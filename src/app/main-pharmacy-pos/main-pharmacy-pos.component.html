@@ -1,0 +1,230 @@
+<div class="main-content">
+    <div class="container-fluid">
+        <button mat-raised-button id="menu-toggle" (click)="toggleSide()" class="btn btn-primary btn-lg toggle"
+            style="padding-bottom:20px;">Category</button>
+        <button mat-raised-button id="menu-toggle-calc" (click)="toggleCalculator()"
+            class="btn btn-primary btn-lg toggle" style="padding-bottom:20px;">Calculator</button>
+        <div id="sidebar-wrapper" *ngIf="openside">
+            <div class="card" padding *ngFor="let category of categories" (click)="selectCategory(category)">
+                {{category.name}}</div>
+        </div>
+        <div id="sidebar-wrapper" class="calc" *ngIf="calculator">
+            <div margin id="calculator">
+                <form id="calculator-form1">
+                    <div id="calculator-input1">
+                        <mat-label></mat-label>
+                        <input id="calculator-input2" matInput type="text" placeholder="0" name="display" [(ngModel)]="result"/>
+                    </div>
+                </form>
+              <div class="calculator-container-general">
+                <div margin-top id="calculator-container3">
+                    <button id="calculator-button1" mat-raised-button class="btn btn-danger" (click)="btnClicked('C')"> C </button>
+                    <button id="calculator-button2" mat-raised-button class="btn btn-warning" (click)="btnClicked('%')"> % </button>
+                    <button id="calculator-button3" mat-raised-button class="btn btn-warning" (click)="btnClicked('/')"> / </button>
+                </div>
+            
+                <div id="calculator-container6">
+                    <button id="calculator-button10" mat-raised-button class="btn btn-info" (click)="btnClicked('7')"> 7 </button>
+                    <button id="calculator-button11" mat-raised-button class="btn btn-info" (click)="btnClicked('8')"> 8 </button>
+                    <button id="calculator-button12" mat-raised-button class="btn btn-info" (click)="btnClicked('9')"> 9 </button>
+                    <button id="calculator-button13" mat-raised-button class="btn btn-warning" (click)="btnClicked('*')"> * </button>
+                </div>
+            
+                <div id="calculator-container7">
+                    <button id="calculator-button14" mat-raised-button class="btn btn-info" (click)="btnClicked('4')"> 4 </button>
+                    <button id="calculator-button15" mat-raised-button class="btn btn-info" (click)="btnClicked('5')"> 5 </button>
+                    <button id="calculator-button16" mat-raised-button class="btn btn-info" (click)="btnClicked('6')"> 6 </button>
+                    <button id="calculator-button17" mat-raised-button class="btn btn-warning" (click)="btnClicked('-')"> - </button>
+                </div>
+            
+                <div id="calculator-container8">
+                    <button id="calculator-button18" mat-raised-button class="btn btn-info" (click)="btnClicked('1')"> 1 </button>
+                    <button id="calculator-button19" mat-raised-button class="btn btn-info" (click)="btnClicked('2')"> 2 </button>
+                    <button id="calculator-button20" mat-raised-button class="btn btn-info" (click)="btnClicked('3')"> 3 </button>
+                    <button id="calculator-button21" mat-raised-button class="btn btn-warning" (click)="btnClicked('+')"> + </button>
+                </div>
+            
+                <div id="calculator-container9">
+                    <button id="calculator-button22" mat-raised-button class="btn btn-info" (click)="btnClicked('0')"> 0 </button>
+                    <button id="calculator-button23" mat-raised-button class="btn btn-info" (click)="btnClicked('.')"> . </button>
+                    <button id="calculator-button25" mat-raised-button class="btn btn-danger" (click)="btnClicked('=')"> = </button>
+                </div>
+                </div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="row">
+                    <div class="col-md-11">
+                        <div class="panel panel-primary">
+                            <div class="panel-body">
+                                <ul id="myTab" class="nav nav-tabs" role="tablist">
+                                    <li role="presentation" [ngClass]="{active: tabs.product}"><a
+                                            (click)="activatetab('product')" role="tab" data-toggle="tab">Products</a>
+                                    </li>
+                                    <li role="presentation" [ngClass]="{active: tabs.service}"><a
+                                            (click)="activatetab('service')" role="tab" data-toggle="tab">Services</a>
+                                    </li>
+                                </ul>
+                                <div class="tab-content">
+                                    <div role="tabpanel" [ngClass]="{'tab-pane':true, active: tabs.service}"
+                                        id="service">
+                                        <div class="row">
+                                            <div class="col-sm-9">
+                                                <div ng2-auto-complete [source]="servicearray"
+                                                    (valueChanged)="serviceChanged($event)">
+                                                    <input id="niceinput" placeholder="Search for Services"
+                                                        [ngModel]="model1" />
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-3 right"><button mat-raised-button
+                                                    style="margin:4px; margin-top:20px; background-color: #00254e; color:white"
+                                                    (click)="newService()">
+                                                    <i class="material-icons" matTooltip="Add Service">add</i>
+                                                </button></div>
+                                        </div>
+                                        <div margin>
+                                            <button *ngFor="let item of services;  let i=index" type="button"
+                                                (click)="addToOrder(item,1)"
+                                                class="btn-prni btn-default product pos-tip" data-container="body">
+                                                <img [src]="_DomSanitizer.bypassSecurityTrustUrl('data:image/png;base64,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')"
+                                                    alt="item" style="width:60px;height:60px;" class="img-rounded">
+                                                <span>item.name</span>
+                                            </button>
+                                        </div>
+                                    </div>
+                                    <div role="tabpanel" [ngClass]="{'tab-pane':true, active: tabs.product}"
+                                        id="product">
+                                        <div class="row">
+                                            <div class="col-sm-9">
+                                                <div ng2-auto-complete [source]="productarray"
+                                                    (valueChanged)="valueChanged($event)">
+                                                    <!-- [max-num-list]="10" -->
+                                                    <input id="niceinput" ng2-auto-complete [source]="counterproducts" accept-user-input list-formatter="productname" placeholder="Search for Product"
+                                                    [(ngModel)]='counterproducts.productname' [max-num-list]="10" (valueChanged)="selectProduct($event)"
+                                                      placeholder="Product Name" type="text" />
+                                                </div>
+                                            </div>
+                                            <div class="col-sm-3 right"><button mat-raised-button
+                                                    style="margin:4px; margin-top:20px; background-color: #00254e; color:white"
+                                                    (click)="newProduct()">
+                                                    <i class="material-icons" matTooltip="Add Product">add</i>
+                                                </button></div>
+                                        </div>
+
+                                        <button *ngFor="let item of counterproducts| slice:0:10;  let i=index" type="button"
+                                            (click)="addToOrder(item,1)" class="btn-prni btn-default product pos-tip"
+                                            data-container="body">
+                                            <img *ngIf='item.productimage!=""' [src]="_DomSanitizer.bypassSecurityTrustUrl(item.productimage)" [alt]="item.productname"
+                                                style="width:60px;height:60px;" class="img-rounded">
+                                                <img *ngIf='item.productimage==""' src="assets/img/image_placeholder.png" [alt]="item.productname"
+                                                style="width:60px;height:60px;" class="img-rounded">
+                                            <span>{{item.productname}}</span>
+                                        </button>
+
+                                    </div>
+                                </div>
+                            </div>
+                            <div class="panel-footer"></div>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="row">
+                    <div class="col-md-11">
+                        <div class="panel panel-primary">
+                            <div class="panel-heading">
+                                <div class="row">
+                                    <div class="col-md-3"><span class="panel-title">Order Summary</span></div>
+                                    <div class="col-md-6"><span>Today is: getDate()</span></div>
+                                </div>
+                            </div>
+                            <div class="panel-body" style="max-height:320px; overflow:auto;">
+                                <div style="text-align: center;">
+                                <mat-checkbox (change)="selectedPack(user, $event)">Sold per Pack</mat-checkbox>
+                                <mat-checkbox style="margin-left: 20px;" (change)="selectedTablet(user, $event)">Sold per Item/Tablet</mat-checkbox>
+                                </div>
+                                <ul class="list-group">
+                                    <li class="list-group-item" *ngFor="let item of order">
+                                        <div class="row">
+                                            <div class="col-md-half">
+                                                <span class="badge2 badge2-left">item.qty</span>
+                                            </div>
+                                            <div class="col-md-4">
+                                                <span (click)="editProduct(item)">item.name</span>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <button class="btn btn-success">item.amount * item.qty</button>
+                                            </div>
+                                            <div class="col-md-1">
+                                                <button class="btn btn-info">item.amount</button>
+                                            </div>
+                                            <div class="col-md-3">
+                                                <button style="background-color: #00254e; color:white"
+                                                    (click)="addToOrder(item,1)">
+                                                    <i class="material-icons" matTooltip="Add Amount">add</i>
+                                                </button>
+                                                <button class="btn btn-danger" (click)="removeOneEntity(item)">
+                                                    <i class="material-icons" matTooltip="Remove Amount">remove</i>
+                                                </button>
+                                                <button class="btn btn-danger" (click)="removeItem(item)">
+                                                    <i class="material-icons" matTooltip="Delete Item">Delete</i>
+                                                </button>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ul>
+                            </div>
+                            <div class="panel-footer">
+                                <div class="row">
+                                    <div class="col-sm-9">
+                                        <div ng2-auto-complete [source]="customers"
+                                            (valueChanged)="selectCustomer($event)">
+                                            <input id="niceinput" placeholder="Search for Patient" />
+                                            <!-- [ngModel]="sale.customer" -->
+                                        </div>
+                                    </div>
+                                    <div class="col-sm-3 right"><button mat-raised-button
+                                            style="margin:4px; margin-top:20px; background-color: #00254e; color:white"
+                                            (click)="newCustomer()" class="btn"><i class="material-icons"
+                                                matTooltip="Add Patient">person_add</i></button></div>
+                                </div>
+                                <form>
+                                    <div>
+                                        <mat-form-field class="example-full-width">
+                                            <input matInput placeholder="Notes" type="text" name="description" />
+                                            <!-- [(ngModel)]="sale.description" -->
+                                        </mat-form-field>
+                                    </div>
+                                    <div>
+                                        <mat-label>Balance: </mat-label>
+                                        <mat-form-field class="example-full-width">
+                                            <input matInput placeholder="Balance" type="number" name="balance" />
+                                            <!-- [(ngModel)]="sale.balance" -->
+                                        </mat-form-field>
+                                    </div>
+                                </form>
+                            </div>
+                            <div class="panel-footer">
+                                <!-- *ngIf="order.length" -->
+                                <button mat-button-raised class="btn btn-warning">Total: getTotal()</button>
+                            </div>
+                            <div class="panel-footer">
+                                <!-- ng-show="order.length" -->
+                                <div>
+                                    <button mat-raised-button class="btn btn-danger"
+                                        (click)="clearOrder()">Clear</button>
+                                    <!-- [disabled]="!order.length" -->
+                                    <button mat-raised-button class="btn btn-success"
+                                        (click)="checkout()">Checkout</button>
+                                    <!-- [disabled]="!order.length" -->
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+
+            </div>
+        </div>
+    </div>
+</div>

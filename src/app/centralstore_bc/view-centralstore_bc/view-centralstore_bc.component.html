@@ -1,0 +1,110 @@
+<div class="main-content">
+    <div class="container-fluid">
+        <div *ngIf="tableCheck" class="icon-align"><i style="font-size: 45px; cursor: pointer;"
+                class="material-icons delete-color" matTooltip="Delete Selected Product"
+                (click)="deleteSelectedCentralStoreBc()">delete</i> </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div> <button mat-raised-button class="btn pull-right card-color" (click)="export()">EXPORT <i
+                            class="material-icons" style="color: white;">reply</i></button></div>
+                <div> <button mat-raised-button class="btn btn-success" (click)="viewDispatchedProducts()">View Dispatched Products <i
+                    class="material-icons" style="color: white;">visibility</i></button></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <cdk-virtual-scroll-viewport style="height: 1000px" itemSize="90">
+                    <ng-container *cdkVirtualFor="let centralstorebc of centralstoresbc; let i = index">
+                        <div class="card" style="border: solid #00254e 2px;">
+                            <div class="card-body">
+                                <div class="pharm-img" *ngIf="centralstorebc.productimage == ''">
+                                    <img class="img-avatar" src="assets/img/image_placeholder.png">
+                                </div>
+                                <div class="pharm-img" *ngIf="centralstorebc.productimage != ''">
+                                    <img class="img-avatar" style="cursor: pointer;"
+                                        [src]="_DomSanitizer.bypassSecurityTrustUrl(centralstorebc.productimage)" (click)="viewImage(centralstorebc, i)" matTooltip="View Image">
+                                </div>
+                                <mat-checkbox [disabled]="centralstorebc.isoncredit || centralstorebc.iscompletepayment || centralstorebc.isowing" (change)="selectedCentralStoreBc(centralstorebc, $event)"></mat-checkbox>
+                                <mat-card-title style="margin: 0 0 5px 10px;">Product Name:
+                                    {{centralstorebc.productname}}</mat-card-title>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Unit Stock Supplied:</strong> {{centralstorebc.unitstock}}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Stock Value:</strong> {{centralstorebc.stockvalue}}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Date supplied:</strong> {{centralstorebc.datesupplied}}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Expiry Date:</strong> {{centralstorebc.expiryDate}}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Sub Group:</strong> {{centralstorebc.subgroup}}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Total tablets/Sub items:</strong> {{centralstorebc.totalsubitem}}
+                                    </div>
+                                </div>
+
+                                <div class="row" style="margin: 10px 0 5px 0">
+                                    <div class="col-md-6">
+                                        <button *ngIf = "!centralstorebc.isowing && !centralstorebc.isoncredit" class="icon-product-cat" style="float: left; background-color: #4d0000; color: whitesmoke"
+                                            (click)="makepaymentCentralStoreBc(centralstorebc)" mat-raised-button [disabled] = "centralstorebc.iscompletepayment"> Make Payment</button>
+                                            <button *ngIf = "centralstorebc.isowing" class="icon-product-cat" style="float: left; background-color: #4d3200; color: whitesmoke"
+                                            (click)="completepaymentCentralStoreBc(centralstorebc)" mat-raised-button [disabled] = "centralstorebc.iscompletepayment"> Complete Payment</button>
+                                            <button *ngIf = "centralstorebc.isoncredit" class="icon-product-cat" style="float: left; background-color: #00254e; color: whitesmoke"
+                                            (click)="oncreditCentralStoreBc(centralstorebc)" mat-raised-button [disabled] = "centralstorebc.iscompletepayment">Item Owed</button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <button class="icon-product-cat" style="background-color: #4d0000"
+                                            (click)="deleteCentralStoreBc(centralstorebc)" mat-mini-fab [disabled]="centralstorebc.isoncredit || centralstorebc.iscompletepayment || centralstorebc.isowing"><i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Delete Product">delete</i></button>
+                                        <button class="icon-product-cat" style="background-color: #00254e"
+                                            (click)="editCentralStoreBc(centralstorebc)" mat-mini-fab [disabled]="centralstorebc.isexpired || centralstorebc.isoncredit || centralstorebc.iscompletepayment || centralstorebc.isowing"> <i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Edit Product">edit</i></button>
+                                        <button class="icon-product-cat" style="background-color: green"
+                                            (click)="dispatchItem(centralstorebc)" mat-mini-fab [disabled]="centralstorebc.isexpired"> <i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Dispatch Item">local_shipping</i></button>
+                                        <button class="icon-product-cat btn btn-info"
+                                            (click)="refundCentralStoreBc(centralstorebc)" mat-mini-fab [disabled]="centralstorebc.refund"><i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Refund Product">reply</i></button>
+                                    </div>
+                                </div>
+
+                                <div class="row" *ngIf="centralstorebc.refund" style="margin-bottom: 10px">
+                                    <div class="col-md-12 approve-refund">
+                                        <button style="background-color: green; cursor: pointer;"
+                                            (click)="approveRefund(centralstorebc)" mat-mini-fab><i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Approve Refund">thumb_up</i></button>
+                                        <button style="background-color: #4d0000;  margin-left: 5px; cursor: pointer;"
+                                            (click)="disapproveRefund(centralstorebc)" mat-mini-fab> <i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Disapprove Refund">thumb_down</i></button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12" [style.background-color]="centralstorebc.color">
+                                        <h3 style="text-align: center"> {{centralstorebc.errormessage}} </h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
+                </cdk-virtual-scroll-viewport>
+            </div>
+        </div>
+        <button mat-fab class='fab-button' (click)="addCentralStoreBc()"> <i class="material-icons" style='color: white;'
+                matTooltip="Add Product">add</i></button>
+    </div>
+</div>

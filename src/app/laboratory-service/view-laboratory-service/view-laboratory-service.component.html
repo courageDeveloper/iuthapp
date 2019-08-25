@@ -1,0 +1,56 @@
+<div class="main-content">
+    <div class="container-fluid">
+        <div *ngIf="tableCheck" class="icon-align"><i style="font-size: 45px; cursor: pointer;"
+                class="material-icons delete-color" matTooltip="Delete Selected Serive"
+                (click)="deleteSelectedRenderService()">delete</i> </div>
+                <div class="row">
+                        <div class="col-md-12">
+                            <div *ngIf="!show"> <button mat-raised-button class="btn import-btn pull-right"
+                                    (click)="import()">IMPORT <i class="material-icons"
+                                        style="color: white;">get_app</i></button>
+                            </div>
+                            <div *ngIf="show"> <button mat-raised-button class="btn import-btn pull-right" text-uppercase><a
+                                        href="assets/excel/IUTH Laboratory Services.xlsx" style="color: white;">Download Sample</a> <i
+                                        class="material-icons" style="color: white;">get_app</i></button></div>
+                            <div> <button mat-raised-button class="btn pull-right card-color" (click)="export()">EXPORT <i
+                                        class="material-icons" style="color: white;">reply</i></button></div>
+                            <input accept="*" *ngIf="show" class="margin-btm" type="file" (change)="handleFiles($event)" />
+                        </div>
+                    </div>
+        <div class="row">
+            <div class="col-md-12">
+                    <cdk-virtual-scroll-viewport  style="height: 500px" itemSize="90" >
+                        <ng-container *cdkVirtualFor="let renderService of renderServices" >
+                <div class="card" style="border: solid #00254e 2px;">
+                    <div class="card-body">
+                            <mat-checkbox (change)="selectedRenderService(renderService, $event)"></mat-checkbox>
+                            <mat-card-title style="margin: 0 0 5px 10px;">Service Name: {{renderService.servicename}}</mat-card-title>
+                            <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Set Price:</strong> {{renderService.cost}}
+                                        </div>
+                                        <div class="col-md-6 ">
+                                            <strong>Department:</strong> {{renderService.department}}
+                                            </div>
+                                </div>
+                                 <div class="row">
+                                    <div class="col-md-12">
+                                        <button class="icon-service" style="background-color: #4d0000"
+                                            (click)="deleteRenderService(renderService)" mat-mini-fab><i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Delete Service">delete</i></button>
+                                        <button class="icon-service" style="background-color: #00254e"
+                                            (click)="editRenderService(renderService)" mat-mini-fab> <i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Edit Service">edit</i></button>
+                                    </div>
+                                </div>
+                    </div>
+                </div>
+                </ng-container>
+                </cdk-virtual-scroll-viewport>
+            </div>
+        </div>
+        <button mat-fab class='fab-button' (click)="addRenderService()"> <i class="material-icons" style='color: white;' matTooltip="Add Service">add</i></button>
+    </div>
+</div>

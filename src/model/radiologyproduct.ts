@@ -1,0 +1,21 @@
+export interface RadiologyProducts {
+    id?: string,
+    rev?: string,
+    productname: string,
+    productimage: string,
+    suppliedin: string,
+    productcategory: string,
+    datesupplied: any,
+    branch: string,
+    store: string,
+    dispatched: any,
+    totalamountsupplied: number,
+    dispatchdepartment: string,
+    dispatchmethod: string,
+    quantityincartons: number,
+    refund: any,
+    quantityinpackets: number,
+    quantityperitems: number,
+    datedispatched: any,
+    sales: Array<any>
+}

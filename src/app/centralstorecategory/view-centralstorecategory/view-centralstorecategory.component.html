@@ -1,0 +1,58 @@
+<div class="main-content">
+    <div class="container-fluid">
+        <div *ngIf="tableCheck" class="icon-align"><i style="font-size: 45px; cursor: pointer;"
+                class="material-icons delete-color" matTooltip="Delete Selected Product Category"
+                (click)="deleteSelectedCentralStoreCategory()">delete</i> </div>
+                <div class="row">
+                        <div class="col-md-12">
+                            <div *ngIf="!show"> <button mat-raised-button class="btn import-btn pull-right"
+                                    (click)="import()">IMPORT <i class="material-icons"
+                                        style="color: white;">get_app</i></button>
+                            </div>
+                            <div *ngIf="show"> <button mat-raised-button class="btn import-btn pull-right" text-uppercase><a
+                                        href="assets/excel/IUTH-PRODUCT-CATEGORY-CS.xlsx" style="color: white;">Download Sample</a> <i
+                                        class="material-icons" style="color: white;">get_app</i></button></div>
+                            <div> <button mat-raised-button class="btn pull-right card-color" (click)="export()">EXPORT <i
+                                        class="material-icons" style="color: white;">reply</i></button></div>
+                            <input accept="*" *ngIf="show" class="margin-btm" type="file" (change)="handleFiles($event)" />
+                        </div>
+                    </div>
+        <div class="row">
+            <div class="col-md-12">
+                    <cdk-virtual-scroll-viewport  style="height: 500px" itemSize="90" >
+                        <ng-container *cdkVirtualFor="let centralstorecategory of centralstorecategorys" >
+                <div class="card" style="border: solid #00254e 2px;">
+                    <div class="card-body">
+                            <mat-checkbox (change)="selectedCentralStoreCategory(centralstorecategory, $event)"></mat-checkbox>
+                            <mat-card-title style="margin: 0 0 5px 10px;">Product Name: {{centralstorecategory.productname}}</mat-card-title>
+                            <div class="row">
+                                <div class="col-md-6">
+                                    <strong>Cost Price:</strong> {{centralstorecategory.costprice}}
+                                </div>
+                                <div class="col-md-6">
+                                    <strong>Sub Group:</strong>
+                                    {{centralstorecategory.subgroup}}
+                                </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <strong>Number of tablets/sub-items:</strong> {{centralstorecategory.subitemno}}
+                                    </div>
+                                    </div>
+                                     <div class="row">
+                                        <div class="col-md-12">
+                                                <button class="icon-product-cat" style="background-color: #4d0000" (click)="deleteCentralStoreCategory(centralstorecategory)" mat-mini-fab><i class="material-icons" style="color: whitesmoke" matTooltip="Delete Product Category"
+                                                >delete</i></button>
+                                                <button class="icon-product-cat" style="background-color: #00254e" (click)="editCentralStoreCategory(centralstorecategory)" mat-mini-fab> <i class="material-icons" style="color: whitesmoke" matTooltip="Edit Product Category"
+                                                    >edit</i></button>
+                                            </div>
+                                    </div>
+                    </div>
+                </div>
+                </ng-container>
+                </cdk-virtual-scroll-viewport>
+            </div>
+        </div>
+        <button mat-fab class='fab-button' (click)="addCentralStoreCategory()"> <i class="material-icons" style='color: white;' matTooltip="Add Product Category">add</i></button>
+    </div>
+</div>

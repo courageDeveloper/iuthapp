@@ -1,0 +1,21 @@
+export interface TheaterProducts {
+    id?: string,
+    rev?: string,
+    productname: string,
+    productimage: string,
+    suppliedin: string,
+    productcategory: string,
+    datesupplied: any,
+    branch: string,
+    store: string,
+    dispatched: any,
+    totalamountsupplied: number,
+    dispatchdepartment: string,
+    dispatchmethod: string,
+    quantityincartons: number,
+    quantityinpackets: number,
+    refund: any,
+    quantityperitems: number,
+    datedispatched: any,
+    sales: Array<any>
+}

@@ -1,0 +1,110 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <i class="material-icons" style="color: #00254e; cursor: pointer; text-align: left" matTooltip="Close"
+      (click)="onNoClick()">close</i>
+    <div class="row">
+      <div class="col-md-12">
+        <!-- <div class="card"> -->
+        <div style="text-align: center;">
+          <h2 style="color:#00254e;"><b>{{title}} Product</b></h2>
+          <p style="color:#00254e; text-transform: lowercase">You can {{title}} product here</p>
+        </div>
+        <div>
+          <form [formGroup]="productForm">
+            <div class="row">
+              <div class="col-md-12">
+                 <input type="hidden" name="productcatid" [(ngModel)]='product.productcatid'
+                  [formControl]="productForm.controls['productcatid']">
+                <mat-form-field class="example-full-width">
+                  <input matInput  ng2-auto-complete  [source]="products" accept-user-input list-formatter="productname" name="productname" [(ngModel)]='product.productname'
+                  [formControl]="productForm.controls['productname']" (valueChanged)="selectProduct($event)"
+                    placeholder="Product Name" type="text" required>
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12" *ngIf="product.productimage == ''">
+                <div style="text-align: center">
+                  <img style="margin: 5px 0 5px 0;" src="assets/img/image_placeholder.png" width="100px" height="100px" />
+                </div>
+              </div>
+              <div class="col-md-12" *ngIf="product.productimage != ''">
+                <div style="text-align: center">
+                  <img style="margin: 5px 0 5px 0;" [src]="_DomSanitizer.bypassSecurityTrustUrl(product.productimage)" width="100px" height="100px" />
+                </div>
+              </div>
+            </div>
+            <div class="row" style="margin: 5px 0 5px 0;">
+              <div class="col-md-12">
+                <input accept="*" class="margin-btm" type="file" (change)="handleFiles($event)" />
+                <input type="hidden" name="productimage" [(ngModel)]='product.productimage'
+                  [formControl]="productForm.controls['attachments']">
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <mat-form-field class="example-full-width">
+                  <input matInput placeholder="Unit Stock" (keyup)="calculateStockValue()" (ngModelChange)="calculateStockValue()" type="number"
+                    [(ngModel)]='product.unitstock' [formControl]="productForm.controls['unitstock']" required>
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <mat-form-field class="example-full-width">
+                  <input matInput [matDatepicker]="picker" placeholder="Date Supplied"
+                    [(ngModel)]='product.datesupplied' [formControl]="productForm.controls['datesupplied']">
+                  <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                  <mat-datepicker touchUi #picker></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <mat-form-field class="example-full-width">
+                  <input matInput [matDatepicker]="expiryDate" placeholder="Expiry Date"
+                    [(ngModel)]='product.expiryDate' [formControl]="productForm.controls['expiryDate']" required>
+                  <mat-datepicker-toggle matSuffix [for]="expiryDate"></mat-datepicker-toggle>
+                  <mat-datepicker touchUi #expiryDate></mat-datepicker>
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <mat-form-field class="example-full-width">
+                  <input matInput placeholder="Stock Value" type="number" name="stockvalue" [(ngModel)]="product.stockvalue" [formControl]="productForm.controls['stockvalue']">
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-8">
+                <span *ngIf="!isEditTotalItem">Total Tablets/ Sub items = {{product.totalsubitem}} </span>
+                <mat-form-field class="example-full-width" *ngIf="isEditTotalItem">
+                  <input matInput placeholder="Edit total tablets/sub items" name="totalsubitem" type="number"
+                    [(ngModel)]='product.totalsubitem'
+                    [formControl]="productForm.controls['totalsubitem']">
+                </mat-form-field>
+              </div>
+              <div class="col-md-4">
+                <button mat-raised-button *ngIf="!isEditTotalItem" style="padding: 5px 5px 5px 5px"
+                  (click)="editTotalItem()" class="btn btn-success pull-right">Edit Total Item</button>
+                <button *ngIf="isEditTotalItem" mat-mini-fab (click)="closeTotalItem()"
+                  class="delete-color pull-right"><i class="material-icons" matTooltip="Close Edit">close</i></button>
+              </div>
+            </div>
+            <div *ngIf="title=='Add'">
+              <div style="text-align: center !important;"><button mat-raised-button type="submit" class="btn btn-color"
+                  (click)="submit()" [disabled]='productForm.invalid || product.productcatid == ""'>{{title}} Product</button></div>
+            </div>
+            <div *ngIf="title=='Edit'">
+              <div style="text-align: center !important;"><button mat-raised-button type="submit" class="btn btn-color"
+                  (click)="edit()" [disabled]='productForm.invalid || product.productcatid == ""'>{{title}} Product</button></div>
+            </div>
+            <div class="clearfix"></div>
+          </form>
+        </div>
+        <!-- </div> -->
+      </div>
+    </div>
+  </div>
+</div>

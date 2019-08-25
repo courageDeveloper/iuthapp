@@ -1,0 +1,110 @@
+<div class="main-content">
+    <div class="container-fluid">
+        <div *ngIf="tableCheck" class="icon-align"><i style="font-size: 45px; cursor: pointer;"
+                class="material-icons delete-color" matTooltip="Delete Selected Product"
+                (click)="deleteSelectedPharmacyStore()">delete</i> </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div> <button mat-raised-button class="btn pull-right card-color" (click)="export()">EXPORT <i
+                            class="material-icons" style="color: white;">reply</i></button></div>
+                <div> <button mat-raised-button class="btn btn-success" (click)="viewDispatchedProducts()">View Dispatched Products <i
+                    class="material-icons" style="color: white;">visibility</i></button></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <cdk-virtual-scroll-viewport style="height: 1000px" itemSize="90">
+                    <ng-container *cdkVirtualFor="let pharmacystore of pharmacystores; let i = index">
+                        <div class="card" style="border: solid #00254e 2px;">
+                            <div class="card-body">
+                                <div class="pharm-img" *ngIf="pharmacystore.productimage == ''">
+                                    <img class="img-avatar" src="assets/img/image_placeholder.png">
+                                </div>
+                                <div class="pharm-img" *ngIf="pharmacystore.productimage != ''">
+                                    <img class="img-avatar" style="cursor: pointer;"
+                                        [src]="_DomSanitizer.bypassSecurityTrustUrl(pharmacystore.productimage)" (click)="viewImage(pharmacystore, i)" matTooltip="View Image">
+                                </div>
+                                <mat-checkbox [disabled]="pharmacystore.isoncredit || pharmacystore.iscompletepayment || pharmacystore.isowing" (change)="selectedPharmacyStore(pharmacystore, $event)"></mat-checkbox>
+                                <mat-card-title style="margin: 0 0 5px 10px;">Product Name:
+                                    {{pharmacystore.productname}}</mat-card-title>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Unit Stock Supplied:</strong> {{pharmacystore.unitstock}}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Stock Value:</strong> {{pharmacystore.stockvalue}}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Date supplied:</strong> {{pharmacystore.datesupplied}}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Expiry Date:</strong> {{pharmacystore.expiryDate}}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Sub Group:</strong> {{pharmacystore.subgroup}}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Total tablets/Sub items:</strong> {{pharmacystore.totalsubitem}}
+                                    </div>
+                                </div>
+
+                                <div class="row" style="margin: 10px 0 5px 0">
+                                    <div class="col-md-6">
+                                        <button *ngIf = "!pharmacystore.isowing && !pharmacystore.isoncredit" class="icon-product-cat" style="float: left; background-color: #4d0000; color: whitesmoke"
+                                            (click)="makepaymentPharmacyStore(pharmacystore)" mat-raised-button [disabled] = "pharmacystore.iscompletepayment"> Make Payment</button>
+                                            <button *ngIf = "pharmacystore.isowing" class="icon-product-cat" style="float: left; background-color: #4d3200; color: whitesmoke"
+                                            (click)="completepaymentPharmacyStore(pharmacystore)" mat-raised-button [disabled] = "pharmacystore.iscompletepayment"> Complete Payment</button>
+                                            <button *ngIf = "pharmacystore.isoncredit" class="icon-product-cat" style="float: left; background-color: #00254e; color: whitesmoke"
+                                            (click)="oncreditPharmacyStore(pharmacystore)" mat-raised-button [disabled] = "pharmacystore.iscompletepayment">Item Owed</button>
+                                    </div>
+                                    <div class="col-md-6">
+                                        <button class="icon-product-cat" style="background-color: #4d0000"
+                                            (click)="deletePharmacyStore(pharmacystore)" mat-mini-fab [disabled]="pharmacystore.isoncredit || pharmacystore.iscompletepayment || pharmacystore.isowing"><i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Delete Product">delete</i></button>
+                                        <button class="icon-product-cat" style="background-color: #00254e"
+                                            (click)="editPharmacyStore(pharmacystore)" mat-mini-fab [disabled]="pharmacystore.isexpired || pharmacystore.isoncredit || pharmacystore.iscompletepayment || pharmacystore.isowing"> <i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Edit Product">edit</i></button>
+                                        <button class="icon-product-cat" style="background-color: green"
+                                            (click)="dispatchItem(pharmacystore)" mat-mini-fab [disabled]="pharmacystore.isexpired"> <i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Dispatch Item">local_shipping</i></button>
+                                        <button class="icon-product-cat btn btn-info"
+                                            (click)="refundPharmacyStore(pharmacystore)" mat-mini-fab [disabled]="pharmacystore.refund"><i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Refund Product">reply</i></button>
+                                    </div>
+                                </div>
+
+                                <div class="row" *ngIf="pharmacystore.refund" style="margin-bottom: 10px">
+                                    <div class="col-md-12 approve-refund">
+                                        <button style="background-color: green; cursor: pointer;"
+                                            (click)="approveRefund(pharmacystore)" mat-mini-fab><i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Approve Refund">thumb_up</i></button>
+                                        <button style="background-color: #4d0000;  margin-left: 5px; cursor: pointer;"
+                                            (click)="disapproveRefund(pharmacystore)" mat-mini-fab> <i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Disapprove Refund">thumb_down</i></button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12" [style.background-color]="pharmacystore.color">
+                                        <h3 style="text-align: center"> {{pharmacystore.errormessage}} </h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
+                </cdk-virtual-scroll-viewport>
+            </div>
+        </div>
+        <button mat-fab class='fab-button' (click)="addPharmacyStore()"> <i class="material-icons" style='color: white;'
+                matTooltip="Add Product">add</i></button>
+    </div>
+</div>

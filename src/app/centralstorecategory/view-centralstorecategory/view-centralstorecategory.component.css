@@ -1,0 +1,43 @@
+.card-color {
+    background-color: #00254e !important;
+}
+
+.import-btn {
+    background-color: #4d0000 !important;
+}
+
+thead {
+    color: #00254e;
+}
+
+td:nth-last-child(2) {
+   cursor: pointer;
+}
+
+td:nth-last-child(1) {
+    cursor: pointer;
+ }
+
+ i {
+     color: #00254e
+ }
+
+ .delete-color {
+     color: #4d0000;
+ }
+
+ .fab-button {
+     background-color: #00254e;
+     float: right;
+     position: sticky;
+     bottom: 15px;
+     right: 30px;
+ }
+
+ .icon-product-cat {
+     float: right;
+     cursor: pointer;
+     margin-left: 5px;
+ }
+
+ 

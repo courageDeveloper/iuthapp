@@ -1,0 +1,159 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-10">
+        <div class="card">
+          <div class="card-header card-header-iuth">
+            <h4 class="card-title" style="color:white;"><b>Register New Staff</b></h4>
+            <p class="card-category" style="color:white;">Complete your profile</p>
+          </div>
+          <div class="card-body">
+            <form [formGroup]="staffForm" (ngSubmit)="submit()">
+              <div class="row">
+                <div class="col-md-3">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Username" [(ngModel)]="staff.username" name="username"
+                      (ngModelChange)="checkUser()" [formControl]="staffForm.controls['username']" required>
+                  </mat-form-field>
+                  <span class="text-danger">{{errorMessageUser}}</span>
+                </div>
+                <div class="col-md-5">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Email address" type="email" [(ngModel)]="staff.email" name="email"
+                      (ngModelChange)="checkEmail()" [formControl]="staffForm.controls['email']" required>
+                  </mat-form-field>
+                  <span class="text-danger" 
+                    *ngIf="!staffForm.controls.email.valid && staffForm.controls.email.dirty">Please
+                    enter a valid email.</span>
+                    <span class="text-danger">{{errorMessage}}</span>
+                </div>
+                <div class="col-md-4">
+                  <mat-form-field class="example-full-width">
+                    <input matInput [type]="getType()" placeholder="Password" [(ngModel)]="staff.password"
+                      name="password" [formControl]="staffForm.controls['password']" required>
+                  </mat-form-field>
+                  <i class="material-icons align-end" (click)="toggleTextPassword()">visibility</i>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Fist Name" type="text" [(ngModel)]="staff.firstname" name="firstname"
+                      [formControl]="staffForm.controls['firstname']" required>
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Last Name" type="text" [(ngModel)]="staff.lastname" name="lastname"
+                      [formControl]="staffForm.controls['lastname']" required>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <mat-label>Branch</mat-label>
+                    <mat-select [value]="staff.branch" [(ngModel)]="staff.branch" name="branch"
+                      [formControl]="staffForm.controls['branch']"  required>
+                      <mat-option [value]="branch" *ngFor="let branch of branchNames" (click)="changeBranch(branch)">{{branch}}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <mat-label>Department</mat-label>
+                    <mat-select [value]="staff.department" [(ngModel)]="staff.department" name="department"
+                      [formControl]="staffForm.controls['department']" required>
+                      <mat-option [value]="department" *ngFor="let department of departmentNames">{{department}}
+                      </mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Address" type="text" [(ngModel)]="staff.address" name="address"
+                      [formControl]="staffForm.controls['address']">
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-4">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Phone Number" type="text" [(ngModel)]="staff.mobile" name="mobile"
+                      [formControl]="staffForm.controls['mobile']">
+                  </mat-form-field>
+                </div>
+                <div class="col-md-4">
+                  <mat-form-field class="example-full-width">
+                    <input matInput [matDatepicker]="picker" placeholder="Date of Birth" [(ngModel)]="staff.dob"
+                      name="dob" [formControl]="staffForm.controls['dob']">
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker touchUi #picker></mat-datepicker>
+                  </mat-form-field>
+                </div>
+                <div class="col-md-4">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Staff Code" type="text" [(ngModel)]="staff.staffcode" name="staffcode"
+                      [formControl]="staffForm.controls['staffcode']">
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput [matDatepicker]="employment" placeholder="Date of Employment"
+                      [(ngModel)]="staff.dateofentry" name="dateofentry"
+                      [formControl]="staffForm.controls['dateofentry']">
+                    <mat-datepicker-toggle matSuffix [for]="employment"></mat-datepicker-toggle>
+                    <mat-datepicker touchUi #employment></mat-datepicker>
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <mat-label>Sex</mat-label>
+                    <mat-select [value]="staff.sex" [(ngModel)]="staff.sex" name="sex"
+                      [formControl]="staffForm.controls['sex']">
+                      <mat-option *ngFor='let sex of sexes' [value]="sex">{{sex}}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Position" type="text" [(ngModel)]="staff.position" name="position"
+                      [formControl]="staffForm.controls['position']">
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Salary" type="number" [(ngModel)]="staff.salary" name="salary"
+                      [formControl]="staffForm.controls['salary']">
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Preferred Account Number" type="text" [(ngModel)]="staff.accountnumber"
+                      name="accountnumber" [formControl]="staffForm.controls['accountnumber']">
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Preferred Bank Account" type="text" [(ngModel)]="staff.bankaccount"
+                      name="bankaccount" [formControl]="staffForm.controls['bankaccount']">
+                  </mat-form-field>
+                </div>
+              </div>
+              <button mat-raised-button type="submit" class="btn btn-color pull-right" [disabled]='staffForm.invalid || disabled'>Submit</button>
+              <div class="clearfix"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

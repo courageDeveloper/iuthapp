@@ -1,0 +1,12 @@
+.nav-link {
+    cursor: pointer;
+ }
+
+ .focus-color :focus{
+    background-color: #00254e;
+    color: #ffff;
+ }
+
+ .align-end {
+     float: right !important;
+ }

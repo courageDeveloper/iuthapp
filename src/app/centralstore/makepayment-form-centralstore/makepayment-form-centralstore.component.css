@@ -1,0 +1,16 @@
+.align-end {
+    float: right;
+    cursor: pointer;
+}
+
+.header {
+    background-color: #00254e;
+}
+
+.btn-color {
+    background-color: #00254e !important;
+}
+
+.delete-color {
+    background-color: #4d0000;
+}

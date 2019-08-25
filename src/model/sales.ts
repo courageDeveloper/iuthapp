@@ -1,0 +1,23 @@
+export interface Sales {
+    id?: string,
+    rev?: string,
+    posdepartment: string,
+    amountloaned: number,
+    amountpayable: number,
+    loanstatus: any,
+    departmentloaned: string,
+    staffloaned: string,
+    departmentloaning: string,
+    dateofloan: any,
+    salename: string,
+    amount: number,
+    description: string,
+    date: any,
+    pending: any,
+    staffloan: any,
+    departmentloan: any,
+    balance: any,
+    branch: string,
+    products: Array<any>,
+    services: Array<any>
+}
