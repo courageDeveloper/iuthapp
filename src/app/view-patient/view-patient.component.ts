@@ -163,14 +163,14 @@ export class ViewPatientComponent implements OnInit {
                   lastname: item['LASTNAME'],
                   branch: item['BRANCH'],
                   department: item['DEPARTMENT'],
-                  dob: new Date(item['DOB']),
+                  dob: item['DOB'],
                   patientno: item['PATIENT NUMBER'],
                   position: item['POSITION'],
                   mobile: item['PHONE NUMBER'],
                   address: item['ADDRESS'],
                   email: item['EMAIL'],
                   debt: item['DEBT'],
-                  dateofregistration: new Date(item['DATE OF REGISTRATION']),
+                  dateofregistration: item['DATE OF REGISTRATION'],
                   sex: item['SEX'],
                   sales: []
                 }
@@ -179,6 +179,8 @@ export class ViewPatientComponent implements OnInit {
                 this.newArray.push(patient);
 
                 this.newArray.forEach(arrayPatient => {
+                  arrayPatient.dob = new Date((arrayPatient.dob - (25567 + 2)) * 86400 * 1000);
+                  arrayPatient.dateofregistration = new Date((arrayPatient.dateofregistration - (25567 + 2)) * 86400 * 1000);
                   this.pouchService.savePatient(arrayPatient).then(res => {
                     this.loadPatients();
                   });

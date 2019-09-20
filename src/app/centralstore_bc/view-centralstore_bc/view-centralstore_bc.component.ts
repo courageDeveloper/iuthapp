@@ -19,6 +19,7 @@ import * as FileSaver from "file-saver";
 const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 const EXCEL_EXTENSION = '.xlsx';
 import { DataService } from '../../services/data.service';
+import { ExpensedialogmessageComponent } from '../../expensedialogmessage/expensedialogmessage.component';
 
 @Component({
   selector: 'app-view-centralstore_bc',
@@ -192,14 +193,30 @@ export class ViewCentralStoreBcComponent implements OnInit {
   }
 
   approveRefund(centralstorebc) {
-    this.pouchService.getExpense(centralstorebc.expenseid).then(result => {
-      this.pouchService.deleteExpense(result).then(response => {
-        this.pouchService.deleteProduct(centralstorebc).then(res => {
-          this.toastr.success(`${centralstorebc.productname} has been refunded successfully`);
-          this.loadCentralStoresBc();
+    if (centralstorebc.isdispatched) {
+      let dialogRef = this.dialog.open(ExpensedialogmessageComponent, {
+        width: '450px',
+        data: {
+          content: centralstorebc
+        }
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        console.log('This dialog has closed');
+        if (result) {
+        }
+      });
+    }
+    else if (!centralstorebc.isdispatched) {
+      this.pouchService.getExpense(centralstorebc.expenseid).then(result => {
+        this.pouchService.deleteExpense(result).then(response => {
+          this.pouchService.deleteProduct(centralstorebc).then(res => {
+            this.toastr.success(`${centralstorebc.productname} has been refunded successfully`);
+            this.loadCentralStoresBc();
+          });
         });
       });
-    });
+    }
   }
 
   disapproveRefund(centralstorebc) {

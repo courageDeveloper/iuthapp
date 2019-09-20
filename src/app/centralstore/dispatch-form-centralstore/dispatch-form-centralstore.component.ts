@@ -142,7 +142,8 @@ export class DispatchFormCentralStoreComponent implements OnInit {
         this.pouchService.getProductcategory(this.data.centralstore.productcatid).then(item => {
           this.data.centralstore.unitstock = this.data.centralstore.unitstock - this.dispatchedProducts.unitquantity;
           this.data.centralstore.totalsubitem = this.data.centralstore.totalsubitem - this.dispatchedProducts.unitquantity * item.subitemno;
-            this.data.centralstore.stockvalue = this.data.centralstore.unitstock * item.costprice;
+          this.data.centralstore.stockvalue = this.data.centralstore.unitstock * item.costprice;
+          this.data.centralstore.isdispatched = true;
 
           this.pouchService.updateProduct(this.data.centralstore);
           var counterProduct = {
@@ -160,7 +161,16 @@ export class DispatchFormCentralStoreComponent implements OnInit {
             color: '',
             errormessage: '',
             return: false,
+            sourcedepartment: this.data.centralstore.store,
+            unitsellingprice: 0,
+            subitemsellingprice: 0,
+            costprice: item.costprice,
+            expirydate: this.data.centralstore.expiryDate,
+            productcatid: this.data.centralstore.productcatid,
             barcode: '',
+            dispatchid: results.id,
+            refund: false,
+            isUnitSelling: true,
             isexpired: this.data.centralstore.isexpired,
             sales: []
           }

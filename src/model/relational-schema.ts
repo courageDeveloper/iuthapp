@@ -34,6 +34,10 @@ export const Schema = [
         }
     },
     {
+        singular: 'evacuate',
+        plural: 'evacuates',
+    },
+    {
         singular: 'sale',
         plural: 'sales',
         relations: {

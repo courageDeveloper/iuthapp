@@ -1,0 +1,162 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <i class="material-icons" style="color: #00254e; cursor: pointer; text-align: left" matTooltip="Close"
+      (click)="onNoClick()">close</i>
+    <div class="row">
+      <div class="col-md-12">
+        <!-- <div class="card"> -->
+        <div style="text-align: center;">
+          <h2 style="color:#00254e;"><b>{{title}} Receipt</b></h2>
+        </div>
+
+        <div id="printArea">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="info" style="display: block;margin-left: 0;">
+                <h2 style="font-size: 1.5em; text-align: center;">Igbinedion University Teaching Hospital</h2>
+                <p style="font-size: .9em;color: #666;line-height: 1.2em; text-align: center;">
+                  {{sale.department}}<br>
+                  {{sale.salename}}<br>
+                  {{sale.branch}}<br>
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <div style="text-align: center">
+                <div class="info" style="display: block;margin-left: 0;">
+                  <p style="font-size: .9em;color: #666;line-height: 1.2em;">
+                    <strong>Patient</strong> : {{sale.patientName}}
+                  </p>
+                </div>
+                <div *ngIf="receiptSource=='default message'" class="info" style="display: block;margin-left: 0;">
+                  <p style="font-size: .9em;color: #666;line-height: 1.2em;">
+                    <strong>Ref No </strong> : <b>{{sale.referencenumber}}</b>
+                  </p>
+                </div>
+                <div *ngIf="receiptSource=='Account'" class="info" style="display: block;margin-left: 0;">
+                  <p style="font-size: .9em;color: #666;line-height: 1.2em;">
+                    <strong>Invoice No </strong> : <b>{{sale.referencenumber}}</b>
+                  </p>
+                </div>
+                <div class="info" style="display: block;margin-left: 0;">
+                  <p style="font-size: .9em;color: #666;line-height: 1.2em;">
+                    <strong>Date </strong> : {{sale.date}}
+                  </p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+          <div id="bot" style="border-bottom: 1px solid #EEE;min-height: 50px;">
+
+            <div id="table">
+              <table style="width: 100%;border-collapse: collapse;">
+                <tr class="tabletitle" style="font-size: .8em;background: #EEE; border-bottom: 1px solid #EEE;">
+                  <td class="item" style="width: 70%;">
+                    <h2 style="font-size: 1.5em;"><strong>Item</strong></h2>
+                  </td>
+                  <td class="Hours" style="width: 15%;">
+                    <h2 style="font-size: 1.5em;"><strong>Qty</strong></h2>
+                  </td>
+                  <td class="Rate" style="width: 15%;">
+                    <h2 style="font-size: 1.5em;"><strong>Amount</strong></h2>
+                  </td>
+                </tr>
+                <!-- Product Error -->
+                <tr>
+                  <td style="text-align:center;">
+                    <h4 style="color: rgb(180, 179, 179);">{{productError}}</h4>
+                  </td>
+                </tr>
+                <!-- End Product Error -->
+                <tr class="service" *ngFor="let product of sale.productorder" style="border-bottom: 1px solid #EEE;">
+                  <td class="tableitem">
+                    <p class="itemtext" style="font-size: .8em;color: #666;line-height: 1.2em;">
+                      {{product.productname}}</p>
+                  </td>
+                  <td class="tableitem">
+                    <p class="itemtext" style="font-size: .8em;color: #666;line-height: 1.2em;">{{product.qty}}</p>
+                  </td>
+                  <td class="tableitem" *ngIf="product.isUnitSelling">
+                    <p class="itemtext" style="font-size: .8em;color: #666;line-height: 1.2em;">#
+                      {{product.unitsellingprice}}</p>
+                  </td>
+                  <td class="tableitem" *ngIf="!product.isUnitSelling">
+                    <p class="itemtext" style="font-size: .8em;color: #666;line-height: 1.2em;">#
+                      {{product.subitemsellingprice}}</p>
+                  </td>
+                </tr>
+                <!-- Service Error -->
+                <tr>
+                  <td style="text-align:center;">
+                    <h4 style="color: rgb(180, 179, 179);">{{seviceError}}</h4>
+                  </td>
+                </tr>
+                <!-- End Service Error -->
+                <tr class="service" *ngFor="let product of sale.serviceorder" style="border-bottom: 1px solid #EEE;">
+                  <td class="tableitem">
+                    <p class="itemtext" style="font-size: .8em;color: #666;line-height: 1.2em;">
+                      {{product.servicename}}</p>
+                  </td>
+                  <td class="tableitem">
+                    <p class="itemtext" style="font-size: .8em;color: #666;line-height: 1.2em;">{{product.qty}}</p>
+                  </td>
+                  <td class="tableitem">
+                    <p class="itemtext" style="font-size: .8em;color: #666;line-height: 1.2em;"># {{product.cost}}</p>
+                  </td>
+                </tr>
+                <tr class="tabletitle" style="font-size: .8em;background: #EEE; border-bottom: 1px solid #EEE;">
+                  <td></td>
+                  <td class="Rate">
+                    <h2 style="font-size: .9em;">Total</h2>
+                  </td>
+                  <td class="payment">
+                    <h2 style="font-size: .9em;"># {{sale.amount}} </h2>
+                  </td>
+                </tr>
+                <tr class="tabletitle" style="font-size: .8em;background: #EEE;">
+                  <td></td>
+                  <td class="Rate">
+                    <h2 style="font-size: .9em;">Balance</h2>
+                  </td>
+                  <td class="payment">
+                    <h2 style="font-size: .9em;"># {{sale.balance}}</h2>
+                  </td>
+                </tr>
+                <tr class="tabletitle" style="font-size: .8em;background: #EEE;">
+                  <td></td>
+                  <td class="Rate">
+                    <h2 style="font-size: .9em;">Amount loaned</h2>
+                  </td>
+                  <td class="payment">
+                    <h2 style="font-size: .9em;"># {{sale.amountloaned}}</h2>
+                  </td>
+                </tr>
+
+              </table>
+            </div>
+            <!--End Table-->
+            <div id="legalcopy" style="margin-top: 5mm;">
+              <p class="legal" style="font-size: .9em;color: #666;line-height: 1.2em; text-align:center;">You were
+                served by {{sale.department}} </p>
+            </div>
+
+            <div *ngIf="receiptSource=='default message'" id="legalcopy" style="margin-top: 5mm;">
+              <p class="legal" style="font-size: .9em;color: #666;line-height: 1.2em; text-align:center;"> Proceed to
+                Account to make payment </p>
+            </div>
+            <div *ngIf="receiptSource=='Account'" id="legalcopy" style="margin-top: 5mm;">
+              <p class="legal" style="font-size: .9em;color: #666;line-height: 1.2em; text-align:center;"> Payment has
+                been made, Thanks for your patronage. </p>
+            </div>
+
+          </div>
+          <div class="clearfix"></div>
+        </div>
+        <!-- </div> -->
+      </div>
+    </div>
+  </div>
+</div>

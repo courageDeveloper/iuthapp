@@ -7,8 +7,10 @@ import {BehaviorSubject} from 'rxjs'
 export class DataService {
   private messageSourceBranch = new BehaviorSubject('default message');
   private messageSourceDepartment = new BehaviorSubject('default message');
+  private messageSourceReceipt = new BehaviorSubject('default message');
   currentBranch = this.messageSourceBranch.asObservable();
   currentDepartment = this.messageSourceDepartment.asObservable();
+  receiptSource = this.messageSourceReceipt.asObservable();
 
   constructor() { }
 
@@ -18,5 +20,9 @@ export class DataService {
 
   changeBranch(branch: string) {
     this.messageSourceBranch.next(branch);
+  }
+
+  changeReceiptSource(receiptsource: string) {
+    this.messageSourceReceipt.next(receiptsource);
   }
 }

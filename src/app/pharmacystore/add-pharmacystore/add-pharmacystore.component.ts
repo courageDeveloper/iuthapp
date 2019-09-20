@@ -46,6 +46,7 @@ export class AddPharmacyStoreComponent implements OnInit {
     totalsubitem: new FormControl(),
     expenseid: new FormControl(),
     stockvalue: new FormControl(),
+    isdispatched: new FormControl(),
     unitstock: new FormControl(),
     sales: new FormControl()
   });
@@ -77,6 +78,7 @@ export class AddPharmacyStoreComponent implements OnInit {
         isoncredit: false,
         iscompletepayment: false,
         isowing: false,
+        isdispatched: false,
         sales: []
       }
     }
@@ -85,7 +87,6 @@ export class AddPharmacyStoreComponent implements OnInit {
       data.pharmacystore.datesupplied = new Date(data.pharmacystore.datesupplied);
       data.pharmacystore.expiryDate = new Date(data.pharmacystore.expiryDate);
       this.product = data.pharmacystore;
-      console.log(this.product);
     }
   }
 
@@ -106,6 +107,7 @@ export class AddPharmacyStoreComponent implements OnInit {
       expenseid: [this.product.expenseid],
       iscompletepayment: [this.product.iscompletepayment],
       isowing: [this.product.isowing],
+      isdispatched: [this.product.isdispatched],
       attachments: [this.product.attachments],
       color: [this.product.color],
       errormessage: [this.product.errormessage],
@@ -183,7 +185,6 @@ export class AddPharmacyStoreComponent implements OnInit {
   }
 
   submit() {
-    //Send Notification to accountant
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(item => {
       this.product.branch = item.branch;

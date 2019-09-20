@@ -13,7 +13,7 @@ export class NotificationsComponent implements OnInit {
 
   ngOnInit() {
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
-    this.pouchService.getStaff(localStorageItem).then(item => {
+    this.pouchService.getStaff(localStorageItem).then(item => {      
       item.notification.reverse();
       this.notifications = item.notification;
       //item.notification = item.notification.filter(data => data.viewed == false);

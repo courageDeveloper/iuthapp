@@ -44,6 +44,12 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
     expenseproduct: new FormControl(),
     expenseproductid: new FormControl(),
     description: new FormControl(),
+    isreconciled: new FormControl(),
+    iscomplete: new FormControl(),
+    isowing: new FormControl(),
+    color: new FormControl(),
+    departmentid: new FormControl(),
+    staffid: new FormControl(),
     isonlinepayment: new FormControl(),
     date: new FormControl(),
     pending: new FormControl(),
@@ -76,6 +82,12 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
         expenseproductid: this.data.centralstore.id,
         description: '',
         isonlinepayment: false,
+        isowing: false,
+        iscomplete: false,
+        isreconciled: true,
+        color: '',
+        departmentid: '',
+        staffid: '',
         date: new Date(),
         pending: false,
         staffloan: false,
@@ -105,6 +117,12 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
         expenseproductid: this.data.centralstore.id,
         description: '',
         isonlinepayment: false,
+        isowing: false,
+        iscomplete: false,
+        isreconciled: false,
+        color: '',
+        departmentid: '',
+        staffid: '',
         date: new Date(),
         pending: false,
         staffloan: false,
@@ -134,6 +152,12 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
         expenseproductid: this.data.centralstore.id,
         description: '',
         isonlinepayment: false,
+        isowing: false,
+        iscomplete: false,
+        isreconciled: false,
+        color: '',
+        departmentid: '',
+        staffid: '',
         date: new Date(),
         pending: false,
         staffloan: false,
@@ -345,12 +369,22 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
           this.data.centralstore.isoncredit = false;
           this.data.centralstore.iscompletepayment = false;
           this.sendNotificationIsOwing(this.makepayment.branch);
+
+          results.isowing = true;
+          results.iscomplete = false;
+          results.isoncredit = false;
+          this.pouchService.updateExpense(results);
         }
         else if (this.makepayment.amount >= this.data.centralstore.stockvalue) {
           this.data.centralstore.iscompletepayment = true;
           this.data.centralstore.isoncredit = false;
           this.data.centralstore.isowing = false;
           this.sendNotification(this.makepayment.branch);
+
+          results.iscomplete = true;
+          results.isowing = false;
+          results.isoncredit = false;
+          this.pouchService.updateExpense(results);
         }
         
         this.pouchService.updateProduct(this.data.centralstore).then(data => {

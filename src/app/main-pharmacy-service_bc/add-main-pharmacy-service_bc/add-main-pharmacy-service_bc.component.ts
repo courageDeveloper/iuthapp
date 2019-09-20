@@ -45,7 +45,6 @@ export class AddMainPharmacyServiceBcComponent implements OnInit {
     else {
       this.title = 'Edit';
       this.renderservice = this.data.renderService;
-      console.log(this.renderservice);
     }
 
     this.renderServiceForm = this.formBuilder.group({

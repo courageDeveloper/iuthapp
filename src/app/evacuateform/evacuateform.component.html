@@ -1,0 +1,42 @@
+<h1 mat-dialog-title>Evacuate Sales</h1>
+<div mat-dialog-content>
+  Select date and evacuate sales.
+</div>
+<form>
+    <div class="row">
+      <div class="col-md-12 text-danger" style="text-align: center">
+            {{errorMessage}}
+        </div>
+    </div>
+  <div class="row">
+    <div class="col-md-6">
+      <mat-form-field class="example-full-width">
+        <input matInput name="datefrom" [matDatepicker]="from" placeholder="Date from" [(ngModel)]="dateFrom">
+        <mat-datepicker-toggle matSuffix [for]="from"></mat-datepicker-toggle>
+        <mat-datepicker touchUi #from></mat-datepicker>
+      </mat-form-field>
+    </div>
+    <div class="col-md-6">
+        <mat-form-field class="example-full-width">
+            <input matInput name="timefrom" placeholder="Time from" type="time" [(ngModel)]="timeFrom">
+            </mat-form-field>
+    </div>
+  </div>
+  <div class="row">
+      <div class="col-md-6">
+          <mat-form-field class="example-full-width">
+              <input matInput name="dateto" [matDatepicker]="to" placeholder="Date to" [(ngModel)]="dateTo">
+              <mat-datepicker-toggle matSuffix [for]="to"></mat-datepicker-toggle>
+              <mat-datepicker touchUi #to></mat-datepicker>
+            </mat-form-field>
+      </div>
+      <div class="col-md-6">
+      <mat-form-field class="example-full-width">
+          <input matInput name="timeto" placeholder="Time to" type="time" [(ngModel)]="timeTo">
+          </mat-form-field>
+      </div>
+    </div>
+</form>
+<div mat-dialog-actions style="text-align: center;">
+  <button mat-button (click)="evacuateSales()" class="btn btn-success">Evacuate</button>
+</div>

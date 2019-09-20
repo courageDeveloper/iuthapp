@@ -147,7 +147,7 @@ export class ViewStaffComponent implements OnInit {
                   lastname: item['LASTNAME'],
                   branch: item['BRANCH'],
                   department: item['DEPARTMENT'],
-                  dob: new Date(item['DOB']),
+                  dob: item['DOB'],
                   staffcode: item['STAFF CODE'],
                   position: item['POSITION'],
                   password: item['PASSWORD'],
@@ -158,7 +158,7 @@ export class ViewStaffComponent implements OnInit {
                   mobile: item['PHONE NUMBER'],
                   address: item['ADDRESS'],
                   email: item['EMAIL'],
-                  dateofentry: new Date(item['DATE OF EMPLOYMENT']),
+                  dateofentry: item['DATE OF EMPLOYMENT'],
                   sex: item['SEX'],
                   notification: [],
                   expenses: []
@@ -168,6 +168,8 @@ export class ViewStaffComponent implements OnInit {
                 this.newArray.push(staff);
 
                 this.newArray.forEach(arrayStaff => {
+                  arrayStaff.dob = new Date((arrayStaff.dob - (25567 + 2)) * 86400 * 1000);
+                  arrayStaff.dateofentry = new Date((arrayStaff.dateofentry - (25567 + 2)) * 86400 * 1000);
                   this.pouchService.saveStaff(arrayStaff).then(res => {
                     this.loadStaff();
                   });

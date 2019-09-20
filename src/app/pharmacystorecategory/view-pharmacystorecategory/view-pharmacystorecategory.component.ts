@@ -31,7 +31,7 @@ export class ViewPharmacyStoreCategoryComponent implements OnInit {
   convertFiles;
   newArray;
   excelBuffer: any;
-  public productCategorys: Array<ProductCategory> = [];
+  //public productCategorys: Array<ProductCategory> = [];
   worksheet: XLSX.WorkSheet;
   workbook: XLSX.WorkBook;
 

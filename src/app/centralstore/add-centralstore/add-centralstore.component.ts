@@ -41,6 +41,7 @@ export class AddCentralStoreComponent implements OnInit {
     isoncredit: new FormControl(),
     iscompletepayment: new FormControl(),
     isowing: new FormControl(),
+    isdispatched: new FormControl(),
     refund: new FormControl(),
     productcatid: new FormControl(),
     totalsubitem: new FormControl(),
@@ -77,6 +78,7 @@ export class AddCentralStoreComponent implements OnInit {
         isoncredit: false,
         iscompletepayment: false,
         isowing: false,
+        isdispatched: false,
         sales: []
       }
     }
@@ -105,6 +107,7 @@ export class AddCentralStoreComponent implements OnInit {
       expenseid: [this.product.expenseid],
       iscompletepayment: [this.product.iscompletepayment],
       isowing: [this.product.isowing],
+      isdispatched: [this.product.isdispatched],
       attachments: [this.product.attachments],
       color: [this.product.color],
       errormessage: [this.product.errormessage],

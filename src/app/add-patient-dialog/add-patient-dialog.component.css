@@ -1,0 +1,8 @@
+.align-end {
+    float: right;
+    cursor: pointer;
+}
+
+.btn-color {
+    background-color: #00254e !important;
+}

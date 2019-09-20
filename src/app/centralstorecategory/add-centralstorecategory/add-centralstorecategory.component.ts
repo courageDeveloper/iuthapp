@@ -41,7 +41,7 @@ export class AddCentralStoreCategoryComponent implements OnInit {
     }
   }
 
-  ngOnInit() {
+  ngOnInit() {  
     if (this.data.action == 'add') {
       this.title = 'Add';
     }

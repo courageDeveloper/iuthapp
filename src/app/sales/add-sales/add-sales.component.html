@@ -1,49 +1,86 @@
 <div class="main-content">
   <div class="container-fluid">
-      <i class="material-icons" style="color: #00254e; cursor: pointer; text-align: left" matTooltip="Close" (click)="onNoClick()">close</i>
+    <i class="material-icons" style="color: #00254e; cursor: pointer; text-align: left" matTooltip="Close"
+      (click)="onNoClick()">close</i>
     <div class="row">
       <div class="col-md-12">
         <!-- <div class="card"> -->
-            <div style="text-align: center;">
-                <h2 style="color:#00254e;"><b>{{title}} Sales</b></h2>
-                <p style="color:#00254e; text-transform: lowercase">You can {{title}} sales here</p>
-              </div> 
-          <div>
-            <form>
-                <div class="row">
-                    <div class="col-md-12">
-                      <mat-form-field class="example-full-width">
-                        <input matInput placeholder="Sale Name" type="text" name="saletype">
-                      </mat-form-field>
-                    </div>
-                  </div>
-              <div class="row">
-                <div class="col-md-12">
-                    <mat-form-field class="example-full-width">
-                      <input matInput placeholder="Amount" type="number">
-                    </mat-form-field>
-                  </div>
-              </div>
-              <div class="row">
-                <div class="col-md-6">
-                  <mat-form-field class="example-full-width">
-                    <textarea matInput placeholder="Description" type="text" row="5"></textarea>
-                  </mat-form-field>
-                </div>
-                <div class="col-md-6">
-                  <mat-form-field class="example-full-width">
-                    <input matInput [matDatepicker]="picker" placeholder="Date of sale">
-                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
-                    <mat-datepicker touchUi #picker></mat-datepicker>
-                  </mat-form-field>
-                </div>
-              </div>
-              <button mat-raised-button type="submit" class="btn btn-color pull-right">{{title}} Sale</button>
-              <div class="clearfix"></div>
-            </form>
+        <div style="text-align: center;">
+          <h2 style="color:#00254e;"><b>{{title}} Sales</b></h2>
+          <p style="color:#00254e; text-transform: lowercase">You can {{title}} sales here</p>
+        </div>
+        <form [formGroup]="salesForm" (ngSubmit)="submit()">
+          <div class="row">
+            <div class="col-md-12">
+              <mat-form-field class="example-full-width">
+                <input matInput placeholder="Sale Name" [(ngModel)]="sales.salename" type="text" [formControl]="salesForm.controls['salename']"
+                  name="saletype">
+              </mat-form-field>
+            </div>
           </div>
-        <!-- </div> -->
+          <div class="row">
+            <div class="col-md-12">
+              <mat-form-field class="example-full-width">
+                <input matInput placeholder="Amount" type="number" [(ngModel)]="sales.amount" [formControl]="salesForm.controls['amount']"
+                  name="amount">
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <mat-form-field class="example-full-width">
+                <input matInput placeholder="Balance" type="number" [(ngModel)]="sales.balance" [formControl]="salesForm.controls['balance']"
+                  name="balance" [disabled]="disableBalance">
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-6" style="margin-bottom: 10px;">
+              <button mat-stroked-button type="button" class="btn btn-color" (click)="selectIndividual()">Select
+                Individual</button>
+            </div>
+            <div class="col-md-6">
+              <button mat-stroked-button type="button" class="btn btn-color" (click)="selectDepartment()">Select
+                Department</button>
+            </div>
+          </div>
+          <div class="row" *ngIf="!isDepartment">
+              <div class="col-md-12">
+                <mat-form-field class="example-full-width">
+                  <input matInput ng2-auto-complete [source]="individuals" list-formatter="fullname"
+                    [(ngModel)]='individualName' [max-num-list]="10" (valueChanged)="selectCurrentIndividual($event)"
+                    placeholder="Search for Individual" />
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="row" *ngIf="isDepartment">
+              <div class="col-md-12">
+                <mat-form-field class="example-full-width">
+                  <input matInput ng2-auto-complete [source]="departments" list-formatter="name"
+                    [(ngModel)]='departmentName' [max-num-list]="10" (valueChanged)="selectCurrentDepartment($event)"
+                    placeholder="Search for Department" />
+                </mat-form-field>
+              </div>
+            </div>
+          <div class="row">
+            <div class="col-md-12">
+              <mat-form-field class="example-full-width">
+                <textarea matInput placeholder="Description" [(ngModel)]="sales.description" type="text" row="5"
+                  [formControl]="salesForm.controls['description']" name="description"></textarea>
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+                <mat-checkbox (change)="onCredit($event)"> On Credit?
+                </mat-checkbox>
+            </div>
+          </div>
+          <button mat-raised-button type="submit" class="btn btn-color pull-right">{{title}} Sale</button>
+          <div class="clearfix"></div>
+        </form>
       </div>
+      <!-- </div> -->
     </div>
   </div>
 </div>

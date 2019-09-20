@@ -19,6 +19,7 @@ import * as FileSaver from "file-saver";
 const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 const EXCEL_EXTENSION = '.xlsx';
 import { DataService } from '../../services/data.service';
+import { ExpensedialogmessageComponent } from '../../expensedialogmessage/expensedialogmessage.component';
 
 @Component({
   selector: 'app-view-centralstore',
@@ -44,8 +45,6 @@ export class ViewCentralStoreComponent implements OnInit {
   constructor(private dialog: MatDialog, private data: DataService, private router: Router, public pouchService: PouchService, public _DomSanitizer: DomSanitizer, public toastr: ToastrService) { }
 
   ngOnInit() {
-    this.loadCentralStores();
-
     setInterval(() => {
       this.checkedExpired();
     }, 300000);
@@ -195,14 +194,30 @@ export class ViewCentralStoreComponent implements OnInit {
   }
 
   approveRefund(centralstore) {
-    this.pouchService.getExpense(centralstore.expenseid).then(result => {
-      this.pouchService.deleteExpense(result).then(response => {
-        this.pouchService.deleteProduct(centralstore).then(res => {
-          this.toastr.success(`${centralstore.productname} has been refunded successfully`);
-          this.loadCentralStores();
+    if (centralstore.isdispatched) {
+      let dialogRef = this.dialog.open(ExpensedialogmessageComponent, {
+        width: '450px',
+        data: {
+          content: centralstore
+        }
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        console.log('This dialog has closed');
+        if (result) {
+        }
+      });
+    }
+    else if (!centralstore.isdispatched) {
+      this.pouchService.getExpense(centralstore.expenseid).then(result => {
+        this.pouchService.deleteExpense(result).then(response => {
+          this.pouchService.deleteProduct(centralstore).then(res => {
+            this.toastr.success(`${centralstore.productname} has been refunded successfully`);
+            this.loadCentralStores();
+          });
         });
       });
-    });
+    }
   }
 
   disapproveRefund(centralstore) {

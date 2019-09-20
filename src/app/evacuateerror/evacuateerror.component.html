@@ -1,0 +1,8 @@
+<h1 mat-dialog-title>Previously Evacuated</h1>
+<div mat-dialog-content>
+  {{parsedData.salename}} sale created on {{parsedData.date}} has previously been evacuated 
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="dialogRef.close(false)" class="btn btn-danger">Close</button>
+  <button mat-button (click)="dialogRef.close(true)" class="btn btn-success" cdkFocusInitial>Ok</button>
+</div>

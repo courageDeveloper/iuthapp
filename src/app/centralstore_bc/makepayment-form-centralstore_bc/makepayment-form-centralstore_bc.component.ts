@@ -46,8 +46,14 @@ export class MakepaymentFormCentralStoreBcComponent implements OnInit {
     description: new FormControl(),
     isonlinepayment: new FormControl(),
     date: new FormControl(),
+    isreconciled: new FormControl(),
+    iscomplete: new FormControl(),
+    isowing: new FormControl(),
+    color: new FormControl(),
     pending: new FormControl(),
     staffloan: new FormControl(),
+    departmentid: new FormControl(),
+    staffid: new FormControl(),
     departmentloan: new FormControl(),
     branch: new FormControl()
   });
@@ -75,6 +81,12 @@ export class MakepaymentFormCentralStoreBcComponent implements OnInit {
         expenseproduct: this.data.centralstorebc.productname,
         expenseproductid: this.data.centralstorebc.id,
         description: '',
+        isowing: false,
+        iscomplete: false,
+        isreconciled: true,
+        color: '',
+        departmentid: '',
+        staffid: '',
         isonlinepayment: false,
         date: new Date(),
         pending: false,
@@ -105,6 +117,12 @@ export class MakepaymentFormCentralStoreBcComponent implements OnInit {
         expenseproduct: this.data.centralstorebc.productname,
         expenseproductid: this.data.centralstorebc.id,
         description: '',
+        isowing: false,
+        iscomplete: false,
+        isreconciled: false,
+        color: '',
+        departmentid: '',
+        staffid: '',
         isonlinepayment: false,
         date: new Date(),
         pending: false,
@@ -134,6 +152,12 @@ export class MakepaymentFormCentralStoreBcComponent implements OnInit {
         expenseproduct: this.data.centralstorebc.productname,
         expenseproductid: this.data.centralstorebc.id,
         description: '',
+        isowing: false,
+        iscomplete: false,
+        isreconciled: false,
+        color: '',
+        departmentid: '',
+        staffid: '',
         isonlinepayment: false,
         date: new Date(),
         pending: false,
@@ -288,7 +312,7 @@ export class MakepaymentFormCentralStoreBcComponent implements OnInit {
       this.makepayment.branch = item.branch;
       this.makepayment.staffname = item.firstname + '' + item.lastname;
       this.makepayment.staffposition = item.position;
-      this.makepayment.expensename = 'Payment of ' + this.makepayment.expenseproduct
+      this.makepayment.expensename = 'Payment of ' + this.makepayment.expenseproduct;
 
       this.makepayment.date = new Date(this.makepayment.date).toString();
       this.pouchService.saveExpense(this.makepayment).then(results => {
@@ -346,6 +370,11 @@ export class MakepaymentFormCentralStoreBcComponent implements OnInit {
           this.data.centralstorebc.iscompletepayment = false;
           this.updateProduct(this.data.centralstorebc);
           this.sendNotificationIsOwing(this.makepayment.branch);
+
+          results.isowing = true;
+          results.iscomplete = false;
+          results.isoncredit = false;
+          this.pouchService.updateExpense(results);
         }
         else if (this.makepayment.amount >= this.data.centralstorebc.stockvalue) {
           this.data.centralstorebc.iscompletepayment = true;
@@ -353,6 +382,11 @@ export class MakepaymentFormCentralStoreBcComponent implements OnInit {
           this.data.centralstorebc.isowing = false;
           this.updateProduct(this.data.centralstorebc);
           this.sendNotification(this.makepayment.branch);
+
+          results.iscomplete = true;
+          results.isowing = false;
+          results.isoncredit = false;
+          this.pouchService.updateExpense(results);
         }
         this.toastr.success('Payment has been made');
         this.dialogRef.close(true);

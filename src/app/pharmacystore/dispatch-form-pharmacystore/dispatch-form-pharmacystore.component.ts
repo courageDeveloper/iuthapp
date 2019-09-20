@@ -63,9 +63,6 @@ export class DispatchFormPharmacyStoreComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.pouchService.getCounterProducts().then(items => {
-      console.log(items);
-    });
     this.errorMessage = "";
     if (this.data.pharmacystore.unitstock <= 0) {
       this.errorMessage = "You can not dispatch this item as it is out of stock.";
@@ -143,7 +140,8 @@ export class DispatchFormPharmacyStoreComponent implements OnInit {
         this.pouchService.getProductcategory(this.data.pharmacystore.productcatid).then(item => {
           this.data.pharmacystore.unitstock = this.data.pharmacystore.unitstock - this.dispatchedProducts.unitquantity;
           this.data.pharmacystore.totalsubitem = this.data.pharmacystore.totalsubitem - this.dispatchedProducts.unitquantity * item.subitemno;
-            this.data.pharmacystore.stockvalue = this.data.pharmacystore.unitstock * item.costprice;
+          this.data.pharmacystore.stockvalue = this.data.pharmacystore.unitstock * item.costprice;
+          this.data.pharmacystore.isdispatched = true;
 
           this.pouchService.updateProduct(this.data.pharmacystore);
           var counterProduct = {
@@ -161,8 +159,17 @@ export class DispatchFormPharmacyStoreComponent implements OnInit {
             color: '',
             errormessage: '',
             return: false,
+            sourcedepartment: this.data.pharmacystore.store,
+            unitsellingprice: 0,
+            subitemsellingprice: 0,
+            costprice: item.costprice,
+            expirydate: this.data.pharmacystore.expiryDate,
+            productcatid: this.data.pharmacystore.productcatid,
             barcode: '',
             isexpired: this.data.pharmacystore.isexpired,
+            dispatchid: results.id,
+            isUnitSelling: true,
+            refund: false,
             sales: []
           }
 

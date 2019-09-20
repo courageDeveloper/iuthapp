@@ -46,8 +46,14 @@ export class MakepaymentFormPharmacyStoreComponent implements OnInit {
     description: new FormControl(),
     isonlinepayment: new FormControl(),
     date: new FormControl(),
+    isreconciled: new FormControl(),
+    iscomplete: new FormControl(),
+    isowing: new FormControl(),
+    color: new FormControl(),
     pending: new FormControl(),
     staffloan: new FormControl(),
+    departmentid: new FormControl(),
+    staffid: new FormControl(),
     departmentloan: new FormControl(),
     branch: new FormControl()
   });
@@ -76,9 +82,15 @@ export class MakepaymentFormPharmacyStoreComponent implements OnInit {
         expenseproductid: this.data.pharmacystore.id,
         description: '',
         isonlinepayment: false,
+        departmentid: '',
+        staffid: '',
         date: new Date(),
         pending: false,
         staffloan: false,
+        isreconciled: true,
+        iscomplete: false,
+        isowing: false,
+        color: '',
         departmentloan: false,
         branch: ''
       }
@@ -104,6 +116,12 @@ export class MakepaymentFormPharmacyStoreComponent implements OnInit {
         expenseproduct: this.data.pharmacystore.productname,
         expenseproductid: this.data.pharmacystore.id,
         description: '',
+        isowing: false,
+        iscomplete: false,
+        isreconciled: false,
+        color: '',
+        departmentid: '',
+        staffid: '',
         isonlinepayment: false,
         date: new Date(),
         pending: false,
@@ -132,6 +150,12 @@ export class MakepaymentFormPharmacyStoreComponent implements OnInit {
         expensetype: 'Product Payment',
         expenseproduct: this.data.pharmacystore.productname,
         expenseproductid: this.data.pharmacystore.id,
+        isowing: false,
+        iscomplete: false,
+        isreconciled: false,
+        color: '',
+        departmentid: '',
+        staffid: '',
         description: '',
         isonlinepayment: false,
         date: new Date(),
@@ -345,6 +369,11 @@ export class MakepaymentFormPharmacyStoreComponent implements OnInit {
           this.data.pharmacystore.iscompletepayment = false;
           this.updateProduct(this.data.pharmacystore);
           this.sendNotificationIsOwing(this.makepayment.branch);
+
+          results.isowing = true;
+          results.iscomplete = false;
+          results.isoncredit = false;
+          this.pouchService.updateExpense(results);
         }
         else if (this.makepayment.amount >= this.data.pharmacystore.stockvalue) {
           this.data.pharmacystore.iscompletepayment = true;
@@ -352,6 +381,11 @@ export class MakepaymentFormPharmacyStoreComponent implements OnInit {
           this.data.pharmacystore.isowing = false;
           this.updateProduct(this.data.pharmacystore);
           this.sendNotification(this.makepayment.branch);
+
+          results.iscomplete = true;
+          results.isowing = false;
+          results.isoncredit = false;
+          this.pouchService.updateExpense(results);
         }
         this.toastr.success('Payment has been made');
         this.dialogRef.close(true);

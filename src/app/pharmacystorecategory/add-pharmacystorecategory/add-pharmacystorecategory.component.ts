@@ -27,7 +27,7 @@ export class AddPharmacyStoreCategoryComponent implements OnInit {
     products: new FormControl()
   });
 
-  constructor(public dialogRef: MatDialogRef<AddPharmacyStoreCategoryComponent>, @Inject(MAT_DIALOG_DATA) public data: any, public toastr: ToastrService, public pouchService: PouchService, private formBuilder: FormBuilder, ) {
+  constructor(public dialogRef: MatDialogRef<AddPharmacyStoreCategoryComponent>, @Inject(MAT_DIALOG_DATA) public data: any, public toastr: ToastrService, public pouchService: PouchService, private formBuilder: FormBuilder) {
     this.productcategory = {
       id: Math.round((new Date()).getTime()).toString(),
       rev: '',

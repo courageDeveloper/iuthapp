@@ -26,7 +26,7 @@ export class ImageviewerComponent implements OnInit {
 
   ngOnInit() {
     this.data.currentBranch.subscribe(branch => this.branch = branch);
-    this.data.currentDepartment.subscribe(department => this.department = department)
+    this.data.currentDepartment.subscribe(department => this.department = department);
 
     var myThis = this;
     this.products = [];
@@ -39,7 +39,6 @@ export class ImageviewerComponent implements OnInit {
           product.productimage = 'assets/img/image_placeholder.png';
         }
         myThis.productImages.push(product.productimage);
-        console.log(myThis.productImages);
       });
     });
   }

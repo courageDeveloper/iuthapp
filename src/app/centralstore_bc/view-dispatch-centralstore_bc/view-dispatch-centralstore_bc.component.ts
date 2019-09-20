@@ -45,7 +45,6 @@ export class ViewDispatchCentralStoreBcComponent implements OnInit {
     this.pouchService.getDispatchedProducts().then(data => {
       this.dispatchedProducts = data;
       this.dispatchedProducts = this.dispatchedProducts.filter(data => data.sourcedepartment == 'Central Store' && data.branch == 'Benin Centre');
-      console.log(this.dispatchedProducts);
       $(document).ready(function () {
         $('#dtBasicExample').DataTable();
         $('.dataTables_length').addClass('bs-select');

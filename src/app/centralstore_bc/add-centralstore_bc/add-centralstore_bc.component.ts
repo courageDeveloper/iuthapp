@@ -41,6 +41,7 @@ export class AddCentralStoreBcComponent implements OnInit {
     isoncredit: new FormControl(),
     iscompletepayment: new FormControl(),
     isowing: new FormControl(),
+    isdispatched: new FormControl,
     refund: new FormControl(),
     productcatid: new FormControl(),
     totalsubitem: new FormControl(),
@@ -77,6 +78,7 @@ export class AddCentralStoreBcComponent implements OnInit {
         isoncredit: false,
         iscompletepayment: false,
         isowing: false,
+        isdispatched: false,
         sales: []
       }
     }
@@ -89,9 +91,6 @@ export class AddCentralStoreBcComponent implements OnInit {
   }
 
   ngOnInit() {
-    this.pouchService.getStaffs().then(items => {
-       console.log(items);
-    });
     this.localStorageItem = JSON.parse(localStorage.getItem('user'));
 
     this.productForm = this.formBuilder.group({
@@ -108,6 +107,7 @@ export class AddCentralStoreBcComponent implements OnInit {
       expenseid: [this.product.expenseid],
       iscompletepayment: [this.product.iscompletepayment],
       isowing: [this.product.isowing],
+      isdispatched: [this.product.isdispatched],
       attachments: [this.product.attachments],
       color: [this.product.color],
       errormessage: [this.product.errormessage],
@@ -123,10 +123,6 @@ export class AddCentralStoreBcComponent implements OnInit {
     this.pouchService.getProductcategorys().then(items => {
       items = items.filter(data => data.department == 'Central Store' && data.branch == 'Benin Centre')
       this.products = items;
-      console.log(this.products);
-    });
-    this.pouchService.getStaff(this.localStorageItem).then(item => {
-      console.log(item);
     });
   }
 

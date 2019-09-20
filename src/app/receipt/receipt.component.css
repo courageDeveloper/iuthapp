@@ -1,0 +1,36 @@
+.align-end {
+    float: right;
+    cursor: pointer;
+}
+
+.header {
+    background-color: #00254e;
+}
+
+.btn-color {
+    background-color: #00254e !important;
+}
+
+.delete-color {
+    background-color: #4d0000;
+}
+
+@media print {
+    #home, #sales-head, #sales-body, #pos-head, #pos-body, #print-head 
+    {    
+      display: none !important;
+    }
+
+    .printable{
+        display: block !important;
+    }
+ }
+
+    td, th {
+        padding: 3px;
+        padding-top: 10px;
+    }
+    body {margin-top: 0mm; margin-bottom: 0mm; 
+        margin-left: 0mm; margin-right: 0mm}
+
+

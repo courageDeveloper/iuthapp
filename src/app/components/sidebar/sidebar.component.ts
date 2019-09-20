@@ -20,7 +20,8 @@ export const ROUTES: RouteInfo[] = [
   { path: '/dashboard', title: 'Dashboard', icon: 'dashboard', class: '', dropDown: '', toggle: false, show: true, matBadgeHidden: true, matBadge: null, children: [] },
   { path: null, title: 'Staff', icon: 'person', class: '', dropDown: 'add', toggle: true, show: true, matBadgeHidden: true, matBadge: null, children: [{ title: 'Register Staff', path: '/user-profile' }, { title: 'View Staff', path: '/viewstaff' }] },
   { path: null, title: 'Patient', icon: 'people', class: '', dropDown: 'add', toggle: true, show: true, matBadgeHidden: true, matBadge: null, children: [{ title: 'Add Patient', path: '/add-patient' }, { title: 'View Patient', path: '/view-patient' }] },
-  { path: null, title: 'Point of Sale', icon: 'store', class: '', dropDown: 'add', toggle: true, show: true, matBadgeHidden: true, matBadge: null, children: [{ title: 'Main Pharmacy(POS)', path: '/main-pharmacy-pos' }, { title: 'GOPD Pharmacy(POS)', path: '/gopd-pharmacy-pos' }, { title: 'Laboratory(POS)', path: '/lab-pos' }, { title: 'Radiology(POS)', path: '/radiology-pos' }, { title: 'Revenue(POS)', path: '/revenue-pos' }] },
+  { path: '/view-departments', title: 'Departments', icon: 'library_books', class: '', dropDown: '', toggle: false, show: true, matBadgeHidden: false, matBadge: null, children: [] },
+  { path: null, title: 'Point of Sale', icon: 'store', class: '', dropDown: 'add', toggle: true, show: true, matBadgeHidden: true, matBadge: null, children: [{ title: 'Main Pharmacy(POS)', path: '/main-pharmacy-pos' },{ title: 'Main Pharmacy(POS-BC)', path: '/main-pharmacy-pos-bc' }, { title: 'GOPD Pharmacy(POS)', path: '/gopd-pharmacy-pos' }, { title: 'Laboratory(POS)', path: '/laboratory-pos' }, { title: 'Radiology(POS)', path: '/radiology-pos' }, { title: 'Revenue(POS)', path: '/revenue-pos' },{ title: 'Account(POS)', path: '/account-pos' }] },
   { path: null, title: 'Accounts', icon: 'account_balance', class: '', dropDown: 'add', toggle: true, show: true, matBadgeHidden: true, matBadge: null, children: [{ title: 'Pay Roll', path: '/pay-roll' }, { title: 'Sales', path: '/sales' }, { title: 'Expenses', path: '/expenses' }] },
   { path: null, title: 'Inventory Categ..', icon: 'group_work', class: '', dropDown: 'add', toggle: true, show: true, matBadgeHidden: true, matBadge: null, children: [{ title: 'Pharmacy Store Category', path: '/pharmacy-store-category' }, { title: 'Central Store Category', path: '/central-store-category' }, { title: 'Central Store Category(BC)', path: '/central-store-bc-category' }] },
   { path: null, title: 'Inventory', icon: 'local_grocery_store', class: '', dropDown: 'add', toggle: true, show: true, matBadgeHidden: true, matBadge: null, children: [{ title: 'Pharmacy Store', path: '/pharmacy-store' }, { title: 'Central Store', path: '/central-store' }, { title: 'Central Store(BC)', path: '/central-store-bc' }] },
@@ -57,12 +58,12 @@ export class SidebarComponent implements OnInit {
       this.pouchService.getStaff(localStorageItem).then(item => {
         item.notification = item.notification.filter(data => data.viewed == false);
         if (item.notification.length == 0) {
-          this.menuItems[8].matBadgeHidden = true;
+          this.menuItems[9].matBadgeHidden = true;
         }
         else {
-          this.menuItems[8].matBadgeHidden = false;
+          this.menuItems[9].matBadgeHidden = false;
         }
-        this.menuItems[8].matBadge = item.notification.length;
+        this.menuItems[9].matBadge = item.notification.length;
       });
 
       this.navbarNotification(localStorageItem);

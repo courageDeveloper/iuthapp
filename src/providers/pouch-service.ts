@@ -23,6 +23,7 @@ import { LabProducts } from '../model/labproduct';
 import { CounterProducts } from '../model/counterproduct';
 import { Patient } from '../model/patient';
 import { Products } from '../model/product';
+import { Evacuate } from '../model/evacuate';
 import { ProductCategory } from '../model/productcategory';
 import { RadiologyProducts } from '../model/radiologyproduct';
 import { Sales } from '../model/sales';
@@ -1692,6 +1693,102 @@ export class PouchService {
     */
     deletePatient(patient: Patient): Promise<boolean> {
         return this.db.rel.del('patient', patient).then((data: any) => {
+            return data && data.deleted ? data.deleted : false
+        }).catch((err: any) => {
+            console.log(err)
+        })
+    }
+
+     /***********
+    * Evacuated
+    **********/
+    /**
+     * Save an evacuate
+     * @param {evacuate} evacuate
+     *
+     * @return Promise<Evacuate>
+     */
+    saveEvacuate(evacuate: Evacuate): Promise<Evacuate> {
+        evacuate.id = Math.floor(Date.now()).toString();
+        return this.db.rel.save('evacuate', evacuate).then((data: any) => {
+            if (data && data.evacuates && data.evacuates[0]) {
+                return data.evacuates[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Return all the Evacuates
+    *
+    * @return Promise<Array<Evacuate>>
+    */
+    getEvacuates(): Promise<Array<Evacuate>> {
+        return this.db.rel.find('evacuate').then((data: any) => {
+            let evacuates = data.evacuates ? data.evacuates : [];
+            let sortBy = 'DESC';
+
+            switch (sortBy) {
+                case 'ASC':
+                    evacuates.sort((a: any, b: any) => {
+                        return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                    })
+                    break;
+                case 'DESC':
+                    evacuates.sort((a: any, b: any) => {
+                        return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                    });
+                    break;
+                default:
+                    break;
+            }
+            return evacuates;
+        }).catch((err: any) => {
+            console.log(err);
+        });
+    }
+
+    /**
+    * Read a evacuate
+    * @param {evacuate} evacuate
+    *
+    * @return Promise<Evacuates>
+    */
+    getEvacuate(id): Promise<Evacuate> {
+        return this.db.rel.find('Evacuate', id).then((data: any) => {
+            return data && data.evacuates ? data.evacuates[0] : null
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+   * Update a evacuate
+   * @param {evacuate} evacuate
+   *
+   * @return Promise<Evacuate>
+   */
+    updateEvacuate(evacuate: Evacuate): Promise<Evacuate> {
+        return this.db.rel.save('evacuate', evacuate).then((data: any) => {
+            if (data && data.evacuates && data.evacuates[0]) {
+                return data.evacuates[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Remove a evacuate
+    * @param {evacuate} evacuate
+    *
+    * @return Promise<boolean>
+    */
+    deleteEvacuate(evacuate: Evacuate): Promise<boolean> {
+        return this.db.rel.del('evacuate', evacuate).then((data: any) => {
             return data && data.deleted ? data.deleted : false
         }).catch((err: any) => {
             console.log(err)

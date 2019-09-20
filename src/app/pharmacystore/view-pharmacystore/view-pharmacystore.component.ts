@@ -19,6 +19,7 @@ import * as FileSaver from "file-saver";
 const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 const EXCEL_EXTENSION = '.xlsx';
 import { DataService } from '../../services/data.service';
+import { ExpensedialogmessageComponent } from '../../expensedialogmessage/expensedialogmessage.component';
 
 @Component({
   selector: 'app-view-pharmacystore',
@@ -193,14 +194,31 @@ export class ViewPharmacyStoreComponent implements OnInit {
   }
 
   approveRefund(pharmacystore) {
-    this.pouchService.getExpense(pharmacystore.expenseid).then(result => {
-      this.pouchService.deleteExpense(result).then(response => {
-        this.pouchService.deleteProduct(pharmacystore).then(res => {
-          this.toastr.success(`${pharmacystore.productname} has been refunded successfully`);
-          this.loadPharmacyStores();
+    console.log(pharmacystore);
+    if (pharmacystore.isdispatched) {
+      let dialogRef = this.dialog.open(ExpensedialogmessageComponent, {
+        width: '450px',
+        data: {
+          content: pharmacystore
+        }
+      });
+
+      dialogRef.afterClosed().subscribe(result => {
+        console.log('This dialog has closed');
+        if (result) {
+        }
+      });
+    }
+    else if (!pharmacystore.isdispatched) {
+      this.pouchService.getExpense(pharmacystore.expenseid).then(result => {
+        this.pouchService.deleteExpense(result).then(response => {
+          this.pouchService.deleteProduct(pharmacystore).then(res => {
+            this.toastr.success(`${pharmacystore.productname} has been refunded successfully`);
+            this.loadPharmacyStores();
+          });
         });
       });
-    });
+    }
   }
 
   disapproveRefund(pharmacystore) {

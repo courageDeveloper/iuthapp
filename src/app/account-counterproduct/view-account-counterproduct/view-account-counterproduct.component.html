@@ -1,0 +1,93 @@
+<div class="main-content">
+    <div class="container-fluid">
+        <div *ngIf="tableCheck" class="icon-align"><i style="font-size: 45px; cursor: pointer;"
+                class="material-icons delete-color" matTooltip="Delete Selected Product"
+                (click)="deleteSelectedCounterProduct()">delete</i> </div>
+        <div class="row">
+            <div class="col-md-12">
+                <cdk-virtual-scroll-viewport style="height: 1000px" itemSize="90">
+                    <ng-container *cdkVirtualFor="let counterproduct of counterProducts; let i = index">
+                        <div class="card" style="border: solid #00254e 2px;">
+                            <div class="card-body">
+                                <div class="pharm-img" *ngIf="counterproduct.productimage == ''">
+                                    <img class="img-avatar" src="assets/img/image_placeholder.png">
+                                </div>
+                                <div class="pharm-img" *ngIf="counterproduct.productimage != ''">
+                                    <img class="img-avatar" style="cursor: pointer;"
+                                        [src]="_DomSanitizer.bypassSecurityTrustUrl(counterproduct.productimage)" (click)="viewImage(counterproduct, i)" matTooltip="View Image">
+                                </div>
+                                <mat-checkbox (change)="selectedCounterProduct(counterproduct, $event)"></mat-checkbox>
+                                <mat-card-title style="margin: 0 0 5px 10px;">Product Name:
+                                    {{counterproduct.productname}}</mat-card-title>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <strong>Supplied Unit:</strong> {{counterproduct.suppliedunit}}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                        <div class="col-md-6">
+                                                <strong>Sub Item/Tablet Selliing Price:</strong> {{counterproduct.subitemsellingprice}}
+                                            </div>
+                                        <div class="col-md-6">
+                                                <strong>Unit Selliing Price:</strong> {{counterproduct.unitsellingprice}}
+                                            </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Date supplied:</strong> {{counterproduct.datesupplied}}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Expiry Date:</strong> {{counterproduct.expirydate}}
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-6">
+                                        <strong>Product Category:</strong> {{counterproduct.productcategory}}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Total tablets/Sub items:</strong> {{counterproduct.totalsubitem}}
+                                    </div>
+                                </div>
+
+                                <div class="row" style="margin: 10px 0 5px 0">
+                                    <div class="col-md-12">
+                                        <button class="icon-product-cat" style="background-color: #4d0000"
+                                            (click)="deleteCounterProduct(counterproduct)" mat-mini-fab><i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Delete Product">delete</i></button>
+                                        <button class="icon-product-cat" style="background-color: #00254e"
+                                            (click)="editCounterProduct(counterproduct)" mat-mini-fab> <i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Edit Product">edit</i></button>
+                                        <button class="icon-product-cat btn btn-info"
+                                            (click)="refundCounterProduct(counterproduct)" mat-mini-fab><i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Refund Product">reply</i></button>
+                                    </div>
+                                </div>
+
+                                <div class="row" *ngIf="counterproduct.refund" style="margin-bottom: 10px">
+                                    <div class="col-md-12 approve-refund">
+                                        <button style="background-color: green; cursor: pointer;"
+                                            (click)="approveRefund(counterproduct)" mat-mini-fab><i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Approve Refund">thumb_up</i></button>
+                                        <button style="background-color: #4d0000;  margin-left: 5px; cursor: pointer;"
+                                            (click)="disapproveRefund(counterproduct)" mat-mini-fab> <i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Disapprove Refund">thumb_down</i></button>
+                                    </div>
+                                </div>
+                                <div class="row">
+                                    <div class="col-md-12" [style.background-color]="counterproduct.color">
+                                        <h3 style="text-align: center"> {{counterproduct.errormessage}} </h3>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
+                </cdk-virtual-scroll-viewport>
+            </div>
+        </div>
+    </div>
+</div>

@@ -21,5 +21,6 @@ export interface Products {
     isoncredit: any;
     isowing: any;
     iscompletepayment: any;
+    isdispatched: any;
     sales: Array<any>
 }

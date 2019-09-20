@@ -15,6 +15,7 @@ import { UpgradeComponent } from '../../upgrade/upgrade.component';
 import {MainPharmacyPosComponent} from '../../main-pharmacy-pos/main-pharmacy-pos.component';
 import {ViewPatientComponent} from '../../view-patient/view-patient.component';
 import {RevenuePosComponent} from '../../revenue-pos/revenue-pos.component';
+import { AccountPosComponent } from '../../account-pos/account-pos.component';
 import {ViewPayrollComponent} from '../../payroll/view-payroll/view-payroll.component';
 import {ViewSalesComponent} from '../../sales/view-sales/view-sales.component';
 import {ViewExpensesComponent} from '../../expenses/view-expenses/view-expenses.component';
@@ -35,6 +36,21 @@ import { ViewLaboratoryServiceComponent } from '../../laboratory-service/view-la
 import { ViewRadiologyServiceComponent } from '../../radiology-service/view-radiology-service/view-radiology-service.component';
 import { ViewTheatreServiceComponent } from '../../theatre-service/view-theatre-service/view-theatre-service.component';
 import { ViewMainPharmacyServiceBcComponent } from '../../main-pharmacy-service_bc/view-main-pharmacy-service_bc/view-main-pharmacy-service_bc.component';
+import { ViewMainPharmacyCounterProductComponent } from '../../main-pharmacy-counterproduct/view-main-pharmacy-counterproduct/view-main-pharmacy-counterproduct.component';
+import { ImageviewerCounterProductComponent } from '../../image-viewer-counterproduct/image-viewer-counterproduct.component';
+import { GopdPharmacyPosComponent } from '../../gopd-pharmacy-pos/gopd-pharmacy-pos.component';
+import { ViewGopdPharmacyCounterProductComponent } from '../../gopd-pharmacy-counterproduct/view-gopd-pharmacy-counterproduct/view-gopd-pharmacy-counterproduct.component';
+import { LaboratoryPosComponent } from '../../laboratory-pos/laboratory-pos.component';
+import { ViewLaboratoryCounterProductComponent } from '../../laboratory-counterproduct/view-laboratory-counterproduct/view-laboratory-counterproduct.component';
+import { RadiologyPosComponent } from '../../radiology-pos/radiology-pos.component';
+import { ViewRadiologyCounterProductComponent } from '../../radiology-counterproduct/view-radiology-counterproduct/view-radiology-counterproduct.component';
+import { MainPharmacyPosBcComponent } from '../../main-pharmacy-pos_bc/main-pharmacy-pos_bc.component';
+import { ViewMainPharmacyCounterProductBcComponent } from '../../main-pharmacy-counterproduct_bc/view-main-pharmacy-counterproduct_bc/view-main-pharmacy-counterproduct_bc.component';
+import { ViewRevenueCounterProductComponent } from '../../revenue-counterproduct/view-revenue-counterproduct/view-revenue-counterproduct.component';
+import { ViewDepartmentComponent } from '../../view-department/view-department.component';
+import { ViewAccountCounterProductComponent } from '../../account-counterproduct/view-account-counterproduct/view-account-counterproduct.component';
+import { ViewEvacuatedComponent } from '../../view-evacuated/view-evacuated.component';
+import { ViewLoansComponent } from '../../sales/view-loans/view-loans.component';
 
 export const AdminLayoutRoutes: Routes = [
     // {
@@ -94,9 +110,11 @@ export const AdminLayoutRoutes: Routes = [
     { path: 'view-patient',   component: ViewPatientComponent },
     { path: 'main-pharmacy-pos',   component: MainPharmacyPosComponent },
     { path: 'revenue-pos',   component: RevenuePosComponent },
+    { path: 'account-pos',   component: AccountPosComponent },
     { path: 'image-viewer/:index',   component: ImageviewerComponent },
     { path: 'pay-roll',   component: ViewPayrollComponent },
     { path: 'sales',   component: ViewSalesComponent },
+    { path: 'loans',   component: ViewLoansComponent },
     { path: 'expenses',   component: ViewExpensesComponent },
     { path: 'pharmacy-store-category',   component: ViewPharmacyStoreCategoryComponent },
     { path: 'pharmacy-store',   component: ViewPharmacyStoreComponent },
@@ -114,4 +132,18 @@ export const AdminLayoutRoutes: Routes = [
     { path: 'radiology-services',   component: ViewRadiologyServiceComponent },
     { path: 'theater-services',   component: ViewTheatreServiceComponent },
     { path: 'main-pharmacy-services-bc',   component: ViewMainPharmacyServiceBcComponent },
+    { path: 'view-main-pharmacy-counterproduct',   component: ViewMainPharmacyCounterProductComponent },
+    { path: 'image-viewer-counterproduct/:index',   component: ImageviewerCounterProductComponent },
+    { path: 'gopd-pharmacy-pos',   component: GopdPharmacyPosComponent },
+    { path: 'view-gopd-pharmacy-counterproduct',   component: ViewGopdPharmacyCounterProductComponent },
+    { path: 'laboratory-pos',   component: LaboratoryPosComponent },
+    { path: 'view-laboratory-counterproduct',   component: ViewLaboratoryCounterProductComponent },
+    { path: 'radiology-pos',   component: RadiologyPosComponent },
+    { path: 'view-radiology-counterproduct',   component: ViewRadiologyCounterProductComponent },
+    { path: 'main-pharmacy-pos-bc',   component: MainPharmacyPosBcComponent },
+    { path: 'view-main-pharmacy-counterproduct_bc',   component: ViewMainPharmacyCounterProductBcComponent },
+    { path: 'view-revenue-counterproduct',   component: ViewRevenueCounterProductComponent },
+    { path: 'view-account-counterproduct',   component: ViewAccountCounterProductComponent },
+    { path: 'view-departments',   component: ViewDepartmentComponent },
+    { path: 'view-evacuated-sales',   component: ViewEvacuatedComponent }
 ];
