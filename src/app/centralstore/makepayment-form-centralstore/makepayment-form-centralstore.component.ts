@@ -48,6 +48,9 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
     iscomplete: new FormControl(),
     isowing: new FormControl(),
     color: new FormControl(),
+    allowancebonus: new FormControl(),
+    tax: new FormControl(),
+    discount: new FormControl(),
     departmentid: new FormControl(),
     staffid: new FormControl(),
     isonlinepayment: new FormControl(),
@@ -55,7 +58,11 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
     pending: new FormControl(),
     staffloan: new FormControl(),
     departmentloan: new FormControl(),
-    branch: new FormControl()
+    totalamount: new FormControl(),
+    branch: new FormControl(),
+    vendorid: new FormControl(),
+    vendordebt: new FormControl(),
+    paymentstatus: new FormControl()
   });
 
   constructor(private router: Router, public pouchService: PouchService, public toastr: ToastrService, public dialogRef: MatDialogRef<MakepaymentFormCentralStoreComponent>, @Inject(MAT_DIALOG_DATA) public data: any, private formBuilder: FormBuilder) {
@@ -89,10 +96,17 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
         departmentid: '',
         staffid: '',
         date: new Date(),
+        allowancebonus: 0,
+        tax: 0,
+        discount: 0,
+        totalamount: 0,
         pending: false,
         staffloan: false,
         departmentloan: false,
-        branch: ''
+        branch: '',
+        vendorid: '',
+        vendordebt: 0,
+        paymentstatus: ''
       }
     }
     else if (this.data.action == 'completepayment') {
@@ -124,10 +138,17 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
         departmentid: '',
         staffid: '',
         date: new Date(),
+        allowancebonus: 0,
+        tax: 0,
+        discount: 0,
+        totalamount: 0,
         pending: false,
         staffloan: false,
         departmentloan: false,
-        branch: ''
+        branch: '',
+        vendorid: '',
+        vendordebt: 0,
+        paymentstatus: ''
       }
     }
     else if (this.data.action == 'oncredit') {
@@ -159,10 +180,17 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
         departmentid: '',
         staffid: '',
         date: new Date(),
+        allowancebonus: 0,
+        tax: 0,
+        discount: 0,
+        totalamount: 0,
         pending: false,
         staffloan: false,
         departmentloan: false,
-        branch: ''
+        branch: '',
+        vendorid: '',
+        vendordebt: 0,
+        paymentstatus: ''
       }
     }
 
@@ -192,13 +220,21 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
       description: [this.makepayment.description],
       isonlinepayment: [this.makepayment.isonlinepayment],
       date: [this.makepayment.date],
+      allowancebonus: [this.makepayment.allowancebonus],
+      tax: [this.makepayment.tax],
+      discount: [this.makepayment.discount],
       pending: [this.makepayment.pending],
+      totalamount: [this.makepayment.totalamount],
       staffloan: [this.makepayment.staffloan],
       departmentloan: [this.makepayment.departmentloan],
-      branch: [this.makepayment.branch]
+      branch: [this.makepayment.branch],
+      vendorid: [this.makepayment.vendorid],
+      vendordebt: [this.makepayment.vendordebt],
+      paymentstatus: [this.makepayment.paymentstatus]
     });
 
     this.makepaymentForm.controls.expenseproduct.disable();
+    this.makepayment.vendorid = this.data.centralstore.vendorid
   }
 
   onNoClick(): void {
@@ -209,14 +245,17 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
     if (event.checked) {
       this.makepayment.isoncredit = true;
       this.makepayment.amount = 0;
+      this.makepaymentForm.controls.amount.disable();
     }
     else {
       this.makepayment.isoncredit = false;
+      this.makepaymentForm.controls.amount.enable();
     }
   }
 
   calcBalance() {
     this.makepayment.balance = this.data.centralstore.stockvalue - this.makepayment.amount;
+    this.makepayment.vendordebt = this.makepayment.balance;
 
     if (this.makepayment.balance <= 0) {
       this.errorMessage = "You have reached/exceeded cost for item";
@@ -317,6 +356,8 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
       this.pouchService.saveExpense(this.makepayment).then(results => {
         this.data.centralstore.expenseid = results.id;
 
+        this.updateVendorAdd(this.makepayment.vendorid);
+
         if (this.makepayment.isoncredit == true) {
           this.data.centralstore.isoncredit = true;
           this.data.centralstore.isowing = false;
@@ -346,7 +387,6 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
   }
 
   payOffline() {
-    console.log(this.data.centralstore);
     this.pouchService.getStaff(this.localStorageItem).then(item => {
       this.makepayment.branch = item.branch;
       this.makepayment.branch = item.branch;
@@ -355,45 +395,105 @@ export class MakepaymentFormCentralStoreComponent implements OnInit {
       this.makepayment.expensename = 'Payment of ' + this.makepayment.expenseproduct;
 
       this.makepayment.date = new Date(this.makepayment.date).toString();
-      
-      this.pouchService.saveExpense(this.makepayment).then(results => {
-        this.data.centralstore.expenseid = results.id;
-        if (this.makepayment.isoncredit == true) {
-          this.data.centralstore.isoncredit = true;
-          this.data.centralstore.isowing = false;
-          this.data.centralstore.iscompletepayment = false;
-          this.sendNotificationOnCredit(this.makepayment.branch);
-        }
-        else if (this.makepayment.amount < this.data.centralstore.stockvalue) {
-          this.data.centralstore.isowing = true;
-          this.data.centralstore.isoncredit = false;
-          this.data.centralstore.iscompletepayment = false;
-          this.sendNotificationIsOwing(this.makepayment.branch);
+      if (this.data.centralstore.expenseid == "") {
+        this.pouchService.saveExpense(this.makepayment).then(results => {
+          this.updateVendorAdd(this.makepayment.vendorid);
 
-          results.isowing = true;
-          results.iscomplete = false;
-          results.isoncredit = false;
-          this.pouchService.updateExpense(results);
-        }
-        else if (this.makepayment.amount >= this.data.centralstore.stockvalue) {
-          this.data.centralstore.iscompletepayment = true;
-          this.data.centralstore.isoncredit = false;
-          this.data.centralstore.isowing = false;
-          this.sendNotification(this.makepayment.branch);
+          this.data.centralstore.expenseid = results.id;
+          if (this.makepayment.isoncredit == true) {
+            this.data.centralstore.isoncredit = true;
+            this.data.centralstore.isowing = false;
+            this.data.centralstore.iscompletepayment = false;
+            this.sendNotificationOnCredit(this.makepayment.branch);
+          }
+          else if (this.makepayment.amount < this.data.centralstore.stockvalue) {
+            this.data.centralstore.isowing = true;
+            this.data.centralstore.isoncredit = false;
+            this.data.centralstore.iscompletepayment = false;
+            this.sendNotificationIsOwing(this.makepayment.branch);
 
-          results.iscomplete = true;
-          results.isowing = false;
-          results.isoncredit = false;
-          this.pouchService.updateExpense(results);
-        }
-        
-        this.pouchService.updateProduct(this.data.centralstore).then(data => {
-          this.toastr.success('Payment has been made');
-          this.dialogRef.close(true);
+            results.isowing = true;
+            results.iscomplete = false;
+            results.isoncredit = false;
+            this.pouchService.updateExpense(results);
+          }
+          else if (this.makepayment.amount >= this.data.centralstore.stockvalue) {
+            this.data.centralstore.iscompletepayment = true;
+            this.data.centralstore.isoncredit = false;
+            this.data.centralstore.isowing = false;
+            this.sendNotification(this.makepayment.branch);
+
+            results.iscomplete = true;
+            results.isowing = false;
+            results.isoncredit = false;
+            this.pouchService.updateExpense(results);
+          }
+
+          this.pouchService.updateProduct(this.data.centralstore).then(data => {
+            this.toastr.success('Payment has been made');
+            this.dialogRef.close(true);
+          });
         });
-      });
-    });
+      }
+      else {
+        this.pouchService.getExpense(this.data.centralstore.expenseid).then(expense => {
+          expense.balance = this.makepayment.balance;
+          expense.amount = this.makepayment.amount;
+          this.pouchService.updateExpense(expense).then(results => {
+            this.updateVendorSubtract(this.makepayment.vendorid);
 
+            if (this.makepayment.isoncredit == true) {
+              this.data.centralstore.isoncredit = true;
+              this.data.centralstore.isowing = false;
+              this.data.centralstore.iscompletepayment = false;
+              this.sendNotificationOnCredit(this.makepayment.branch);
+            }
+            else if (this.makepayment.amount < this.data.centralstore.stockvalue) {
+              this.data.centralstore.isowing = true;
+              this.data.centralstore.isoncredit = false;
+              this.data.centralstore.iscompletepayment = false;
+              this.sendNotificationIsOwing(this.makepayment.branch);
+
+              results.isowing = true;
+              results.iscomplete = false;
+              results.isoncredit = false;
+              this.pouchService.updateExpense(results);
+            }
+            else if (this.makepayment.amount >= this.data.centralstore.stockvalue) {
+              this.data.centralstore.iscompletepayment = true;
+              this.data.centralstore.isoncredit = false;
+              this.data.centralstore.isowing = false;
+              this.sendNotification(this.makepayment.branch);
+
+              results.iscomplete = true;
+              results.isowing = false;
+              results.isoncredit = false;
+              this.pouchService.updateExpense(results);
+            }
+
+            this.pouchService.updateProduct(this.data.centralstore).then(data => {
+              this.toastr.success('Payment has been made');
+              this.dialogRef.close(true);
+            });
+          });
+        });
+      }
+    });
   }
+
+  updateVendorAdd(id) {
+    this.pouchService.getVendor(id).then(vendor => {
+      vendor.balance += this.makepayment.vendordebt;
+      this.pouchService.updateVendor(vendor);
+    });
+  }
+
+  updateVendorSubtract(id) {
+    this.pouchService.getVendor(id).then(vendor => {
+      vendor.balance -= this.makepayment.amount;
+      this.pouchService.updateVendor(vendor);
+    });
+  }
+
 
 }

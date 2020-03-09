@@ -51,6 +51,8 @@ export class DispatchFormPharmacyStoreComponent implements OnInit {
         productid: this.data.pharmacystore.id,
         dispatchdepartment: '',
         sourcedepartment: this.data.pharmacystore.store,
+        subitemno: 0,
+        costprice: 0,
         dispatched: false,
         datedispatched: new Date(),
         branch: '',
@@ -71,7 +73,8 @@ export class DispatchFormPharmacyStoreComponent implements OnInit {
 
     if (this.data.pharmacystore)
       this.localStorageItem = JSON.parse(localStorage.getItem('user'));
-    this.departments = ['Main Pharmacy', 'GOPD Pharmacy', 'Laboratory', 'Radiology', 'Central Store', 'Theatre'];
+    this.departments = ['Main Pharmacy', 'GOPD Pharmacy', 'Laboratory',
+    'Radiology', 'Revenue', 'Account', 'Audit', 'Theatre', 'Admin'];
 
     this.dispatchProductForm = this.formBuilder.group({
       id: [this.dispatchedProducts.id],
@@ -89,6 +92,17 @@ export class DispatchFormPharmacyStoreComponent implements OnInit {
     });
 
     this.dispatchProductForm.controls.productname.disable();
+
+    this.pouchService.getProductcategory(this.data.pharmacystore.productcatid).then(item => {
+      this.dispatchedProducts.costprice = item.costprice;
+      this.dispatchedProducts.subitemno = item.subitemno;
+    });
+
+    /* this.pouchService.getDispatchedProducts().then(items => {
+         items.map(item => {
+           this.pouchService.deleteDispatchedProduct(item);
+         });
+    }); */
   }
 
   onNoClick(): void {
@@ -170,6 +184,8 @@ export class DispatchFormPharmacyStoreComponent implements OnInit {
             dispatchid: results.id,
             isUnitSelling: true,
             refund: false,
+            isnoticed: false,
+            isquantitynoticed: false,
             sales: []
           }
 

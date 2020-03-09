@@ -29,6 +29,8 @@ export interface Sales {
     serviceorder: any,
     productorder: any,
     posproduct: any,
+    discount: number,
+    totalamount: number,
     referencenumber: any,
     products: Array<any>,
     services: Array<any>

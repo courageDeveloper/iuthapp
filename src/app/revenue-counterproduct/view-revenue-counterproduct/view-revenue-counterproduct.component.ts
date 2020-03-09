@@ -8,6 +8,7 @@ import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { PouchService } from '../../../providers/pouch-service';
 import { CounterProducts } from '../../../model/counterproduct';
 import { Router } from '@angular/router';
+import { AddDamagedproductsComponent } from '../../damagedproducts/add-damagedproducts/add-damagedproducts.component';
 import { ConfirmdialogmessageComponent } from '../../confirmdialogmessage/confirmdialogmessage.component';
 import { ToastrService } from 'ngx-toastr';
 import { DomSanitizer } from '@angular/platform-browser';
@@ -161,7 +162,7 @@ export class ViewRevenueCounterProductComponent implements OnInit {
 
     this.pouchService.getStaffs().then(staffs => {
       staffs = staffs.filter(data => data.branch == notification.branch);
-      staffs = staffs.filter(data => data.department == 'Revenue' || data.department == counterproduct.sourcedepartment  || data.department == 'Account' || data.department == 'Audit');
+      staffs = staffs.filter(data => data.department == 'Revenue' || data.department == counterproduct.sourcedepartment || data.department == 'Account' || data.department == 'Audit');
       staffs.forEach(staff => {
         staff.notification.push(notification);
         this.pouchService.updateStaff(staff).then(result => {
@@ -188,7 +189,7 @@ export class ViewRevenueCounterProductComponent implements OnInit {
 
     this.pouchService.getStaffs().then(staffs => {
       staffs = staffs.filter(data => data.branch == notification.branch);
-      staffs = staffs.filter(data => data.department == 'Revenue' || data.department == counterproduct.sourcedepartment  || data.department == 'Account' || data.department == 'Audit');
+      staffs = staffs.filter(data => data.department == 'Revenue' || data.department == counterproduct.sourcedepartment || data.department == 'Account' || data.department == 'Audit');
       staffs.forEach(staff => {
         staff.notification.push(notification);
         this.pouchService.updateStaff(staff).then(result => {
@@ -196,6 +197,24 @@ export class ViewRevenueCounterProductComponent implements OnInit {
         })
       })
     });
+  }
+
+  addDamagedProduct(counterproduct) {
+    let dialogRef = this.dialog.open(AddDamagedproductsComponent, {
+      height: '500px',
+      width: '500px',
+      data: {
+        content: counterproduct,
+        action: 'add'
+      }
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      console.log(result);
+      if (!result) {
+        return;
+      }
+      this.loadCounterProducts();
+    })
   }
 
 
@@ -213,6 +232,10 @@ export class ViewRevenueCounterProductComponent implements OnInit {
     else {
       this.tableCheck = false;
     }
+  }
+
+  navdamagedproducts() {
+    this.router.navigate(['/view-damagedproducts']);
   }
 
   deleteSelectedCounterProduct() {

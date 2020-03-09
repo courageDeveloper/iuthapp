@@ -29,6 +29,11 @@ h3{font-size:24px;}
   margin-left: 5px;
 }
 
+.scrollbar {
+  overflow: auto;
+  height: 350px;
+}
+
 .right{
   text-align: -webkit-right;
 }
@@ -319,6 +324,10 @@ ng2-auto-complete{
 
 .calculator-container-general {
   padding-left: 25px;
+}
+
+.btn-size {
+   height: 25px;
 }
 
 

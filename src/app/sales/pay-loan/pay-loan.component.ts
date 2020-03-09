@@ -19,6 +19,8 @@ export class AddPayloanComponent implements OnInit {
   amountToPay: any;
   isError = false;
   errorMessage = '';
+  globalBalance: any;
+  globalAmountLoaned: any;
 
   constructor(public dialogRef: MatDialogRef<AddPayloanComponent>, @Inject(MAT_DIALOG_DATA) public data: any, private router: Router, public toastr: ToastrService, public pouchService: PouchService) {
     this.title = 'Pay';
@@ -42,23 +44,23 @@ export class AddPayloanComponent implements OnInit {
 
   amountChanged(event) {
     if (this.data.loan.isoncredit) {
-     if(this.data.loan.amountloaned < this.amount) {
-       this.errorMessage = "You have exceded the amount meant to be paid";
-       this.isError = true;
-     }
-     else {
-      this.errorMessage = "";
-      this.isError = false;
-     }
-    }
-    else if(!this.data.loan.isoncredit) {
-      if(this.data.loan.balance < this.amount) {
+      if (this.data.loan.amountloaned < this.amount) {
         this.errorMessage = "You have exceded the amount meant to be paid";
         this.isError = true;
       }
       else {
-       this.errorMessage = "";
-       this.isError = false;
+        this.errorMessage = "";
+        this.isError = false;
+      }
+    }
+    else if (!this.data.loan.isoncredit) {
+      if (this.data.loan.balance < this.amount) {
+        this.errorMessage = "You have exceded the amount meant to be paid";
+        this.isError = true;
+      }
+      else {
+        this.errorMessage = "";
+        this.isError = false;
       }
     }
   }
@@ -90,9 +92,39 @@ export class AddPayloanComponent implements OnInit {
       }
     }
     this.pouchService.updateSale(this.data.loan).then(result => {
+      if (this.data.loan.patientid != "") {
+        this.staffDebtUpdate(this.data.loan.patientid);
+      }
+      else if (this.data.loan.patientid == "") {
+        this.staffDebtUpdate(this.data.loan.departmentid);
+      }
       this.dialogRef.close(true);
     });
 
+  }
+
+  staffDebtUpdate(id) {
+    this.pouchService.getStaff(id).then(staff => {
+      if (staff != undefined) {
+        staff.debt -= this.amount;
+        this.pouchService.updateStaff(staff);
+      }
+      else if (staff == undefined) {
+        this.pouchService.getPatient(id).then(patient => {
+          if (patient != undefined) {
+            patient.debt -= this.amount;
+            this.pouchService.updatePatient(patient);
+          }
+          else if (staff == undefined && patient == undefined) {
+            console.log('reached');
+            this.pouchService.getDepartment(id).then(department => {
+              department.debt -= this.amount;
+              this.pouchService.updateDepartment(department);
+            });
+          }
+        });
+      }
+    });
   }
 
 

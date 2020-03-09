@@ -1,0 +1,78 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <i class="material-icons" style="color: #00254e; cursor: pointer; text-align: left" matTooltip="Close"
+      (click)="onNoClick()">close</i>
+    <div class="row">
+      <div class="col-md-12">
+        <!-- <div class="card"> -->
+        <div style="text-align: center;">
+          <h2 style="color:#00254e;"><b>{{title}} Payroll</b></h2>
+        </div>
+
+        <div id="printArea">
+          <div class="row">
+            <div class="col-md-12">
+              <div class="info" style="text-align: center;">
+                {{expense.date}}
+              </div>
+              <div class="info" style="display: block;margin-left: 0;">
+                <h2 style="font-size: 1.5em; text-align: center;">Igbinedion University Teaching Hospital</h2>
+                <p style="font-size: 1em;color: #666;line-height: 1.2em; text-align: center;">
+                  {{expense.expensename}}
+                </p>
+                <p style="font-size: 1em;color: #666;line-height: 1.2em; text-align: center;">
+                  {{expense.branch}}
+                </p>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <div style="text-align: center">
+                <div class="info" style="display: block;margin-left: 0;">
+                  <p style="font-size: .9em;color: #666;line-height: 1.2em;">
+                    <strong>Staff</strong> : {{expense.staffname}}
+                  </p>
+                </div>
+                <div class="info" style="display: block;margin-left: 0;">
+                  <p style="font-size: .9em;color: #666;line-height: 1.2em;">
+                    <strong>Staff Code </strong> : <b>{{staffCode}}</b>
+                  </p>
+                </div>
+                <div class="info" style="display: block;margin-left: 0;">
+                  <p style="font-size: .9em;color: #666;line-height: 1.2em;">
+                    <strong>Staff Department </strong> : {{staffDepartment}}
+                  </p>
+                </div>
+                <div class="info" style="display: block;margin-left: 0;">
+                  <p style="font-size: .9em;color: #666;line-height: 1.2em;">
+                    <strong>Description </strong> : {{expense.description}}
+                  </p>
+                </div>
+                <div class="info" style="display: block;margin-left: 0;">
+                  <p style="font-size: .9em;color: #666;line-height: 1.2em;">
+                    <strong>Amount Paid </strong> : {{expense.amount}}
+                  </p>
+                </div>
+                <div class="info" style="display: block;margin-left: 0;">
+                  <p style="font-size: .9em;color: #666;line-height: 1.2em;">
+                    <strong>Amount Paid In Words </strong> : {{amountInWords}} naira only.
+                  </p>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <button mat-stroked-button class="btn btn-info hide-btn" style="float:right;" (click)="print()"> PRINT
+              </button>
+            </div>
+          </div>
+
+          <div class="clearfix"></div>
+        </div>
+        <!-- </div> -->
+      </div>
+    </div>
+  </div>
+</div>

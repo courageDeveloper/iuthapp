@@ -17,6 +17,7 @@ export class UserProfileComponent implements OnInit {
   departmentNames: any[];
   errorMessageUser;
   errorMessage;
+  checkboxes: any;
   disabled = false;
   emailValidate = "[A-Za-z0-9._%+-]{3,}@[a-zA-Z]{3,}([.]{1}[a-zA-Z]{2,}|[.]{1}[a-zA-Z]{2,}[.]{1}[a-zA-Z]{2,})";
   staffForm = new FormGroup({
@@ -40,6 +41,8 @@ export class UserProfileComponent implements OnInit {
     email: new FormControl(),
     dateofentry: new FormControl(),
     sex: new FormControl(),
+    roles: new FormControl(),
+    isswitchedtable: new FormControl(),
     notification: new FormControl(),
     expenses: new FormControl()
   });
@@ -66,12 +69,15 @@ export class UserProfileComponent implements OnInit {
       email: '',
       dateofentry: new Date(),
       sex: 'Male',
+      isswitchedtable: false,
+      roles: [],
       notification: [],
       expenses: []
     }
   }
 
   ngOnInit() {
+    this.staff.roles = [{ role: 'Supervisor', isChecked: false }, { role: 'Evacuate', isChecked: false }, { role: 'Refund/Return', isChecked: false }, { role: 'Pay Loan', isChecked: false }];
 
     this.sexes = ['Male', 'Female'];
     this.branchNames = ['IUTH(Okada)', 'Benin Centre'];
@@ -96,12 +102,15 @@ export class UserProfileComponent implements OnInit {
       bankaccount: [this.staff.bankaccount],
       mobile: [this.staff.mobile],
       address: [this.staff.address],
-      email: [this.staff.email, Validators.compose([Validators.required, Validators.pattern(this.emailValidate)])],
+      email: [this.staff.email, Validators.compose([Validators.pattern(this.emailValidate)])],
       dateofentry: [this.staff.dateofentry],
       sex: [this.staff.sex],
+      isswitchedtable: [this.staff.isswitchedtable],
+      roles: [this.staff.roles],
       notification: [this.staff.notification],
       expenses: [this.staff.expenses]
     })
+
   }
 
   changeBranch(branch) {
@@ -117,7 +126,6 @@ export class UserProfileComponent implements OnInit {
   isActiveToggleTextPassword: Boolean = true;
   toggleTextPassword(): void {
     this.isActiveToggleTextPassword = (this.isActiveToggleTextPassword == true) ? false : true;
-    console.log('Clicked');
   }
 
   getType() {
@@ -129,7 +137,7 @@ export class UserProfileComponent implements OnInit {
     this.errorMessageUser = "";
     this.pouchService.getStaffs().then(data => {
       data.forEach(item => {
-        if (this.staff.username == item.username) {
+        if (this.staff.username == item.username && this.staff.username != "") {
           this.errorMessageUser = "This User name is already taken";
           this.disabled = true;
         }
@@ -142,7 +150,7 @@ export class UserProfileComponent implements OnInit {
     this.errorMessage = "";
     this.pouchService.getStaffs().then(data => {
       data.forEach(item => {
-        if (this.staff.email == item.email) {
+        if (this.staff.email == item.email && this.staff.email != "") {
           this.errorMessage = "This email already exists";
           this.disabled = true;
         }
@@ -151,6 +159,7 @@ export class UserProfileComponent implements OnInit {
   }
 
   submit() {
+
     this.staff.dob = new Date(this.staff.dob).toString();
     this.staff.dateofentry = new Date(this.staff.dateofentry).toString();
     this.pouchService.saveStaff(this.staff).then(res => {
@@ -174,12 +183,27 @@ export class UserProfileComponent implements OnInit {
         mobile: '',
         address: '',
         email: '',
+        isswitchedtable: false,
         dateofentry: new Date(),
         sex: 'Male',
+        roles: [{ role: 'Supervisor', isChecked: false }, { role: 'Evacuate', isChecked: false }, { role: 'Refund/Return', isChecked: false }, { role: 'Pay Loan', isChecked: false }],
         notification: [],
         expenses: []
       }
     });
+  }
+
+
+
+  selectCheckbox(event, i) {
+    if (event.checked) {
+      var role = this.staff.roles[i];
+      role.isChecked = true;
+    }
+    else {
+      var role = this.staff.roles[i];
+      role.isChecked = false;
+    }
   }
 
 }

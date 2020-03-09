@@ -34,7 +34,7 @@ export class AddCentralStoreCategoryComponent implements OnInit {
       productname: '',
       subgroup: '',
       costprice: 0,
-      subitemno: 0,
+      subitemno: 1,
       branch: '',
       department: 'Central Store',
       products: []
@@ -68,7 +68,6 @@ export class AddCentralStoreCategoryComponent implements OnInit {
   }
 
   submit() {
-
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(item => {
       this.productcategory.branch = item.branch;
@@ -80,7 +79,6 @@ export class AddCentralStoreCategoryComponent implements OnInit {
   }
 
   edit() {
-    
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(item => {
       this.productcategory.branch = item.branch;

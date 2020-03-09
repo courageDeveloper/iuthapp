@@ -13,24 +13,24 @@
                 <div class="col-md-3">
                   <mat-form-field class="example-full-width">
                     <input matInput placeholder="Username" [(ngModel)]="staff.username" name="username"
-                      (ngModelChange)="checkUser()" [formControl]="staffForm.controls['username']" required>
+                      (ngModelChange)="checkUser()" [formControl]="staffForm.controls['username']">
                   </mat-form-field>
                   <span class="text-danger">{{errorMessageUser}}</span>
                 </div>
                 <div class="col-md-5">
                   <mat-form-field class="example-full-width">
                     <input matInput placeholder="Email address" type="email" [(ngModel)]="staff.email" name="email"
-                      (ngModelChange)="checkEmail()" [formControl]="staffForm.controls['email']" required>
+                      (ngModelChange)="checkEmail()" [formControl]="staffForm.controls['email']">
                   </mat-form-field>
-                  <span class="text-danger" 
+                  <span class="text-danger"
                     *ngIf="!staffForm.controls.email.valid && staffForm.controls.email.dirty">Please
                     enter a valid email.</span>
-                    <span class="text-danger">{{errorMessage}}</span>
+                  <span class="text-danger">{{errorMessage}}</span>
                 </div>
                 <div class="col-md-4">
                   <mat-form-field class="example-full-width">
                     <input matInput [type]="getType()" placeholder="Password" [(ngModel)]="staff.password"
-                      name="password" [formControl]="staffForm.controls['password']" required>
+                      name="password" [formControl]="staffForm.controls['password']">
                   </mat-form-field>
                   <i class="material-icons align-end" (click)="toggleTextPassword()">visibility</i>
                 </div>
@@ -54,8 +54,9 @@
                   <mat-form-field class="example-full-width">
                     <mat-label>Branch</mat-label>
                     <mat-select [value]="staff.branch" [(ngModel)]="staff.branch" name="branch"
-                      [formControl]="staffForm.controls['branch']"  required>
-                      <mat-option [value]="branch" *ngFor="let branch of branchNames" (click)="changeBranch(branch)">{{branch}}</mat-option>
+                      [formControl]="staffForm.controls['branch']" required>
+                      <mat-option [value]="branch" *ngFor="let branch of branchNames" (click)="changeBranch(branch)">
+                        {{branch}}</mat-option>
                     </mat-select>
                   </mat-form-field>
                 </div>
@@ -148,7 +149,14 @@
                   </mat-form-field>
                 </div>
               </div>
-              <button mat-raised-button type="submit" class="btn btn-color pull-right" [disabled]='staffForm.invalid || disabled'>Submit</button>
+              <div class="row">
+                <div class="col-md-12">
+                  <label> Roles: </label>
+                  <mat-checkbox *ngFor = 'let role of staff.roles; let i = index' (change)="selectCheckbox($event, i)" style="color: black;">{{role.role}}</mat-checkbox>
+                </div>
+              </div>
+              <button mat-raised-button type="submit" class="btn btn-color pull-right"
+                [disabled]='staffForm.invalid || disabled'>Submit</button>
               <div class="clearfix"></div>
             </form>
           </div>

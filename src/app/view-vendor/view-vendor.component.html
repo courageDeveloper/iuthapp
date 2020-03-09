@@ -1,0 +1,116 @@
+<div class="main-content">
+    <div class="container-fluid">
+        <div *ngIf="tableCheck" class="icon-align"><i style="font-size: 45px; cursor: pointer;"
+                class="material-icons delete-color" matTooltip="Delete Selected Vendor"
+                (click)="deleteSelectedVendor()">delete</i> </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div *ngIf="!show"> <button mat-raised-button class="btn import-btn pull-right"
+                        (click)="import()">IMPORT <i class="material-icons" style="color: white;">get_app</i></button>
+                </div>
+                <div *ngIf="show"> <button mat-raised-button class="btn import-btn pull-right" text-uppercase><a
+                            href="assets/excel/iuth-vendor.xlsx" style="color: white;">Download Sample</a> <i
+                            class="material-icons" style="color: white;">get_app</i></button></div>
+                <div> <button mat-raised-button class="btn pull-right card-color" (click)="export(json, name)">EXPORT <i
+                            class="material-icons" style="color: white;">reply</i></button></div>
+                <input accept="*" *ngIf="show" class="margin-btm" type="file" (change)="handleFiles($event)" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header card-header-iuth">
+                        <h4 class="card-title" style="color:white;"><b>View Vendors</b></h4>
+                        <p class="card-category" style="color:white;"> Records of all vendors at IUTH</p>
+                    </div>
+                    <div class="card-body">
+                        <mat-form-field class="example-full-width" style="float: right;">
+                            <input matInput placeholder="Search" (change)="filterString($event)">
+                        </mat-form-field>
+                        <div class="table-responsive">
+                            <table id="dtBasicExample" class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th *ngIf="isUserPermitted">
+
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Full Name
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Phone Number
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Branch
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Address
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Account Number
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Owed
+                                        </th>
+                                        <th>
+
+                                        </th>
+                                        <th *ngIf="isUserPermitted">
+
+                                        </th>
+                                        <th>
+
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let vendor of paginatedVendors">
+                                        <th scope="row" *ngIf="isUserPermitted">
+                                            <mat-checkbox (change)="selectedVendor(vendor, $event)"></mat-checkbox>
+                                        </th>
+                                        <td>
+                                            {{vendor.fullname}}
+                                        </td>
+                                        <td>
+                                            {{vendor.mobile}}
+                                        </td>
+                                        <td>
+                                            {{vendor.branch}}
+                                        </td>
+                                        <td>
+                                            {{vendor.address}}
+                                        </td>
+                                        <td class="text-primary">
+                                            {{vendor.accountnumber}}
+                                        </td>
+                                        <td class="text-primary">
+                                            {{vendor.balance}}
+                                        </td>
+                                        <td style="cursor: pointer;">
+                                            <i class="material-icons" matTooltip="Edit Vendor"
+                                                (click)="editVendor(vendor)">edit</i>
+                                        </td>
+                                        <td *ngIf="isUserPermitted">
+                                            <i class="material-icons delete-color" matTooltip="Delete Vendor"
+                                                (click)="deleteVendor(vendor)">delete</i>
+                                        </td>
+                                        <td>
+                                            <i class="material-icons" matTooltip="View History"
+                                                (click)="viewHistory(vendor)">assignment</i>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <button mat-stroked-button style="float: right; margin: 5px;" class="btn btn-info"
+                            (click)="next()" [disabled]="!isNextActive"> NEXT </button>
+                        <button mat-stroked-button style="float: right; margin: 5px;" class="btn btn-warning"
+                            (click)="previous()" [disabled]="!isPreviousActive"> PREVIOUS </button>
+                        <button mat-stroked-button style="float: right; margin: 5px;" class="btn btn-success"
+                            (click)="goToStart()" [disabled]="!isPreviousActive"> GO TO START </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

@@ -29,28 +29,110 @@ export class ViewStaffComponent implements OnInit {
   convertFiles;
   newArray;
   excelBuffer: any;
+  isUserPermitted = false;
   public staffs: Array<Staff> = [];
   worksheet: XLSX.WorkSheet;
   workbook: XLSX.WorkBook
   exportedStaffsArray: any;
+  paginatedStaffs;
+  isPreviousActive = false;
+  isNextActive = false;
 
 
-  constructor(public pouchService: PouchService, private router: Router, public dialog: MatDialog, public toastr: ToastrService) { }
+  constructor(public pouchService: PouchService, private router: Router, public dialog: MatDialog, public toastr: ToastrService) {
+
+  }
 
   ngOnInit() {
+    this.pouchService.paginationId = null;
+    this.pouchService.userPermission().then(result => {
+      if (result.department == 'Admin') {
+        this.isUserPermitted = true;
+      }
+    });
+
     this.loadStaff();
   }
 
-  loadStaff() {
-    this.pouchService.getStaffs().then(data => {
-      this.staffs = data;
+  reloadStaff() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.pouchService.getStaffs().then(data => {
+        //console.log(data);
+        this.staffs = data.filter(data => data.branch == staff.branch);
 
-      $(document).ready(function () {
-        $('#dtBasicExample').DataTable();
-        $('.dataTables_length').addClass('bs-select');
+        this.pouchService.paginationId = this.paginatedStaffs[0].id; //Reverse of what is meant to be;
+
+        this.pouchService.paginateByBranchRemoveItem('staff', this.pouchService.paginationId).then(paginatedata => {
+          this.paginatedStaffs = paginatedata;
+          
+          this.isNextActive = true;
+        });
       });
     });
+
   }
+
+  loadStaff() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.pouchService.getStaffs().then(data => {
+        
+        this.staffs = data.filter(data => data.branch == staff.branch);
+        this.pouchService.paginationId = this.staffs[this.staffs.length - 1].id; //Reverse of what is meant to be;
+
+        this.pouchService.paginateByBranch2('staff', this.pouchService.paginationId).then(paginatedata => {
+          this.paginatedStaffs = paginatedata;
+
+          $(document).ready(function () {
+            $('#dtBasicExample').DataTable({
+              "paging": false,
+              "searching": false
+            });
+            $('.dataTables_length').addClass('bs-select');
+          });
+          this.isNextActive = true;
+        });
+
+      });
+    });
+
+  }
+
+
+  next() {
+    this.pouchService.paginationId = this.paginatedStaffs[this.paginatedStaffs.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByBranch2('staff', this.pouchService.paginationId).then(paginatedata => {
+      this.paginatedStaffs = paginatedata;
+
+      this.isPreviousActive = true;
+    });
+  }
+
+  previous() {
+    this.pouchService.paginationId = this.paginatedStaffs[this.paginatedStaffs.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByBranchPrev2('staff', this.pouchService.paginationId).then(paginatedata => {
+      this.paginatedStaffs = paginatedata;
+
+      if (this.paginatedStaffs.length < this.pouchService.limitRange) {
+        this.isPreviousActive = false;
+      }
+    });
+  }
+
+  goToStart() {
+    this.isPreviousActive = false;
+
+    this.pouchService.paginationId = this.paginatedStaffs[this.paginatedStaffs.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByBranchStart('staff', this.pouchService.paginationId).then(paginatedata => {
+      this.paginatedStaffs = paginatedata;
+      
+    });
+  }
+
 
   editStaff(staff) {
     this.router.navigate(['edit-user-profile', staff.id]);
@@ -69,14 +151,10 @@ export class ViewStaffComponent implements OnInit {
       if (result) {
         this.pouchService.deleteStaff(staff).then(res => {
           this.toastr.success('Staff has been deleted successfully');
-          this.loadStaff();
+          this.reloadStaff();
         });
       }
     });
-
-  }
-
-  viewHistory() {
 
   }
 
@@ -87,7 +165,7 @@ export class ViewStaffComponent implements OnInit {
     else {
       staff['selected'] = false;
     }
-    this.newStaffs = this.staffs.filter(data => data['selected'] == true);
+    this.newStaffs = this.paginatedStaffs.filter(data => data['selected'] == true);
     if (this.newStaffs.length > 0) {
       this.tableCheck = true;
     }
@@ -160,6 +238,7 @@ export class ViewStaffComponent implements OnInit {
                   email: item['EMAIL'],
                   dateofentry: item['DATE OF EMPLOYMENT'],
                   sex: item['SEX'],
+                  roles: [{ role: 'Supervisor', isChecked: false }, { role: 'Evacuate', isChecked: false }, { role: 'Refund/Return', isChecked: false }, { role: 'Pay Loan', isChecked: false }],
                   notification: [],
                   expenses: []
                 }
@@ -171,7 +250,7 @@ export class ViewStaffComponent implements OnInit {
                   arrayStaff.dob = new Date((arrayStaff.dob - (25567 + 2)) * 86400 * 1000);
                   arrayStaff.dateofentry = new Date((arrayStaff.dateofentry - (25567 + 2)) * 86400 * 1000);
                   this.pouchService.saveStaff(arrayStaff).then(res => {
-                    this.loadStaff();
+                    this.reloadStaff();
                   });
                 });
               }, 3000);
@@ -197,7 +276,7 @@ export class ViewStaffComponent implements OnInit {
       if (result) {
         this.newStaffs.forEach(staff => {
           this.pouchService.deleteStaff(staff).then(res => {
-            this.loadStaff();
+            this.reloadStaff();
             this.tableCheck = false;
           });
         });
@@ -243,6 +322,22 @@ export class ViewStaffComponent implements OnInit {
   private saveAsExcelFile(buffer: any, fileName: string): void {
     const data: Blob = new Blob([buffer], { type: EXCEL_TYPE });
     FileSaver.saveAs(data, fileName + '_export_' + new Date().getTime() + EXCEL_EXTENSION);
+  }
+
+  viewHistory(staff) {
+    this.router.navigate(['view-history-staff', staff.id]);
+  }
+
+  filterString(event: any): void {
+    const value: string = event.target.value ? event.target.value.toLowerCase() : '';
+    this.paginatedStaffs = [];
+
+    for (let staff of this.staffs) {
+      if ((staff.firstname + ' ' + staff.lastname).toLowerCase().indexOf(value) !== -1) {
+        this.paginatedStaffs.push(staff);
+        this.paginatedStaffs = this.paginatedStaffs.slice(0, this.pouchService.limitRange);
+      }
+    }
   }
 
 }

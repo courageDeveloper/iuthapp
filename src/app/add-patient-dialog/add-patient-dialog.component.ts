@@ -60,7 +60,7 @@ export class AddPatientDialogComponent implements OnInit {
   }
 
   ngOnInit() {
-  
+
     this.sexes = ['Male', 'Female'];
 
     this.patientForm = this.formBuilder.group({
@@ -110,28 +110,34 @@ export class AddPatientDialogComponent implements OnInit {
   }
 
   submit() {
-    this.patient.dob = new Date(this.patient.dob).toString();
-    this.patient.dateofregistration = new Date(this.patient.dateofregistration).toString();
-    this.pouchService.savePatient(this.patient).then(res => {
-      this.toastr.success('Patient has been registered successfully');
-      this.patient = {
-        id: Math.round((new Date()).getTime()).toString(),
-        rev: '',
-        firstname: '',
-        lastname: '',
-        branch: '',
-        department: '',
-        dob: new Date(),
-        patientno: '',
-        position: '',
-        mobile: '',
-        address: '',
-        debt: 0,
-        email: '',
-        dateofregistration: new Date(),
-        sex: 'Male',
-        sales: []
-      }
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(item => {
+      this.patient.branch = item.branch;
+      this.patient.dob = new Date(this.patient.dob).toString();
+      this.patient.dateofregistration = new Date(this.patient.dateofregistration).toString();
+      this.pouchService.savePatient(this.patient).then(res => {        
+        this.toastr.success('Patient has been registered successfully');
+        this.patient = {
+          id: Math.round((new Date()).getTime()).toString(),
+          rev: '',
+          firstname: '',
+          lastname: '',
+          branch: '',
+          department: '',
+          dob: new Date(),
+          patientno: '',
+          position: '',
+          mobile: '',
+          address: '',
+          debt: 0,
+          email: '',
+          dateofregistration: new Date(),
+          sex: 'Male',
+          sales: []
+        }
+
+        this.dialogRef.close(true);
+      })
     });
   }
 

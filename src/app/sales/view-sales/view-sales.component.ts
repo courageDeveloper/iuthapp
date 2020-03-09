@@ -19,6 +19,7 @@ import { ReceiptComponent } from '../../receipt/receipt.component';
 import { ReceiptAccountComponent } from '../../receipt-account/receipt-account.component';
 import { ViewReceiptComponent } from '../../view-receipt/view-receipt.component';
 import { ViewReceiptAccountComponent } from '../../view-receipt-account/view-receipt-account.component';
+import { DataService } from '../../services/data.service';
 
 @Component({
   selector: 'app-view-sales',
@@ -40,6 +41,7 @@ export class ViewSalesComponent implements OnInit {
   worksheet: XLSX.WorkSheet;
   workbook: XLSX.WorkBook
   exportedSalesArray: any;
+  isUserPermitted = true;
   branch;
   promise1;
   promise2;
@@ -48,13 +50,205 @@ export class ViewSalesComponent implements OnInit {
   promise5;
   dateFrom: any;
   dateTo: any;
+  timeFrom: any;
+  timeTo: any;
+  isEvacuate = false;
+  isSupervisor = false;
+  isRefund = false;
+  departments: any[];
+  selectedDepartment;
+  months: any[];
+  years: any[];
+  selectedMonth;
+  selectedYear = new Date().getFullYear();
+  isFilterMonth = false;
+  isFilterDepartment = false;
+  paginatedSales;
+  isPreviousActive = false;
+  isNextActive = false;
 
-  constructor(public pouchService: PouchService, private router: Router, private dialog: MatDialog, public toastr: ToastrService) { }
+  constructor(public pouchService: PouchService, private router: Router, private data: DataService, private dialog: MatDialog, public toastr: ToastrService) { }
 
   ngOnInit() {
+    this.months = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+
+    this.departments = ['Main Pharmacy', 'GOPD Pharmacy', 'Laboratory',
+      'Radiology', 'Account', 'Revenue', 'Audit'];
+
+    this.timeFrom = '00:00';
+    this.timeTo = '00:00';
+
+    this.pouchService.userPermission().then(result => {
+      if (result.department == 'Admin') {
+        this.isUserPermitted = false;
+      }
+    });
+
     this.loadSales();
     this.loadTotalSales();
+    this.getYears();
+    this.getMonths();
+    this.checkRoles();
   }
+
+  getYears() {
+    this.years = [];
+    var currentYear = new Date().getFullYear();
+
+    for (var i = 1980; i <= currentYear; i++) {
+
+      this.years.push(i);
+    }
+  }
+
+  getMonths() {
+    var indexMonth = new Date().getMonth();
+    this.selectedMonth = this.months[indexMonth];
+  }
+
+  filterByMonth() {
+    this.isFilterMonth = true;
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.pouchService.getSales().then(data => {
+        if (staff.department != "Account" && staff.department != "Revenue" && staff.department != "Audit") { //If not those departments then filter by specific department logged.
+          this.sales = data.filter(data => data.branch == staff.branch);
+        }
+        else {
+          if (!this.isFilterDepartment) {
+            this.sales = data.filter(data => data.branch == staff.branch);
+          }
+          else {
+            this.sales = data.filter(data => data.branch == staff.branch && data.department == this.selectedDepartment);
+          }
+        }
+        this.sales = this.sales.filter(data => data.iscomplete == true);
+        this.sales = this.sales.filter(data => data.isoncredit == false);
+        this.sales = this.sales.filter(data => {
+          var dbMonth = this.months[new Date(data.date).getMonth()];
+          var dbYear = new Date(data.date).getFullYear();
+
+          return this.selectedMonth == dbMonth && this.selectedYear == dbYear;
+
+        });
+        this.pouchService.paginationId = this.sales[0].id; //Reverse of what is meant to be;
+
+        this.pouchService.paginateBySale('sale', this.pouchService.paginationId, undefined, false, undefined, true).then(paginatedata => {
+          this.paginatedSales = paginatedata;
+          this.paginatedSales = this.paginatedSales.filter(data => {
+            var dbMonth = this.months[new Date(data.date).getMonth()];
+            var dbYear = new Date(data.date).getFullYear();
+
+            return this.selectedMonth == dbMonth && this.selectedYear == dbYear;
+
+          });
+        });
+
+        this.getTotalSales(this.sales);
+      });
+    });
+  }
+
+  checkRoles() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      staff.roles.map(role => {
+        if (role.role == "Evacuate" && role.isChecked == true) {
+          this.isEvacuate = true;
+        }
+        if (role.role == "Refund/Return" && role.isChecked == true) {
+          this.isRefund = true;
+        }
+      })
+    });
+  }
+
+  filterByDepartment() {
+    this.isFilterDepartment = true;
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.pouchService.getSales().then(data => {
+        if (this.selectedDepartment != "Account" && this.selectedDepartment != "Revenue" && this.selectedDepartment != "Audit") { //If not those departments then filter by specific department logged.
+          if (!this.isFilterMonth) {
+            this.sales = data.filter(data => data.branch == staff.branch && data.department == this.selectedDepartment);
+
+            this.pouchService.paginationId = this.sales[0].id; //Reverse of what is meant to be;
+            this.pouchService.paginateBySale('sale', this.pouchService.paginationId, this.selectedDepartment, false, undefined, true).then(paginatedata => {
+              this.paginatedSales = paginatedata;
+            });
+          }
+          else {
+            this.sales = data.filter(data => {
+              var dbMonth = this.months[new Date(data.date).getMonth()];
+              var dbYear = new Date(data.date).getFullYear();
+              return this.selectedMonth == dbMonth && this.selectedYear == dbYear && data.branch == staff.branch && data.department == this.selectedDepartment;
+            });
+
+            this.pouchService.paginationId = this.sales[0].id; //Reverse of what is meant to be;
+            this.pouchService.paginateBySale('sale', this.pouchService.paginationId, this.selectedDepartment, false, undefined, true).then(paginatedata => {
+              this.paginatedSales = paginatedata;
+              this.paginatedSales = data.filter(data => {
+                var dbMonth = this.months[new Date(data.date).getMonth()];
+                var dbYear = new Date(data.date).getFullYear();
+                return this.selectedMonth == dbMonth && this.selectedYear == dbYear && data.branch == staff.branch && data.department == this.selectedDepartment;
+              });
+            });
+          }
+        }
+        else {
+          if (!this.isFilterMonth) {
+            this.sales = data.filter(data => data.branch == staff.branch);
+
+            this.pouchService.paginationId = this.sales[0].id; //Reverse of what is meant to be;
+            this.pouchService.paginateBySale('sale', this.pouchService.paginationId, undefined, false, undefined, true).then(paginatedata => {
+              this.paginatedSales = paginatedata;
+            });
+          }
+          else {
+            this.sales = data.filter(data => {
+              var dbMonth = this.months[new Date(data.date).getMonth()];
+              var dbYear = new Date(data.date).getFullYear();
+              return this.selectedMonth == dbMonth && this.selectedYear == dbYear && data.branch == staff.branch;
+            });
+
+            this.pouchService.paginationId = this.sales[0].id; //Reverse of what is meant to be;
+            this.pouchService.paginateBySale('sale', this.pouchService.paginationId, undefined, false, undefined, true).then(paginatedata => {
+              this.paginatedSales = paginatedata;
+
+              this.paginatedSales = data.filter(data => {
+                var dbMonth = this.months[new Date(data.date).getMonth()];
+                var dbYear = new Date(data.date).getFullYear();
+                return this.selectedMonth == dbMonth && this.selectedYear == dbYear && data.branch == staff.branch;
+              });
+            });
+          }
+        }
+        this.sales = this.sales.filter(data => data.iscomplete == true);
+        this.sales = this.sales.filter(data => data.isoncredit == false);
+        this.getTotalSales(this.sales);
+      });
+    });
+  }
+
+  reloadSales() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+
+      this.pouchService.getSales().then(data => {
+        this.sales = data.filter(data => data.branch == staff.branch);
+        this.sales = this.sales.filter(data => data.iscomplete == true);
+        this.sales = this.sales.filter(data => data.isoncredit == false);
+        
+        this.pouchService.paginationId = this.sales[0].id; //Reverse of what is meant to be;
+
+        this.pouchService.paginateBySaleRemoveItem('sale', this.pouchService.paginationId, undefined, false, undefined, true).then(paginatedata => {
+          this.paginatedSales = paginatedata;
+
+        });
+      });
+    });
+  }
+
 
   loadSales() {
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
@@ -62,15 +256,131 @@ export class ViewSalesComponent implements OnInit {
 
       this.pouchService.getSales().then(data => {
         this.sales = data.filter(data => data.branch == staff.branch);
-        this.sales = this.sales.filter(data => data.iscomplete == true || data.isowing == true);
+        this.sales = this.sales.filter(data => data.iscomplete == true);
         this.sales = this.sales.filter(data => data.isoncredit == false);
         
-        $(document).ready(function () {
-          $('#dtBasicExample').DataTable();
-          $('.dataTables_length').addClass('bs-select');
+        this.pouchService.paginationId = this.sales[0].id; //Reverse of what is meant to be;
+
+        this.pouchService.paginateBySale('sale', this.pouchService.paginationId, undefined, false, undefined, true).then(paginatedata => {
+          this.paginatedSales = paginatedata;
+
+          $(document).ready(function () {
+            $('#dtBasicExample').DataTable({
+              "paging": false,
+              "searching": false
+            });
+            $('.dataTables_length').addClass('bs-select');
+          });
+          this.isNextActive = true;
         });
       });
     });
+  }
+
+  next() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      //this.department = staff.department;
+
+      this.pouchService.paginationId = this.paginatedSales[this.paginatedSales.length - 1].id;  //Reverse of what is meant to be;
+
+      if (this.isFilterDepartment) {
+        if (staff.department != "Account" && staff.department != "Revenue" && staff.department != "Audit") { //If not those departments then filter by specific department logged.
+          this.pouchService.paginateBySale('sale', this.pouchService.paginationId, this.selectedDepartment, false, undefined, true).then(paginatedata => {
+            this.paginatedSales = paginatedata;
+
+            this.isPreviousActive = true;
+          });
+        }
+        else {
+          this.pouchService.paginateBySale('sale', this.pouchService.paginationId, undefined, false, undefined, true).then(paginatedata => {
+            this.paginatedSales = paginatedata;
+
+            this.isPreviousActive = true;
+          });
+        }
+      }
+      else {
+        this.pouchService.paginateBySale('sale', this.pouchService.paginationId, undefined, false, undefined, true).then(paginatedata => {
+          this.paginatedSales = paginatedata;
+
+          this.isPreviousActive = true;
+        });
+      }
+    });
+  }
+
+  previous() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      //this.department = staff.department;
+
+      this.pouchService.paginationId = this.paginatedSales[this.paginatedSales.length - 1].id;  //Reverse of what is meant to be;
+
+      if (this.isFilterDepartment) {
+        if (staff.department != "Account" && staff.department != "Revenue" && staff.department != "Audit") { //If not those departments then filter by specific department logged.
+          this.pouchService.paginateBySalePrev('sale', this.pouchService.paginationId, this.selectedDepartment, false, undefined, true).then(paginatedata => {
+            this.paginatedSales = paginatedata;
+
+          });
+        }
+        else {
+          this.pouchService.paginateBySalePrev('sale', this.pouchService.paginationId, undefined, false, undefined, true).then(paginatedata => {
+            this.paginatedSales = paginatedata;
+
+          });
+        }
+        if (this.paginatedSales.length < this.pouchService.limitRange) {
+          this.isPreviousActive = false;
+        }
+      }
+      else {
+        this.pouchService.paginateBySalePrev('sale', this.pouchService.paginationId, undefined, false, undefined, true).then(paginatedata => {
+          this.paginatedSales = paginatedata;
+
+          if (this.paginatedSales.length < this.pouchService.limitRange) {
+            this.isPreviousActive = false;
+          }
+        });
+      }
+    });
+  }
+
+  goToStart() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      //this.department = staff.department;
+
+      this.isPreviousActive = false;
+
+      this.pouchService.paginationId = this.paginatedSales[this.paginatedSales.length - 1].id;  //Reverse of what is meant to be;
+
+      if (this.isFilterDepartment) {
+        if (staff.department != "Account" && staff.department != "Revenue" && staff.department != "Audit") { //If not those departments then filter by specific department logged.
+          this.pouchService.paginateBySaleStart('sale', this.pouchService.paginationId, this.selectedDepartment, false, undefined, true).then(paginatedata => {
+            this.paginatedSales = paginatedata;
+
+          });
+        }
+        else {
+          this.pouchService.paginateBySaleStart('sale', this.pouchService.paginationId, undefined, false, undefined, true).then(paginatedata => {
+            this.paginatedSales = paginatedata;
+
+          });
+        }
+      }
+      else {
+        this.pouchService.paginateBySaleStart('sale', this.pouchService.paginationId, undefined, false, undefined, true).then(paginatedata => {
+          this.paginatedSales = paginatedata;
+
+        });
+      }
+    });
+  }
+
+
+  viewCounterProduct() {
+    this.router.navigate(['/general-counter-product']);
   }
 
   loadTotalSales() {
@@ -78,7 +388,7 @@ export class ViewSalesComponent implements OnInit {
     this.pouchService.getStaff(localStorageItem).then(staff => {
       this.pouchService.getSales().then(data => {
         this.totalSales = data.filter(data => data.branch == staff.branch);
-        this.totalSales = this.totalSales.filter(data => data.iscomplete == true || data.isowing == true);
+        this.totalSales = this.totalSales.filter(data => data.iscomplete == true);
         this.totalSales = this.totalSales.filter(data => data.isoncredit == false);
         this.getTotalSales(this.totalSales);
       });
@@ -95,7 +405,7 @@ export class ViewSalesComponent implements OnInit {
         return;
       }
       console.log(result);
-      this.loadSales();
+      this.reloadSales();
       this.router.navigate(['sales']);
     });
   }
@@ -115,13 +425,25 @@ export class ViewSalesComponent implements OnInit {
           this.promise1 = sale.productorder.map(async productorder => {
             await this.pouchService.getProductcategory(productorder.productcatid).then(productcategory => {
               this.promise2 = this.pouchService.getCounterProduct(productorder.id).then(async counterproduct => {
-                if (counterproduct.isUnitSelling == true) {
-                  counterproduct.suppliedunit += productorder.qty;
-                  counterproduct.totalsubitem += productcategory.subitemno;
+                if (productcategory != undefined) {
+                  if (counterproduct.isUnitSelling == true) {
+                    counterproduct.suppliedunit += productorder.qty;
+                    counterproduct.totalsubitem += productcategory.subitemno;
+                  }
+                  else if (counterproduct.isUnitSelling == false) {
+                    counterproduct.totalsubitem += productorder.qty;
+                    counterproduct.suppliedunit = Math.floor(counterproduct.totalsubitem / productcategory.subitemno);
+                  }
                 }
-                else if (counterproduct.isUnitSelling == false) {
-                  counterproduct.totalsubitem += productorder.qty;
-                  counterproduct.suppliedunit = Math.floor(counterproduct.totalsubitem / productcategory.subitemno);
+                else {
+                  if (counterproduct.isUnitSelling == true) {
+                    counterproduct.suppliedunit += productorder.qty;
+                    counterproduct.totalsubitem += counterproduct['initialsubitem'];
+                  }
+                  else if (counterproduct.isUnitSelling == false) {
+                    counterproduct.totalsubitem += productorder.qty;
+                    counterproduct.suppliedunit = Math.floor(counterproduct.totalsubitem / counterproduct['initialsubitem']);
+                  }
                 }
                 await this.pouchService.updateCounterProduct(counterproduct);
                 /*  if (sale.staffloan) {
@@ -171,8 +493,18 @@ export class ViewSalesComponent implements OnInit {
             });
             Promise.all([this.promise1, this.promise2, this.promise3, this.promise4, this.promise5]).then(res => {
               setTimeout(() => {
-                this.pouchService.deleteSale(sale).then(res => {
-                  this.loadSales();
+                this.pouchService.getIndividualSales().then(individualsales => {
+                  individualsales.map(individualsale => {
+                    individualsale.saleids.filter(data => data == sale.id);
+                    if (individualsale.saleids.length != 0) {
+                      individualsale.totaldailysales -= sale.amount;
+                      this.pouchService.updateIndividualSale(individualsale).then(res => {
+                        this.pouchService.deleteSale(sale).then(res => {
+                          this.reloadSales();
+                        });
+                      });
+                    }
+                  });
                 });
               }, 5000);
             })
@@ -184,8 +516,18 @@ export class ViewSalesComponent implements OnInit {
               if (result != undefined) {
                 result.debt -= sale.balance;
                 await this.pouchService.updateStaff(result).then(response => {
-                  this.pouchService.deleteSale(sale).then(res => {
-                    this.loadSales();
+                  this.pouchService.getIndividualSales().then(individualsales => {
+                    individualsales.map(individualsale => {
+                      individualsale.saleids.filter(data => data == sale.id);
+                      if (individualsale.saleids.length != 0) {
+                        individualsale.totaldailysales -= sale.amount;
+                        this.pouchService.updateIndividualSale(individualsale).then(res => {
+                          this.pouchService.deleteSale(sale).then(res => {
+                            this.reloadSales();
+                          });
+                        });
+                      }
+                    });
                   });
                 });
               }
@@ -194,8 +536,18 @@ export class ViewSalesComponent implements OnInit {
                   if (result != undefined) {
                     result.debt -= sale.balance;
                     await this.pouchService.updatePatient(result).then(response => {
-                      this.pouchService.deleteSale(sale).then(res => {
-                        this.loadSales();
+                      this.pouchService.getIndividualSales().then(individualsales => {
+                        individualsales.map(individualsale => {
+                          individualsale.saleids.filter(data => data == sale.id);
+                          if (individualsale.saleids.length != 0) {
+                            individualsale.totaldailysales -= sale.amount;
+                            this.pouchService.updateIndividualSale(individualsale).then(res => {
+                              this.pouchService.deleteSale(sale).then(res => {
+                                this.reloadSales();
+                              });
+                            });
+                          }
+                        });
                       });
                     });
                   }
@@ -203,8 +555,18 @@ export class ViewSalesComponent implements OnInit {
                     this.promise5 = this.pouchService.getDepartment(sale.departmentid).then(async result => {
                       result.debt -= sale.balance;
                       await this.pouchService.updateDepartment(result).then(response => {
-                        this.pouchService.deleteSale(sale).then(res => {
-                          this.loadSales();
+                        this.pouchService.getIndividualSales().then(individualsales => {
+                          individualsales.map(individualsale => {
+                            individualsale.saleids.filter(data => data == sale.id);
+                            if (individualsale.saleids.length != 0) {
+                              individualsale.totaldailysales -= sale.amount;
+                              this.pouchService.updateIndividualSale(individualsale).then(res => {
+                                this.pouchService.deleteSale(sale).then(res => {
+                                  this.reloadSales();
+                                });
+                              });
+                            }
+                          });
                         });
                       });
                     });
@@ -214,8 +576,18 @@ export class ViewSalesComponent implements OnInit {
             });
           }
           else {
-            this.pouchService.deleteSale(sale).then(res => {
-              this.loadSales();
+            this.pouchService.getIndividualSales().then(individualsales => {
+              individualsales.map(individualsale => {
+                individualsale.saleids.filter(data => data == sale.id);
+                if (individualsale.saleids.length != 0) {
+                  individualsale.totaldailysales -= sale.amount;
+                  this.pouchService.updateIndividualSale(individualsale).then(res => {
+                    this.pouchService.deleteSale(sale).then(res => {
+                      this.reloadSales();
+                    });
+                  });
+                }
+              });
             });
           }
         }
@@ -227,6 +599,8 @@ export class ViewSalesComponent implements OnInit {
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(staff => {
       if (staff.branch == "IUTH(Okada)") {
+        var receiptSource = 'Revenue';
+        this.data.changeReceiptSource(receiptSource);
         let dialogRef = this.dialog.open(ViewReceiptComponent, {
           height: '500px',
           width: '500px',
@@ -240,10 +614,12 @@ export class ViewSalesComponent implements OnInit {
           if (!result) {
             return;
           }
-          this.loadSales();
+          //this.loadSales();
         });
       }
       else if (staff.branch == "Benin Centre") {
+        var receiptSource = 'Account';
+        this.data.changeReceiptSource(receiptSource);
         let dialogRef = this.dialog.open(ViewReceiptAccountComponent, {
           height: '500px',
           width: '500px',
@@ -257,7 +633,7 @@ export class ViewSalesComponent implements OnInit {
           if (!result) {
             return;
           }
-          this.loadSales();
+          //this.loadSales();
         });
       }
     });
@@ -267,6 +643,8 @@ export class ViewSalesComponent implements OnInit {
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(staff => {
       if (staff.branch == "IUTH(Okada)") {
+        var receiptSource = 'Revenue';
+        this.data.changeReceiptSource(receiptSource);
         let dialogRef = this.dialog.open(ReceiptComponent, {
           height: '500px',
           width: '500px',
@@ -280,10 +658,12 @@ export class ViewSalesComponent implements OnInit {
           if (!result) {
             return;
           }
-          this.loadSales();
+          //this.loadSales();
         });
       }
       else if (staff.branch == "Benin Centre") {
+        var receiptSource = 'Account';
+        this.data.changeReceiptSource(receiptSource);
         let dialogRef = this.dialog.open(ReceiptAccountComponent, {
           height: '500px',
           width: '500px',
@@ -297,7 +677,7 @@ export class ViewSalesComponent implements OnInit {
           if (!result) {
             return;
           }
-          this.loadSales();
+          //this.loadSales();
         });
       }
     });
@@ -312,6 +692,7 @@ export class ViewSalesComponent implements OnInit {
         result.isreconciled = false;
         this.pouchService.updateSale(result)
         this.loadTotalSales();
+        this.reloadSales();
       });
     }
     else {
@@ -322,6 +703,7 @@ export class ViewSalesComponent implements OnInit {
         result.isreconciled = true;
         this.pouchService.updateSale(result);
         this.loadTotalSales();
+        this.reloadSales();
       });
     }
   }
@@ -423,7 +805,7 @@ export class ViewSalesComponent implements OnInit {
                       arraySale.branch = "Benin Centre";
                     }
                     this.pouchService.saveSale(arraySale).then(res => {
-                      this.loadSales();
+                      this.reloadSales();
                     });
                   });
                 });
@@ -442,31 +824,39 @@ export class ViewSalesComponent implements OnInit {
 
   public export(): void {
     var exportedSalesArray = [];
-    this.pouchService.getSales().then(items => {
-      for (var i = 0; i < items.length; i++) {
-        var exportedSales = {
-          'S/NO': i + 1,
-          DEPARTMENT: items[i].department,
-          'AMOUNT LOANED': items[i].amountloaned,
-          'AMOUNT PAYABLE': items[i].amountpayable,
-          'DEPARTMENT LOANED': items[i].departmentloaned,
-          'DEPARTMENT LOANING': items[i].departmentloaning,
-          'DATE OF LOAN': items[i].dateofloan,
-          'SALE NAME': items[i].salename,
-          AMOUNT: items[i].amount,
-          DESCRIPTION: items[i].description,
-          COLOR: items[i].color,
-          DATE: items[i].date,
-          BALANCE: items[i].balance,
-          'EVACUATED MESSAGE': items[i].evacuatedmessage,
-          'BRANCH': items[i].branch
+
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.pouchService.getSales().then(items => {
+        items = items.filter(data => data.branch == staff.branch);
+        items = items.filter(data => data.iscomplete == true);
+        items = items.filter(data => data.isoncredit == false);
+
+        for (var i = 0; i < items.length; i++) {
+          var exportedSales = {
+            'S/NO': i + 1,
+            DEPARTMENT: items[i].department,
+            'AMOUNT LOANED': items[i].amountloaned,
+            'AMOUNT PAYABLE': items[i].amountpayable,
+            'DEPARTMENT LOANED': items[i].departmentloaned,
+            'DEPARTMENT LOANING': items[i].departmentloaning,
+            'DATE OF LOAN': items[i].dateofloan,
+            'SALE NAME': items[i].salename,
+            AMOUNT: items[i].amount,
+            DESCRIPTION: items[i].description,
+            COLOR: items[i].color,
+            DATE: items[i].date,
+            BALANCE: items[i].balance,
+            'EVACUATED MESSAGE': items[i].evacuatedmessage,
+            'BRANCH': items[i].branch
+          }
+          exportedSalesArray.push(exportedSales);
+          this.worksheet = XLSX.utils.json_to_sheet(exportedSalesArray);
         }
-        exportedSalesArray.push(exportedSales);
-        this.worksheet = XLSX.utils.json_to_sheet(exportedSalesArray);
-      }
-      const workbook: XLSX.WorkBook = { Sheets: { 'data': this.worksheet }, SheetNames: ['data'] };
-      this.excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-      this.saveAsExcelFile(this.excelBuffer, 'IUTH Sales');
+        const workbook: XLSX.WorkBook = { Sheets: { 'data': this.worksheet }, SheetNames: ['data'] };
+        this.excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        this.saveAsExcelFile(this.excelBuffer, 'IUTH Sales');
+      });
     });
   }
 
@@ -487,7 +877,7 @@ export class ViewSalesComponent implements OnInit {
         return;
       }
       console.log(result);
-      this.loadSales();
+      this.reloadSales();
     })
   }
 
@@ -517,34 +907,77 @@ export class ViewSalesComponent implements OnInit {
     else {
       this.sales = [];
       this.totalSales = [];
-      this.loadSales();
+      this.reloadSales();
       this.loadTotalSales();
     }
   }
 
   filterDate() {
     this.sales = [];
+    var inputTimeArray = this.timeFrom.split(':');
+    var hours = inputTimeArray[0];
+    var minutes = inputTimeArray[1];
+    var millisecondsHour = hours * 3600000;
+    var millisecondsMinute = minutes * 60000;
     this.dateFrom = new Date(this.dateFrom).getTime();
+    var totalMillisecondsFrom = millisecondsHour + millisecondsMinute + this.dateFrom;
+    var newDateFrom = new Date().setTime(totalMillisecondsFrom);
+
+    var inputTimeArrayTo = this.timeTo.split(':');
+    var hoursTo = inputTimeArrayTo[0];
+    var minutesTo = inputTimeArrayTo[1];
+    var millisecondsHourTo = hoursTo * 3600000;
+    var millisecondsMinuteTo = minutesTo * 60000;
     this.dateTo = new Date(this.dateTo).getTime();
+    var totalMillisecondsTo = millisecondsHourTo + millisecondsMinuteTo + this.dateTo;
+    var newDateTo = new Date().setTime(totalMillisecondsTo);
 
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(staff => {
       this.pouchService.getSales().then(sales => {
         sales = sales.filter(data => data.branch == staff.branch);
-        sales = sales.filter(data => data.iscomplete == true || data.isowing == true);
+        sales = sales.filter(data => data.iscomplete == true);
         sales = sales.filter(data => data.isoncredit == false);
 
         sales.map(sale => {
           sale['timestamp'] = new Date(sale.date).toLocaleString("en-US", { timeZone: "GMT" });
           sale['timestamp'] = new Date(sale['timestamp']).setSeconds(0);
-          sale['timestamp'] = new Date(sale['timestamp']).setMinutes(0);
-          sale['timestamp'] = new Date(sale['timestamp']).setHours(0);
+          /* sale['timestamp'] = new Date(sale['timestamp']).setMinutes(0);
+          sale['timestamp'] = new Date(sale['timestamp']).setHours(0); */
 
         });
-        sales = sales.filter(data => this.dateFrom <= data['timestamp']);
-        sales = sales.filter(data => this.dateTo >= data['timestamp']);
+        sales = sales.filter(data => newDateFrom <= data['timestamp']);
+        sales = sales.filter(data => newDateTo >= data['timestamp']);
         this.sales = sales;
+
+        this.pouchService.paginationId = this.sales[0].id; //Reverse of what is meant to be;
+
+        this.pouchService.paginateBySale('sale', this.pouchService.paginationId, undefined, false, undefined, true).then(paginatedata => {
+          this.paginatedSales = paginatedata;
+
+          this.paginatedSales.map(paginatedSale => {
+            paginatedSale['timestamp'] = new Date(paginatedSale.date).toLocaleString("en-US", { timeZone: "GMT" });
+            paginatedSale['timestamp'] = new Date(paginatedSale['timestamp']).setSeconds(0);
+            /*  loan['timestamp'] = new Date(loan['timestamp']).setMinutes(0);
+             loan['timestamp'] = new Date(loan['timestamp']).setHours(0); */
+          });
+          this.paginatedSales = this.paginatedSales.filter(data => newDateFrom <= data['timestamp']);
+          this.paginatedSales = this.paginatedSales.filter(data => newDateTo >= data['timestamp']);
+        });
       });
     });
+  }
+
+  filterString(event: any): void {
+    const value: string = event.target.value ? event.target.value.toLowerCase() : '';
+    this.paginatedSales = [];
+
+    for (let sale of this.sales) {
+      if ((sale.salename).toLowerCase().indexOf(value) !== -1) {
+        this.paginatedSales.push(sale);
+
+        this.paginatedSales = this.paginatedSales.slice(0, this.pouchService.limitRange);
+      }
+    }
   }
 }

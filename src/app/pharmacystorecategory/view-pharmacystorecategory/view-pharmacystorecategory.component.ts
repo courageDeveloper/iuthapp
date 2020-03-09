@@ -3,8 +3,8 @@ import 'datatables.net';
 import 'datatables.net-bs4';
 import * as $ from 'jquery';
 import * as _ from 'lodash'; // to help loop over files more succinctly
-import {AddPharmacyStoreCategoryComponent} from '../../pharmacystorecategory/add-pharmacystorecategory/add-pharmacystorecategory.component';
-import {MatDialog, MatDialogRef} from '@angular/material/dialog';
+import { AddPharmacyStoreCategoryComponent } from '../../pharmacystorecategory/add-pharmacystorecategory/add-pharmacystorecategory.component';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { PouchService } from '../../../providers/pouch-service';
 import { ProductCategory } from '../../../model/productcategory';
 import { Router } from '@angular/router';
@@ -28,23 +28,114 @@ export class ViewPharmacyStoreCategoryComponent implements OnInit {
   newPharmacyStoreCategorys: any;
   show = false;
   files: FileList;
+  isStaffSwitchedTable = false;
+  isDepartmentSwitchedTable = false;
   convertFiles;
+  isUserPermitted = false;
   newArray;
   excelBuffer: any;
   //public productCategorys: Array<ProductCategory> = [];
   worksheet: XLSX.WorkSheet;
   workbook: XLSX.WorkBook;
+  isSupervisor = false;
+  itemSize: number;
+  paginatedPharmacyStorecats;
+  isPreviousActive = false;
+  isNextActive = false;
 
   constructor(public pouchService: PouchService, private dialog: MatDialog, public toastr: ToastrService) { }
 
   ngOnInit() {
-   this.loadPharmacyStoreCategorys();
+    this.pouchService.userPermission().then(result => {
+      if (result.department == 'Pharmacy Store') {
+        this.isUserPermitted = true;
+      }
+    });
+
+    this.checkViewStatus();
+    this.checkRoles();
+  }
+
+  reloadPharmacyStoreCategorys() {
+    this.pouchService.getProductcategorys().then(items => {
+      items = items.filter(data => data.branch == 'IUTH(Okada)' && data.department == "Pharmacy Store");
+      this.pharmacystorecategorys = items;
+      this.itemSize = this.pharmacystorecategorys.length;
+
+      this.pouchService.paginationId = this.pharmacystorecategorys[0].id; //Reverse of what is meant to be;
+
+      this.pouchService.paginateByDepartmentRemoveItem('productcategory', this.pouchService.paginationId, 'Pharmacy Store').then(paginatedata => {
+        this.paginatedPharmacyStorecats = paginatedata;
+
+      });
+    });
   }
 
   loadPharmacyStoreCategorys() {
     this.pouchService.getProductcategorys().then(items => {
       items = items.filter(data => data.branch == 'IUTH(Okada)' && data.department == "Pharmacy Store");
       this.pharmacystorecategorys = items;
+      this.itemSize = this.pharmacystorecategorys.length;
+      
+      this.pouchService.paginationId = this.pharmacystorecategorys[this.pharmacystorecategorys.length - 1].id; //Reverse of what is meant to be;
+
+      this.pouchService.paginateByDepartment2('productcategory', this.pouchService.paginationId, 'Pharmacy Store').then(paginatedata => {
+        this.paginatedPharmacyStorecats = paginatedata;
+
+        $(document).ready(function () {
+          $('#dtBasicExample').DataTable({
+            "paging": false,
+            "searching": false
+          });
+          $('.dataTables_length').addClass('bs-select');
+        });
+        this.isNextActive = true;
+      });
+    });
+  }
+
+  next() {
+    this.pouchService.paginationId = this.paginatedPharmacyStorecats[this.paginatedPharmacyStorecats.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByDepartment2('productcategory', this.pouchService.paginationId, 'Pharmacy Store').then(paginatedata => {
+      this.paginatedPharmacyStorecats = paginatedata;
+
+      this.isPreviousActive = true;
+    });
+  }
+
+  previous() {
+    this.pouchService.paginationId = this.paginatedPharmacyStorecats[this.paginatedPharmacyStorecats.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByDepartmentPrev2('productcategory', this.pouchService.paginationId, 'Pharmacy Store').then(paginatedata => {
+      this.paginatedPharmacyStorecats = paginatedata;
+
+      if (this.paginatedPharmacyStorecats.length < this.pouchService.limitRange) {
+        this.isPreviousActive = false;
+      }
+    });
+  }
+
+  goToStart() {
+    this.isPreviousActive = false;
+
+    this.pouchService.paginationId = this.paginatedPharmacyStorecats[this.paginatedPharmacyStorecats.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByDepartmentStart('productcategory', this.pouchService.paginationId, 'Pharmacy Store').then(paginatedata => {
+      this.paginatedPharmacyStorecats = paginatedata;
+
+    });
+  }
+
+
+  checkRoles() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      staff.roles.map(role => {
+        if (role.role == "Supervisor" && role.isChecked == true) {
+          this.isSupervisor = true;
+        }
+      })
     });
   }
 
@@ -59,10 +150,10 @@ export class ViewPharmacyStoreCategoryComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe(result => {
       console.log(result);
-      if(!result) {
+      if (!result) {
         return;
       }
-      this.loadPharmacyStoreCategorys();
+      //this.loadPharmacyStoreCategorys();
     })
   }
 
@@ -79,20 +170,66 @@ export class ViewPharmacyStoreCategoryComponent implements OnInit {
       if (result) {
         this.pouchService.deleteProductcategory(pharmacystorecategory).then(res => {
           this.toastr.success('Category has been deleted successfully');
-          this.loadPharmacyStoreCategorys();
+          this.reloadPharmacyStoreCategorys();
         });
       }
     });
   }
 
+  checkViewStatus() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.isStaffSwitchedTable = staff.isswitchedtable;
+      this.pouchService.getDepartments().then(departments => {
+        departments = departments.filter(data => data.name == "Pharmacy Store" && data.branch == staff.branch);
+        this.isDepartmentSwitchedTable = departments[0].isswitchedtable;
+        this.loadPharmacyStoreCategorys();
+      });
+    });
+  }
+
+  switchView(event) {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    if (event.checked) {
+      this.pouchService.getStaff(localStorageItem).then(staff => {
+        staff.isswitchedtable = true;
+        this.isStaffSwitchedTable = staff.isswitchedtable;
+        this.pouchService.updateStaff(staff);
+        this.pouchService.getDepartments().then(departments => {
+          departments = departments.filter(data => data.name == "Pharmacy Store" && data.branch == staff.branch);
+          departments[0].isswitchedtable = true;
+          this.isDepartmentSwitchedTable = departments[0].isswitchedtable;
+          this.pouchService.updateDepartment(departments[0]).then(result => {  //For changes to be made based on department
+            this.loadPharmacyStoreCategorys();
+          });
+        });
+      });
+    }
+    else {
+      this.pouchService.getStaff(localStorageItem).then(staff => {
+        staff.isswitchedtable = false;
+        this.isStaffSwitchedTable = staff.isswitchedtable;
+        this.pouchService.updateStaff(staff);
+        this.pouchService.getDepartments().then(departments => {
+          departments = departments.filter(data => data.name == "Pharmacy Store" && data.branch == staff.branch);
+          departments[0].isswitchedtable = false;
+          this.isDepartmentSwitchedTable = departments[0].isswitchedtable;
+          this.pouchService.updateDepartment(departments[0]).then(result => {
+            this.loadPharmacyStoreCategorys();
+          });
+        });
+      });
+    }
+  }
+
   selectedPharmacyStoreCategory(pharmacystorecategory, event) {
-   if (event.checked) {
-    pharmacystorecategory['selected'] = true;
+    if (event.checked) {
+      pharmacystorecategory['selected'] = true;
     }
     else {
       pharmacystorecategory['selected'] = false;
     }
-    this.newPharmacyStoreCategorys = this.pharmacystorecategorys.filter(data => data['selected'] == true);
+    this.newPharmacyStoreCategorys = this.paginatedPharmacyStorecats.filter(data => data['selected'] == true);
     if (this.newPharmacyStoreCategorys.length > 0) {
       this.tableCheck = true;
     }
@@ -105,7 +242,7 @@ export class ViewPharmacyStoreCategoryComponent implements OnInit {
     this.show = true;
   }
 
-  handleFiles(event) { 
+  handleFiles(event) {
     this.files = event.target.files;
 
     var reader: FileReader = new FileReader();
@@ -151,7 +288,7 @@ export class ViewPharmacyStoreCategoryComponent implements OnInit {
                   subitemno: item['TABLETS/SUB-ITEM NUMBER'],
                   subgroup: item['SUB GROUP'],
                   branch: item['BRANCH'],
-                  department: item['DEPARTMENT'],               
+                  department: item['DEPARTMENT'],
                   products: []
                 }
 
@@ -160,7 +297,7 @@ export class ViewPharmacyStoreCategoryComponent implements OnInit {
 
                 this.newArray.forEach(arrayProductCategory => {
                   this.pouchService.saveProductcategory(arrayProductCategory).then(res => {
-                    this.loadPharmacyStoreCategorys();
+                    this.reloadPharmacyStoreCategorys();
                   });
                 });
               }, 3000);
@@ -184,11 +321,11 @@ export class ViewPharmacyStoreCategoryComponent implements OnInit {
       }
     });
     dialogRef.afterClosed().subscribe(result => {
-      if(!result) {
+      if (!result) {
         return;
       }
       console.log(result);
-      this.loadPharmacyStoreCategorys();
+      this.reloadPharmacyStoreCategorys();
     })
   }
 
@@ -202,7 +339,7 @@ export class ViewPharmacyStoreCategoryComponent implements OnInit {
       if (result) {
         this.newPharmacyStoreCategorys.forEach(productcategory => {
           this.pouchService.deleteProductcategory(productcategory).then(res => {
-            this.loadPharmacyStoreCategorys();
+            this.reloadPharmacyStoreCategorys();
             this.tableCheck = false;
           });
         });
@@ -223,7 +360,7 @@ export class ViewPharmacyStoreCategoryComponent implements OnInit {
           'TABLETS/SUB-ITEM NUMBER': items[i].subitemno,
           'SUB GROUP': items[i].subgroup,
           BRANCH: items[i].branch,
-          DEPARTMENT: items[i].department          
+          DEPARTMENT: items[i].department
         }
         exportedProductCategorysArray.push(exportedProductCategorys);
         this.worksheet = XLSX.utils.json_to_sheet(exportedProductCategorysArray);
@@ -237,6 +374,18 @@ export class ViewPharmacyStoreCategoryComponent implements OnInit {
   private saveAsExcelFile(buffer: any, fileName: string): void {
     const data: Blob = new Blob([buffer], { type: EXCEL_TYPE });
     FileSaver.saveAs(data, fileName + '_export_' + new Date().getTime() + EXCEL_EXTENSION);
+  }
+
+  filterString(event: any): void {
+    const value: string = event.target.value ? event.target.value.toLowerCase() : '';
+    this.paginatedPharmacyStorecats = [];
+
+    for (let pharmacystorecategory of this.paginatedPharmacyStorecats) {
+      if ((pharmacystorecategory.productname).toLowerCase().indexOf(value) !== -1) {
+        this.paginatedPharmacyStorecats.push(pharmacystorecategory);
+        this.paginatedPharmacyStorecats = this.paginatedPharmacyStorecats.slice(0, this.pouchService.limitRange);
+      }
+    }
   }
 
 }

@@ -39,6 +39,18 @@ export class ViewDepartmentComponent implements OnInit {
 
   ngOnInit() {
     this.loadDepartments();
+
+    this.addDepartmentsIUTH();
+    this.addDepartmentsBenin();
+
+   /*  this.pouchService.getDepartments().then(data => {
+      console.log(data)
+      data.forEach(department => {
+        department['producthistory'] = [];
+        department.debt = 0;
+        this.pouchService.updateDepartment(department);
+      });
+    });  */
   }
 
   loadDepartments() {
@@ -46,9 +58,10 @@ export class ViewDepartmentComponent implements OnInit {
 
     this.pouchService.getStaff(this.localStorageItem).then(staff => {
       this.pouchService.getDepartments().then(data => {
+        console.log(data);
         this.departments = data;
         this.departments = this.departments.filter(data => data.branch == staff.branch);
-  
+
         $(document).ready(function () {
           $('#dtBasicExample').DataTable();
           $('.dataTables_length').addClass('bs-select');
@@ -57,8 +70,37 @@ export class ViewDepartmentComponent implements OnInit {
     });
   }
 
-  viewHistory() {
+  addDepartmentsIUTH() {
+    this.pouchService.getDepartments().then(data => {
+      data = data.filter(data => data.branch == 'IUTH(Okada)')
+      var departments = [{ id: '', rev: '', name: 'Pharmacy Store', debt: 0, isswitchedtable: false, branch: 'IUTH(Okada)', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }, { id: '', rev: '', name: 'Central Store', debt: 0, isswitchedtable: false, branch: 'IUTH(Okada)', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }, { id: '', rev: '', name: 'Main Pharmacy', debt: 0, isswitchedtable: false, branch: 'IUTH(Okada)', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }, { id: '', rev: '', name: 'GOPD Pharmacy', debt: 0, isswitchedtable: false, branch: 'IUTH(Okada)', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }, { id: '', rev: '', name: 'Laboratory', debt: 0, isswitchedtable: false, branch: 'IUTH(Okada)', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] },
+      { id: '', rev: '', name: 'Radiology', debt: 0, isswitchedtable: false, branch: 'IUTH(Okada)', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }, { id: '', rev: '', name: 'Revenue', debt: 0, isswitchedtable: false, branch: 'IUTH(Okada)', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }, { id: '', rev: '', name: 'Account', debt: 0, isswitchedtable: false, branch: 'IUTH(Okada)', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }, { id: '', rev: '', name: 'Audit', debt: 0, isswitchedtable: false, branch: 'IUTH(Okada)', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }, { id: '', rev: '', name: 'Theatre', debt: 0, isswitchedtable: false, branch: 'IUTH(Okada)', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }, { id: '', rev: '', name: 'Admin', debt: 0, isswitchedtable: false, branch: 'IUTH(Okada)', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }];
+      if (data.length == 0) {
+        departments.forEach(department => {
+          department.dateofloan.toString();
+          this.pouchService.saveDepartment(department);
+        })
+      }
+    });
+  }
 
+  addDepartmentsBenin() {
+    this.pouchService.getDepartments().then(data => {
+      data = data.filter(data => data.branch == 'Benin Centre')
+      var departments = [{ id: '', rev: '', name: 'Central Store', debt: 0, isswitchedtable: false, branch: 'Benin Centre', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }, { id: '', rev: '', name: 'Main Pharmacy', debt: 0, isswitchedtable: false, branch: 'Benin Centre', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }, { id: '', rev: '', name: 'Account', debt: 0, isswitchedtable: false, branch: 'Benin Centre', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }, { id: '', rev: '', name: 'Admin', debt: 0, isswitchedtable: false, branch: 'Benin Centre', loanstatus: false, departmentowed: '', dateofloan: new Date(), producthistory: [], staffs: [] }];
+
+      if (data.length == 0) {
+        departments.forEach(department => {
+          department.dateofloan.toString();
+          this.pouchService.saveDepartment(department);
+        })
+      }
+    });
+  }
+
+
+  viewHistory(department) {
+    this.router.navigate(['view-history-department', department.id]);
   }
 
   public export(): void {

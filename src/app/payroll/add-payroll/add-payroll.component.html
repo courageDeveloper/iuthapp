@@ -1,68 +1,127 @@
 <div class="main-content">
   <div class="container-fluid">
-      <i class="material-icons" style="color: #00254e; cursor: pointer; text-align: left" matTooltip="Close" (click)="onNoClick()">close</i>
+    <i class="material-icons" style="color: #00254e; cursor: pointer; text-align: left" matTooltip="Close"
+      (click)="onNoClick()">close</i>
     <div class="row">
       <div class="col-md-12">
         <!-- <div class="card"> -->
-            <div style="text-align: center;">
-                <h2 style="color:#00254e;"><b>{{title}} Staff Salary</b></h2>
-                <p style="color:#00254e; text-transform: lowercase">You can {{title}} either offline or online</p>
-              </div> 
+        <div style="text-align: center;">
+          <h2 style="color:#00254e;"><b>{{title}} Staff Salary</b></h2>
+          <p style="color:#00254e; text-transform: lowercase">You can {{title}} either offline or online</p>
+        </div>
+        <div>
+          <div style="text-align: center;" class="text-danger">
+            {{excedeedSalaryMessage}}
+          </div>
           <div>
-            <form>
-                <div class="row">
-                    <div class="col-md-12">
-                      <mat-form-field class="example-full-width">
-                        <input ng2-auto-complete [source]="staffArray"
-                        (valueChanged)="staffChanged($event)" matInput placeholder="Staff Name" type="text" name="name">
-                      </mat-form-field>
-                    </div>
-                  </div>
+            <form [formGroup]="payrollForm">
               <div class="row">
-                <div class="col-md-6">
+                <div class="col-md-12">
                   <mat-form-field class="example-full-width">
-                    <input matInput placeholder="Position" type="text" disabled>
+                    <input ng2-auto-complete [source]="staffs" list-formatter="fullname" [(ngModel)]='payroll.staffname'
+                      (valueChanged)="staffChanged($event)" [max-num-list]="10" matInput placeholder="Staff Name"
+                      type="text" name="name" [formControl]="payrollForm.controls['staffname']">
                   </mat-form-field>
                 </div>
-                <div class="col-md-6">
-                    <mat-form-field class="example-full-width">
-                      <input matInput placeholder="Amount" type="number">
-                    </mat-form-field>
-                  </div>
               </div>
               <div class="row">
                 <div class="col-md-6">
                   <mat-form-field class="example-full-width">
-                    <textarea matInput placeholder="Description" type="text" row="5"></textarea>
+                    <input matInput [(ngModel)]='payroll.staffposition' placeholder="Position" type="text"
+                      [formControl]="payrollForm.controls['staffposition']">
                   </mat-form-field>
                 </div>
                 <div class="col-md-6">
                   <mat-form-field class="example-full-width">
-                    <input matInput [matDatepicker]="picker" placeholder="Date of Payment">
+                    <input matInput [(ngModel)]='payroll.amount' placeholder="Amount" type="number"
+                      [formControl]="payrollForm.controls['amount']">
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput [(ngModel)]='payroll.allowancebonus'  placeholder="Additional Allowances" type="number"
+                      [formControl]="payrollForm.controls['allowancebonus']">
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput [(ngModel)]='payroll.tax' placeholder="Tax in percent" type="number"
+                      [formControl]="payrollForm.controls['tax']">
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <mat-form-field class="example-full-width">
+                    <input matInput [(ngModel)]='payroll.discount' placeholder="Discount in percent" type="number"
+                      [formControl]="payrollForm.controls['discount']">
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <textarea matInput [(ngModel)]='payroll.description' placeholder="Description" type="text" row="5"
+                      [formControl]="payrollForm.controls['description']"></textarea>
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput [matDatepicker]="picker" [(ngModel)]='payroll.date' placeholder="Date of Payment"
+                      [formControl]="payrollForm.controls['date']">
                     <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
                     <mat-datepicker touchUi #picker></mat-datepicker>
                   </mat-form-field>
                 </div>
               </div>
-              <div class="row">
-                  <div class="col-md-12">
-                         <mat-checkbox (change)="selectedPayLoan($event)">Pay off loan?</mat-checkbox>
-                    </div>
+              <!-- <div class="row">
+                <div class="col-md-12">
+                  <mat-form-field class="example-full-width">
+                    <input matInput [(ngModel)]='payLoan' placeholder="Pay Debt" type="number" (change)="payDebt($event)">
+                  </mat-form-field>
                 </div>
-                <br>
-                <div class="row">
-              <div class="col-md-6">
-              <button mat-raised-button type="submit" class="btn btn-success pull-right">Pay Online</button>
-              </div>
-              <div class="col-md-6">
-                  <button mat-raised-button type="submit" class="btn btn-color pull-right">Pay Offline</button>
+              </div> -->
+              <div class="row" *ngIf="isShown && isPayLoan">
+                <div class="col-md-10">
+                  <mat-form-field class="example-full-width">
+                    <input ng2-auto-complete [source]="loans" list-formatter="salename"
+                      (valueChanged)="saleChanged($event)" [max-num-list]="10" matInput placeholder="Sale Name"
+                      type="text" name="name">
+                  </mat-form-field>
+                </div>
+                <div class="col-md-2">
+                    <button mat-stroked-button type="submit" (click)="payDebt()" class="btn btn-success pull-right"
+                    [disabled]="isExcedeedSalary">Pay Loan</button>
                   </div>
-            </div>
+              </div>
+              <div class="row" *ngIf="isPayLoan">
+                <div class="col-md-12">
+                  <mat-checkbox [checked]="isShown" (change)="selectedPayLoan($event)">Pay off loan?</mat-checkbox>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <span>Staff Debt: {{staffDebt}}</span>
+                </div>
+              </div>
+              <br>
+              <div class="row">
+                <div class="col-md-6">
+                  <button mat-raised-button type="submit" (click)="payOnline()" class="btn btn-success pull-right"
+                    [disabled]="!isId || isExcedeedSalary || this.isShown">Pay Online</button>
+                </div>
+                <div class="col-md-6">
+                  <button mat-raised-button type="submit" (click)="payOffline()" class="btn btn-color pull-right"
+                    [disabled]="!isId || isExcedeedSalary || this.isShown">Pay Offline</button>
+                </div>
+              </div>
               <div class="clearfix"></div>
             </form>
           </div>
-        <!-- </div> -->
+          <!-- </div> -->
+        </div>
       </div>
     </div>
   </div>
-</div>

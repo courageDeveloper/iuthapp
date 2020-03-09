@@ -19,6 +19,8 @@ export interface Staff {
     email: string,
     dateofentry: any,
     sex: string,
+    isswitchedtable: any,
+    roles: Array<any>,
     notification: Array<any>,
     expenses: Array<string>
 }

@@ -25,6 +25,8 @@ export class AddSalesComponent implements OnInit {
   individualName: any;
   individual: any;
   department: any;
+  totalAmountPaid: number;
+  discountedAmount: number;
 
   salesForm = new FormGroup({
     id: new FormControl(),
@@ -54,6 +56,7 @@ export class AddSalesComponent implements OnInit {
     isevacuated: new FormControl(),
     evacuatedmessage: new FormControl(),
     branch: new FormControl(),
+    discount: new FormControl(),
     posproduct: new FormControl(),
     referencenumber: new FormControl(),
     serviceorder: new FormControl(),
@@ -93,6 +96,8 @@ export class AddSalesComponent implements OnInit {
         isevacuated: false,
         evacuatedmessage: '',
         branch: '',
+        discount: 0,
+        totalamount: 0,
         posproduct: [],
         referencenumber: '',
         serviceorder: [],
@@ -107,15 +112,17 @@ export class AddSalesComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.totalAmountPaid = 0;
+
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(item => {
       if (item.branch == "IUTH(Okada)") {
-        this.sales.department = "Revenue";
-        this.sales.departmentloaning = "Revenue";
+        this.sales.department = item.department;
+        this.sales.departmentloaning = item.department;
       }
       else if (item.branch == "Benin Centre") {
-        this.sales.department = "Account";
-        this.sales.departmentloaning = "Account";
+        this.sales.department = item.department;
+        this.sales.departmentloaning = item.department;
       }
     });
 
@@ -150,6 +157,7 @@ export class AddSalesComponent implements OnInit {
       isevacuated: [this.sales.isevacuated],
       evacuatedmessage: [this.sales.evacuatedmessage],
       branch: [this.sales.branch],
+      discount: [this.sales.discount],
       posproduct: [this.sales.posproduct],
       referencenumber: [this.sales.referencenumber],
       serviceorder: [this.sales.serviceorder],
@@ -200,6 +208,7 @@ export class AddSalesComponent implements OnInit {
       this.sales.amountloaned = this.sales.amount;
       this.sales.loanstatus = true;
       this.sales.balance = 0;
+      this.sales.amountloaned = this.sales.amountloaned - (this.sales.amountloaned * this.sales.discount / 100);
       this.disableBalance = true;
       this.salesForm.controls.balance.disable();
     }
@@ -209,6 +218,10 @@ export class AddSalesComponent implements OnInit {
       this.sales.loanstatus = false;
       this.salesForm.controls.balance.enable();
     }
+  }
+
+  currentAmount() {
+    this.totalAmountPaid = this.sales.amount;
   }
 
   selectCurrentIndividual(individual) {
@@ -229,12 +242,20 @@ export class AddSalesComponent implements OnInit {
     this.isDepartment = true;
   }
 
-  submit() {
+  discounted() {
+    this.discountedAmount = this.sales.amount - (this.sales.amount * this.sales.discount / 100);
+  }
 
+  submit() {
+    this.sales.totalamount = this.sales.amount - (this.sales.amount * this.sales.discount / 100);
     if (this.sales.isoncredit != true) {
-      this.sales.amount = this.sales.amount;
+      if (this.totalAmountPaid == this.sales.amount) {
+        this.totalAmountPaid = this.totalAmountPaid - (this.totalAmountPaid * this.sales.discount / 100);
+      }
+      this.sales.amount = this.sales.amount - (this.sales.amount * this.sales.discount / 100);
+      this.sales.balance = this.sales.amount - this.totalAmountPaid;
     }
-    else if(this.sales.isoncredit == true) {
+    else if (this.sales.isoncredit == true) {
       this.sales.amount = 0;
     }
     this.sales.iscomplete = true;
@@ -251,12 +272,12 @@ export class AddSalesComponent implements OnInit {
     this.pouchService.getStaff(localStorageItem).then(item => {
       this.sales.branch = item.branch;
       if (item.branch == "IUTH(Okada)") {
-        this.sales.department = "Revenue";
-        this.sales.departmentloaning = "Revenue";
+        this.sales.department = item.department;
+        this.sales.departmentloaning = item.department;
       }
       else if (item.branch == "Benin Centre") {
-        this.sales.department = "Account";
-        this.sales.departmentloaning = "Account";
+        this.sales.department = item.department;
+        this.sales.departmentloaning = item.department;
       }
 
       var randomString = this.generateRandomStrings(3);
@@ -287,9 +308,9 @@ export class AddSalesComponent implements OnInit {
             }
           }
           if (item.branch == "IUTH(Okada)") {
-          this.sendNotification(result.branch, result.salename);
+            this.sendNotification(result.branch, result.salename);
           }
-          else if (item.branch == "Benin Centre") { 
+          else if (item.branch == "Benin Centre") {
             this.sendNotificationBenin(result.branch, result.salename);
           }
         }

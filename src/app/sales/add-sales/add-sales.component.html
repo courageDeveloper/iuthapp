@@ -1,5 +1,5 @@
 <div class="main-content">
-  <div class="container-fluid">
+  <div class="container-fluid scrollbar">
     <i class="material-icons" style="color: #00254e; cursor: pointer; text-align: left" matTooltip="Close"
       (click)="onNoClick()">close</i>
     <div class="row">
@@ -13,24 +13,24 @@
           <div class="row">
             <div class="col-md-12">
               <mat-form-field class="example-full-width">
-                <input matInput placeholder="Sale Name" [(ngModel)]="sales.salename" type="text" [formControl]="salesForm.controls['salename']"
-                  name="saletype">
+                <input matInput placeholder="Sale Name" [(ngModel)]="sales.salename" type="text"
+                  [formControl]="salesForm.controls['salename']" name="saletype">
               </mat-form-field>
             </div>
           </div>
           <div class="row">
             <div class="col-md-12">
               <mat-form-field class="example-full-width">
-                <input matInput placeholder="Amount" type="number" [(ngModel)]="sales.amount" [formControl]="salesForm.controls['amount']"
-                  name="amount">
+                <input matInput placeholder="Amount of Product" type="number" [(ngModel)]="sales.amount" (ngModelChange)="currentAmount()"
+                  [formControl]="salesForm.controls['amount']" name="amount">
               </mat-form-field>
             </div>
           </div>
           <div class="row">
             <div class="col-md-12">
               <mat-form-field class="example-full-width">
-                <input matInput placeholder="Balance" type="number" [(ngModel)]="sales.balance" [formControl]="salesForm.controls['balance']"
-                  name="balance" [disabled]="disableBalance">
+                <input matInput placeholder="Amount Paid" type="number" [(ngModel)]="totalAmountPaid" name="amountpaid" [ngModelOptions]="{standalone: true}"
+                  [disabled]="disableBalance">
               </mat-form-field>
             </div>
           </div>
@@ -45,23 +45,36 @@
             </div>
           </div>
           <div class="row" *ngIf="!isDepartment">
-              <div class="col-md-12">
-                <mat-form-field class="example-full-width">
-                  <input matInput ng2-auto-complete [source]="individuals" list-formatter="fullname"
-                    [(ngModel)]='individualName' [max-num-list]="10" (valueChanged)="selectCurrentIndividual($event)"
-                    placeholder="Search for Individual" />
-                </mat-form-field>
-              </div>
+            <div class="col-md-12">
+              <mat-form-field class="example-full-width">
+                <input matInput ng2-auto-complete [source]="individuals" list-formatter="fullname"
+                  [(ngModel)]='individualName' [max-num-list]="10" (valueChanged)="selectCurrentIndividual($event)"
+                  placeholder="Search for Individual" />
+              </mat-form-field>
             </div>
-            <div class="row" *ngIf="isDepartment">
-              <div class="col-md-12">
-                <mat-form-field class="example-full-width">
-                  <input matInput ng2-auto-complete [source]="departments" list-formatter="name"
-                    [(ngModel)]='departmentName' [max-num-list]="10" (valueChanged)="selectCurrentDepartment($event)"
-                    placeholder="Search for Department" />
-                </mat-form-field>
-              </div>
+          </div>
+          <div class="row" *ngIf="isDepartment">
+            <div class="col-md-12">
+              <mat-form-field class="example-full-width">
+                <input matInput ng2-auto-complete [source]="departments" list-formatter="name"
+                  [(ngModel)]='departmentName' [max-num-list]="10" (valueChanged)="selectCurrentDepartment($event)"
+                  placeholder="Search for Department" />
+              </mat-form-field>
             </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <mat-form-field class="example-full-width">
+                <input matInput placeholder="Discount in percent?" (change)="discounted()" [(ngModel)]="sales.discount"
+                  [formControl]="salesForm.controls['discount']" type="number" name="discount" />
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              Total after discount = {{discountedAmount}}
+            </div>
+          </div>
           <div class="row">
             <div class="col-md-12">
               <mat-form-field class="example-full-width">
@@ -72,8 +85,8 @@
           </div>
           <div class="row">
             <div class="col-md-12">
-                <mat-checkbox (change)="onCredit($event)"> On Credit?
-                </mat-checkbox>
+              <mat-checkbox (change)="onCredit($event)"> On Credit?
+              </mat-checkbox>
             </div>
           </div>
           <button mat-raised-button type="submit" class="btn btn-color pull-right">{{title}} Sale</button>

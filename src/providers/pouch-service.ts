@@ -17,6 +17,7 @@ import 'rxjs/add/operator/map';
  */
 import { BEC_PharmProducts } from '../model/bedcpharmproduct';
 import { Department } from '../model/department';
+import { DepartmentDispatch } from '../model/departmentdispatch';
 import { Expenses } from '../model/expense';
 import { GOPDProducts } from '../model/gopdpharmproduct';
 import { LabProducts } from '../model/labproduct';
@@ -27,24 +28,32 @@ import { Evacuate } from '../model/evacuate';
 import { ProductCategory } from '../model/productcategory';
 import { RadiologyProducts } from '../model/radiologyproduct';
 import { Sales } from '../model/sales';
+import { Stock } from '../model/stock';
+import { Vendor } from '../model/vendor';
 import { Services } from '../model/service';
 import { RenderService } from '../model/renderservice';
 import { Staff } from '../model/staff';
 import { TheaterProducts } from '../model/theaterproduct';
+import { IndividualSale } from '../model/individualsales';
+import { Damagedproduct } from '../model/damagedproduct';
+import { Grossprofit } from '../model/grossprofit';
+import { Netprofit } from '../model/netprofit';
 import { DispatchedProducts } from '../model/dispatchedproduct';
 import { Schema } from '../model/relational-schema';
-
+import { NgxSpinnerService } from "ngx-spinner";
 
 @Injectable()
 export class PouchService {
     private db;
     remote: any;
     finishSync: any;
+    paginationId = null;
+    limitRange: number = 31;
 
     /**
     * Constructor
     */
-    constructor() {
+    constructor(private spinner: NgxSpinnerService) {
         console.log('constructor');
     }
 
@@ -62,7 +71,9 @@ export class PouchService {
 
         this.db.createIndex({
             index: {
-                fields: ['data.product', '_id']
+                fields: ['data.branch','data.store', 'data.sourcedepartment', 'data.department', 'data.departmentname',
+                 'data.isoncredit', 'data.isowing', 'data.iscomplete', 'data.isnoticed', 'data.isquantitynoticed', 'data.year',
+                'data.notification', 'data.expensetype', 'data.isexpired', 'data.patientid', 'data.vendorid']
             }
         });
     }
@@ -70,15 +81,15 @@ export class PouchService {
     enableSyncing() {
         let options = {
             Auth: {
-                username: 'sarutech',
-                password: 'Sarutobi2014'
+                username: 'iuth',
+                password: 'iuth'
             },
             live: true,
             retry: true,
             continuous: true
         };
 
-        this.remote = 'http://sarutech.com:5984/iuth';
+        this.remote = 'http://169.254.232.218:5984/iuth';
 
         this.db.sync(this.remote, options).on('change', function (change) {
             console.log('check change', change);
@@ -92,31 +103,27 @@ export class PouchService {
 
     }
 
-    /* checkRemoteSync() {
-        this.remote = 'http://sarutech.com:5984/iuth';
+    checkRemoteSync(): Promise<any> {
+        this.remote = 'http://169.254.232.218:5984/iuth';
 
-        let loading
-        if (this.finishSync == undefined) {
-            loading = this.load.create({
-                content: 'Syncing, Please wait...'
-            });
-            loading.present();
-
-            this.db.sync(this.remote).on('complete', function (info) {
-                this.finishSync = info;
-                console.log(this.finishSync.pull.status);
-                if (this.finishSync.pull.status == 'complete') {
-                    loading.dismiss();
-                }
-                console.log('complete', info);
-            }).on('error', function (err) {
-                console.log('offline');
-                loading.dismiss();
-            });
-        }
+        /* if (this.finishSync == undefined) {
+            this.spinner.show(); */
+        return this.db.sync(this.remote).on('complete', function (info) {
+            this.finishSync = info;
+            console.log(this.finishSync.pull.status);
+            /* if (this.finishSync.pull.status == 'complete') {
+                //this.spinner.hide();
+            } */
+            console.log('complete', info);
+        }).on('error', function (err) {
+            console.log('offline');
+            return err;
+            //this.spinner.hide();
+        });
+        //}
 
     }
- */
+
 
     /***********
       * staff
@@ -139,12 +146,956 @@ export class PouchService {
         })
     }
 
+
+    /*  getPaginatedStaffs(): Promise<Array<Staff>> {
+ 
+         var pageSize = 11;
+         var options = { startkey: this.paginationId, limit: pageSize };
+         console.log(this.paginationId);
+         return this.db.rel.find('staff', options).then((data: any) => {
+             //options['limit'] = 11;
+             //data.staffs = data.staffs.filter(data => data.branch == 'IUTH(Okada)');
+               if (data.staffs.length != 11) {
+                  options.limit = pageSize + 5;
+              }
+             let staffs = data.staffs ? data.staffs : [];
+             //staffs = staffs.filter(data => data.branch == 'IUTH(Okada)');
+               let sortBy = 'DESC';
+  
+              switch (sortBy) {
+                  case 'ASC':
+                      staffs.sort((a: any, b: any) => {
+                          return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                      })
+                      break;
+                  case 'DESC':
+                      staffs.sort((a: any, b: any) => {
+                          return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                      });
+                      break;
+                  default:
+                      break;
+              } 
+             console.log(staffs);
+             //if (data.staffs.length != 11) {
+             return staffs;
+             //}
+         }).catch((err: any) => {
+             console.log(err);
+         });
+     } */
+
+      /* Faster choice than using the query method; */
+    paginateByBranchRemoveItem(type?, id?, year?, expired?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+    paginateByCentralStoreRemoveItem(type?, id?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     paginateByStoreRemoveItem(type?, id?, store?, isnoticed?, isquantitynoticed?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.isnoticed': {$eq: isnoticed},  'data.isquantitynoticed': {$eq: isquantitynoticed}, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     paginateByDispatchedProductRemoveItem(type?, id?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.sourcedepartment': { $eq: 'Central Store' }, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     paginateByGeneralDispatchedProductRemoveItem(type?, id?, sourcedepartment?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.sourcedepartment': { $eq: sourcedepartment }, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+    paginateByDepartmentRemoveItem(type?, id?, department?, isnoticed?, isquantitynoticed?, year?, expired?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+    paginateByExpenseRemoveItem(type?, id?, department?, oncredit?, owing?, complete?, expensetype?, vendorid?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.departmentname': { $eq: department }, 'data.isoncredit' : {$eq: oncredit}, 'data.isowing': {$eq: owing},'data.iscomplete': {$eq: complete}, 'data.expensetype':{$eq: expensetype}, 'data.vendorid': { $eq: vendorid}, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+    paginateBySaleRemoveItem(type?, id?, department?, oncredit?, owing?, complete?, patientid?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, $or: [{'data.isoncredit': oncredit}, {'data.isowing': owing}], 'data.iscomplete': { $eq: complete}, 'data.patientid': { $eq: patientid}, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+
+    /* Faster choice than using the query method; */
+    paginateByBranch2(type?, id?, year?, expired?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+                    
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     /* Faster choice than using the query method; */
+     paginateByNotification(type?, id?, year?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.notification' : {$all: ['Pharmacy Store']}, _id: { $eq: type + '_2_' + staff.id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+
+     /* Faster choice than using the query method; */
+     paginateByCentralStore(type?, id?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];                    
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     /* Faster choice than using the query method; */
+     paginateByStore(type?, id?, store?, isnoticed?, isquantitynoticed?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store },  'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : []; 
+                    
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+      /* Faster choice than using the query method; */
+      paginateByDispatchedProduct(type?, id?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.sourcedepartment': { $eq: 'Central Store' }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+                    
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+      /* Faster choice than using the query method; */
+      paginateByGeneralDispatchedProduct(type?, id?, sourcedepartment?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.sourcedepartment': { $eq: sourcedepartment }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+                    
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+    /* Faster choice than using the query method; */
+      paginateByDepartment2(type?, id?, department?, isnoticed?, isquantitynoticed?, year?, expired?) {          
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+                    
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     /* Faster choice than using the query method; */
+     paginateByExpense(type?, id?, department?, oncredit?, owing?, complete?, expensetype?, vendorid?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.departmentname': { $eq: department }, 'data.isoncredit' : {$eq: oncredit}, 'data.isowing': {$eq: owing},'data.iscomplete':{$eq: complete}, 'data.expensetype':{$eq: expensetype}, 'data.vendorid': { $eq: vendorid}, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+                    
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+       /* Faster choice than using the query method; */
+       paginateBySale(type?, id?, department?, oncredit?, owing?, complete?, patientid?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department },$or: [{'data.isoncredit': oncredit}, {'data.isowing': owing}], 'data.iscomplete': { $eq: complete}, 'data.patientid': { $eq: patientid},  _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+                    console.log(paginatedtypes);
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+
+    /* Faster choice than using the query method; */
+    paginateByBranchPrev2(type?, id?, year?, expired?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'asc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     /* Faster choice than using the query method; */
+     paginateByCentralStorePrev(type?, id?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'asc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+      /* Faster choice than using the query method; */
+     paginateByStorePrev(type?, id?, store?, isnoticed?, isquantitynoticed?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store },  'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'asc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     /* Faster choice than using the query method; */
+     paginateByDispatchedProductPrev(type?, id?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.sourcedepartment': { $eq: 'Central Store' }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'asc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+
+      /* Faster choice than using the query method; */
+      paginateByGeneralDispatchedProductPrev(type?, id?, sourcedepartment?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.sourcedepartment': { $eq: sourcedepartment }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'asc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+
+       /* Faster choice than using the query method; */
+       paginateByDepartmentPrev2(type?, id?, department?, isnoticed?, isquantitynoticed?, year?, expired?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'asc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+       /* Faster choice than using the query method; */
+       paginateByExpensePrev(type?, id?, department?, oncredit?, owing?, complete?, expensetype?, vendorid?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.departmentname': { $eq: department }, 'data.isoncredit' : {$eq: oncredit}, 'data.isowing': {$eq: owing},'data.iscomplete': {$eq: complete} , 'data.expensetype':{$eq: expensetype}, 'data.vendorid': { $eq: vendorid}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'asc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     /* Faster choice than using the query method; */
+     paginateBySalePrev(type?, id?, department?, oncredit?, owing?, complete?, patientid?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, $or: [{'data.isoncredit': oncredit}, {'data.isowing': owing}], 'data.iscomplete': { $eq: complete}, 'data.patientid': { $eq: patientid},  _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'asc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+
+    /* Go to begin of page; */
+    paginateByBranchStart(type?, id?, year?, expired?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     /* Go to begin of page; */
+     paginateByCentralStoreStart(type?, id?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     /* Go to begin of page; */
+     paginateByStoreStart(type?, id?, store?, isnoticed?, isquantitynoticed?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store },  'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     /* Go to begin of page; */
+     paginateByDispatchedProductStart(type?, id?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.sourcedepartment': { $eq: 'Central Store' }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     /* Go to begin of page; */
+     paginateByGeneralDispatchedProductStart(type?, id?, sourcedepartment?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.sourcedepartment': { $eq: sourcedepartment }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     /* Go to begin of page; */
+     paginateByDepartmentStart(type?, id?, department?, isnoticed?, isquantitynoticed?, year?, expired?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department },'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+    
+
+     /* Go to begin of page; */
+     paginateByExpenseStart(type?, id?, department?, oncredit?, owing?, complete?, expensetype?, vendorid?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.departmentname': { $eq: department }, 'data.isoncredit' : {$eq: oncredit}, 'data.isowing': {$eq: owing}, 'data.iscomplete': {$eq: complete}, 'data.expensetype':{$eq: expensetype}, 'data.vendorid': { $eq: vendorid}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+     /* Go to begin of page; */
+     paginateBySaleStart(type?, id?, department?, oncredit?, owing?, complete?, patientid?) {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, $or: [{'data.isoncredit': oncredit}, {'data.isowing': owing}], 'data.iscomplete': { $eq: complete},'data.patientid': { $eq: patientid}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+    /* Query method, it is expensive to use (memory wise). Allows for more complex operations */
+   /*  paginateByBranch(type?, id?): Promise<any> {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.query(function (doc, emit) {
+                //console.log(doc);
+                var firstIndex = doc._id.indexOf('_');
+                var docType = doc._id.substring(0, firstIndex);
+
+                if (docType === type) {
+                    if (doc.data.branch === staff.branch) {
+                        emit(doc._id);
+                    }
+                }
+            }, {
+                startkey: type + '_2_' + id, limit: this.limitRange, include_docs: true
+            }).then(function (result) {
+
+                var docs = [];
+                var data = [];
+                result.rows.map(row => {
+                    docs.push(row.doc);
+                    var index = row.doc._id.lastIndexOf('_');
+                    var id = row.doc._id.substring(index + 1);
+
+                    row.doc.data['id'] = id;
+                    row.doc.data['rev'] = row.doc._rev;
+                });
+
+                docs.map(doc => {
+                    data.push(doc.data);
+                })
+                return data
+                // found docs with name === 'foo'
+            }).catch(function (err) {
+                console.log(err);
+                // handle any errors
+            });
+        });
+    } */
+
+    /*  paginateByBranch3(type?, id?): Promise<any> {
+         var localStorageItem;
+         localStorageItem = JSON.parse(localStorage.getItem('user'));
+         return this.getStaff(localStorageItem).then(staff => {
+             return this.db.allDocs({ startkey: type, include_docs: true }).then(response => {
+                 console.log(response);
+             }).catch((err) => {
+                 console.log(err);
+             });
+         });
+     } */
+
+/* Query method, it is expensive to use (memory wise). Allows for more complex operations */
+    /* paginateByBranchPrev(type?, id?): Promise<any> {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.query(function (doc, emit) {
+                //console.log(doc);
+                var firstIndex = doc._id.indexOf('_');
+                var docType = doc._id.substring(0, firstIndex);
+                if (docType === type) {
+                    if (doc.data.branch === staff.branch) {
+                        emit(doc._id);
+                    }
+                }
+            }, {
+                startkey: type + '_2_' + id, limit: this.limitRange, descending: true, include_docs: true
+            }).then(function (result) {
+
+                var docs = [];
+                var data = [];
+                result.rows.map(row => {
+                    docs.push(row.doc);
+                    var index = row.doc._id.lastIndexOf('_');
+                    var id = row.doc._id.substring(index + 1);
+
+                    row.doc.data['id'] = id;
+                    row.doc.data['rev'] = row.doc._rev;
+                });
+                docs.map(doc => {
+                    data.push(doc.data);
+                })
+                return data
+                // found docs with name === 'foo'
+            }).catch(function (err) {
+                console.log(err);
+                // handle any errors
+            });
+        });
+    } */
+
+    //Paginate by Department;
+    paginateByDepartment(type?, id?): Promise<any> {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.query(function (doc, emit) {
+                //console.log(doc);
+                var firstIndex = doc._id.indexOf('_');
+                var docType = doc._id.substring(0, firstIndex);
+
+                if (docType === type) {
+                    if (doc.data.branch === staff.branch) {
+                        if (doc.data.department === staff.department) {
+                            emit(doc._id);
+                        }
+                    }
+                }
+            }, {
+                startkey: type + '_2_' + id, limit: this.limitRange, include_docs: true
+            }).then(function (result) {
+
+                var docs = [];
+                var data = [];
+                result.rows.map(row => {
+                    docs.push(row.doc);
+                    var index = row.doc._id.lastIndexOf('_');
+                    var id = row.doc._id.substring(index + 1);
+
+                    row.doc.data['id'] = id;
+                    row.doc.data['rev'] = row.doc._rev;
+                });
+
+                docs.map(doc => {
+                    data.push(doc.data);
+                })
+                return data
+                // found docs with name === 'foo'
+            }).catch(function (err) {
+                console.log(err);
+                // handle any errors
+            });
+        });
+    }
+
+    paginateByDepartmentPrev(type?, id?): Promise<any> {
+        var localStorageItem;
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.query(function (doc, emit) {
+                //console.log(doc);
+                var firstIndex = doc._id.indexOf('_');
+                var docType = doc._id.substring(0, firstIndex);
+                if (docType === type) {
+                    if (doc.data.branch === staff.branch) {
+                        if (doc.data.department === staff.department) {
+                            emit(doc._id);
+                        }
+                    }
+                }
+            }, {
+                startkey: type + '_2_' + id, limit: this.limitRange, descending: true, include_docs: true
+            }).then(function (result) {
+
+                var docs = [];
+                var data = [];
+                result.rows.map(row => {
+                    docs.push(row.doc);
+                    var index = row.doc._id.lastIndexOf('_');
+                    var id = row.doc._id.substring(index + 1);
+
+                    row.doc.data['id'] = id;
+                    row.doc.data['rev'] = row.doc._rev;
+                });
+                docs.map(doc => {
+                    data.push(doc.data);
+                })
+                return data
+                // found docs with name === 'foo'
+            }).catch(function (err) {
+                console.log(err);
+                // handle any errors
+            });
+        });
+    }
+
     /**
     * Return all the staffs
     *
     * @return Promise<Array<Staff>>
     */
     getStaffs(): Promise<Array<Staff>> {
+
         return this.db.rel.find('staff').then((data: any) => {
             let staffs = data.staffs ? data.staffs : [];
             let sortBy = 'DESC';
@@ -184,11 +1135,11 @@ export class PouchService {
     }
 
     /**
-   * Update a Staff
-   * @param {staff} staff
-   *
-   * @return Promise<staff>
-   */
+    * Update a Staff
+    * @param {staff} staff
+    *
+    * @return Promise<staff>
+    */
     updateStaff(staff: Staff): Promise<Staff> {
         return this.db.rel.save('staff', staff).then((data: any) => {
             if (data && data.staffs && data.staffs[0]) {
@@ -224,7 +1175,7 @@ export class PouchService {
      * @return Promise<department>
      */
     saveDepartment(department: Department): Promise<Department> {
-        department.id = Math.floor(Date.now()).toString();
+        //department.id = Math.floor(Date.now()).toString();
         return this.db.rel.save('department', department).then((data: any) => {
             if (data && data.departments && data.departments[0]) {
                 return data.departments[0];
@@ -280,11 +1231,11 @@ export class PouchService {
     }
 
     /**
-   * Update a Department
-   * @param {department} department
-   *
-   * @return Promise<department>
-   */
+    * Update a Department
+    * @param {department} department
+    *
+    * @return Promise<department>
+    */
     updateDepartment(department: Department): Promise<Department> {
         return this.db.rel.save('department', department).then((data: any) => {
             if (data && data.departments && data.departments[0]) {
@@ -344,12 +1295,14 @@ export class PouchService {
             switch (sortBy) {
                 case 'ASC':
                     sales.sort((a: any, b: any) => {
-                        return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        //return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        return new Date(a.date).getTime() - new Date(b.date).getTime();
                     })
                     break;
                 case 'DESC':
                     sales.sort((a: any, b: any) => {
-                        return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        //return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        return new Date(b.date).getTime() - new Date(a.date).getTime();
                     });
                     break;
                 default:
@@ -376,11 +1329,11 @@ export class PouchService {
     }
 
     /**
-   * Update a Sale
-   * @param {sale} sale
-   *
-   * @return Promise<sale>
-   */
+    * Update a Sale
+    * @param {sale} sale
+    *
+    * @return Promise<sale>
+    */
     updateSale(sale: Sales): Promise<Sales> {
         return this.db.rel.save('sale', sale).then((data: any) => {
             if (data && data.sales && data.sales[0]) {
@@ -440,12 +1393,14 @@ export class PouchService {
             switch (sortBy) {
                 case 'ASC':
                     expenses.sort((a: any, b: any) => {
-                        return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        //return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        return new Date(a.date).getTime() - new Date(b.date).getTime();
                     })
                     break;
                 case 'DESC':
                     expenses.sort((a: any, b: any) => {
-                        return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        //return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        return new Date(b.date).getTime() - new Date(a.date).getTime();
                     });
                     break;
                 default:
@@ -546,24 +1501,25 @@ export class PouchService {
     */
     getProducts(): Promise<Array<Products>> {
         return this.db.rel.find('product').then((data: any) => {
-            console.log(data);
             let products = data.products ? data.products : [];
             let sortBy = 'DESC';
 
             switch (sortBy) {
                 case 'ASC':
                     products.sort((a: any, b: any) => {
-                        return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        //return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        return new Date(a.datesupplied).getTime() - new Date(b.datesupplied).getTime();
                     })
                     break;
                 case 'DESC':
                     products.sort((a: any, b: any) => {
-                        return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        //return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        return new Date(b.datesupplied).getTime() - new Date(a.datesupplied).getTime();
                     });
                     break;
                 default:
                     break;
-            }            
+            }
             return products;
         }).catch((err: any) => {
             console.log(err);
@@ -639,8 +1595,8 @@ export class PouchService {
     }
 
     /***********
-   * Product
-   **********/
+    * Product
+    **********/
     /**
      * Save a Dispatched Product
      * @param {dispatchedproduct} dispatchedproduct
@@ -675,12 +1631,14 @@ export class PouchService {
             switch (sortBy) {
                 case 'ASC':
                     dispatchedproducts.sort((a: any, b: any) => {
-                        return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        //return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        return new Date(a.datedispatched).getTime() - new Date(b.datedispatched).getTime();
                     })
                     break;
                 case 'DESC':
                     dispatchedproducts.sort((a: any, b: any) => {
-                        return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        //return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        return new Date(b.datedispatched).getTime() - new Date(a.datedispatched).getTime();
                     });
                     break;
                 default:
@@ -899,11 +1857,11 @@ export class PouchService {
     }
 
     /**
-   * Update a Gopdproduct
-   * @param {gopdproduct} gopdproduct
-   *
-   * @return Promise<GOPDProducts>
-   */
+    * Update a Gopdproduct
+    * @param {gopdproduct} gopdproduct
+    *
+    * @return Promise<GOPDProducts>
+    */
     updateGopdproduct(gopdproduct: GOPDProducts): Promise<GOPDProducts> {
         return this.db.rel.save('gopdproduct', gopdproduct).then((data: any) => {
             if (data && data.gopdproducts && data.gopdproducts[0]) {
@@ -1060,12 +2018,14 @@ export class PouchService {
             switch (sortBy) {
                 case 'ASC':
                     counterproducts.sort((a: any, b: any) => {
-                        return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        //return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        return new Date(a.datesupplied).getTime() - new Date(b.datesupplied).getTime();
                     })
                     break;
                 case 'DESC':
                     counterproducts.sort((a: any, b: any) => {
-                        return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        //return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        return new Date(b.datesupplied).getTime() - new Date(a.datesupplied).getTime();
                     });
                     break;
                 default:
@@ -1381,11 +2341,11 @@ export class PouchService {
     }
 
     /**
-   * Update a productcategory
-   * @param {productcategory} productcategory
-   *
-   * @return Promise<ProductCategory>
-   */
+    * Update a productcategory
+    * @param {productcategory} productcategory
+    *
+    * @return Promise<ProductCategory>
+    */
     updateProductcategory(productcategory: ProductCategory): Promise<ProductCategory> {
         return this.db.rel.save('productcategory', productcategory).then((data: any) => {
             if (data && data.productcategorys && data.productcategorys[0]) {
@@ -1631,6 +2591,7 @@ export class PouchService {
     */
     getPatients(): Promise<Array<Patient>> {
         return this.db.rel.find('patient').then((data: any) => {
+            console.log(data);
             let patients = data.patients ? data.patients : [];
             let sortBy = 'DESC';
 
@@ -1669,11 +2630,11 @@ export class PouchService {
     }
 
     /**
-   * Update a patient
-   * @param {patient} patient
-   *
-   * @return Promise<Patient>
-   */
+    * Update a patient
+    * @param {patient} patient
+    *
+    * @return Promise<Patient>
+    */
     updatePatient(patient: Patient): Promise<Patient> {
         return this.db.rel.save('patient', patient).then((data: any) => {
             if (data && data.patients && data.patients[0]) {
@@ -1699,7 +2660,103 @@ export class PouchService {
         })
     }
 
-     /***********
+    /***********
+    * Vendor
+    **********/
+    /**
+     * Save a vendor
+     * @param {vendor} vendor
+     *
+     * @return Promise<Vendor>
+     */
+    saveVendor(vendor: Vendor): Promise<Vendor> {
+        vendor.id = Math.floor(Date.now()).toString();
+        return this.db.rel.save('vendor', vendor).then((data: any) => {
+            if (data && data.vendors && data.vendors[0]) {
+                return data.vendors[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Return all the Vendors
+    *
+    * @return Promise<Array<Vendor>>
+    */
+    getVendors(): Promise<Array<Vendor>> {
+        return this.db.rel.find('vendor').then((data: any) => {
+            let vendors = data.vendors ? data.vendors : [];
+            let sortBy = 'DESC';
+
+            switch (sortBy) {
+                case 'ASC':
+                    vendors.sort((a: any, b: any) => {
+                        return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                    })
+                    break;
+                case 'DESC':
+                    vendors.sort((a: any, b: any) => {
+                        return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                    });
+                    break;
+                default:
+                    break;
+            }
+            return vendors;
+        }).catch((err: any) => {
+            console.log(err);
+        });
+    }
+
+    /**
+    * Read a vendor
+    * @param {vendor} vendor
+    *
+    * @return Promise<Vendors>
+    */
+    getVendor(id): Promise<Vendor> {
+        return this.db.rel.find('vendor', id).then((data: any) => {
+            return data && data.vendors ? data.vendors[0] : null
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Update a vendor
+    * @param {vendor} vendor
+    *
+    * @return Promise<Vendor>
+    */
+    updateVendor(vendor: Vendor): Promise<Vendor> {
+        return this.db.rel.save('vendor', vendor).then((data: any) => {
+            if (data && data.vendors && data.vendors[0]) {
+                return data.vendors[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Remove a vendor
+    * @param {vendor} vendor
+    *
+    * @return Promise<boolean>
+    */
+    deleteVendor(vendor: Vendor): Promise<boolean> {
+        return this.db.rel.del('vendor', vendor).then((data: any) => {
+            return data && data.deleted ? data.deleted : false
+        }).catch((err: any) => {
+            console.log(err)
+        })
+    }
+
+    /***********
     * Evacuated
     **********/
     /**
@@ -1733,12 +2790,14 @@ export class PouchService {
             switch (sortBy) {
                 case 'ASC':
                     evacuates.sort((a: any, b: any) => {
-                        return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        //return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        return new Date(a.date).getTime() - new Date(b.date).getTime();
                     })
                     break;
                 case 'DESC':
                     evacuates.sort((a: any, b: any) => {
-                        return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        //return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        return new Date(b.date).getTime() - new Date(a.date).getTime();
                     });
                     break;
                 default:
@@ -1765,11 +2824,11 @@ export class PouchService {
     }
 
     /**
-   * Update a evacuate
-   * @param {evacuate} evacuate
-   *
-   * @return Promise<Evacuate>
-   */
+    * Update a evacuate
+    * @param {evacuate} evacuate
+    *
+    * @return Promise<Evacuate>
+    */
     updateEvacuate(evacuate: Evacuate): Promise<Evacuate> {
         return this.db.rel.save('evacuate', evacuate).then((data: any) => {
             if (data && data.evacuates && data.evacuates[0]) {
@@ -1795,5 +2854,599 @@ export class PouchService {
         })
     }
 
+
+    /***********
+    * Individual Sales
+    **********/
+    /**
+     * Save an individualsale
+     * @param {individualsale} individualsale
+     *
+     * @return Promise<IndividualSale>
+     */
+    saveIndividualSale(individualsale: IndividualSale): Promise<IndividualSale> {
+        individualsale.id = Math.floor(Date.now()).toString();
+        return this.db.rel.save('individualsale', individualsale).then((data: any) => {
+            if (data && data.individualsales && data.individualsales[0]) {
+                return data.individualsales[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Return all the IndividualSales
+    *
+    * @return Promise<Array<IndividualSale>>
+    */
+    getIndividualSales(): Promise<Array<IndividualSale>> {
+        return this.db.rel.find('individualsale').then((data: any) => {
+            let individualsales = data.individualsales ? data.individualsales : [];
+            let sortBy = 'DESC';
+
+            switch (sortBy) {
+                case 'ASC':
+                    individualsales.sort((a: any, b: any) => {
+                        //return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        return new Date(a.checkindate).getTime() - new Date(b.checkindate).getTime();
+                    })
+                    break;
+                case 'DESC':
+                    individualsales.sort((a: any, b: any) => {
+                        //return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        return new Date(b.checkindate).getTime() - new Date(a.checkindate).getTime();
+                    });
+                    break;
+                default:
+                    break;
+            }
+            return individualsales;
+        }).catch((err: any) => {
+            console.log(err);
+        });
+    }
+
+    /**
+    * Read a individualsale
+    * @param {individualsale} individualsale
+    *
+    * @return Promise<IndividualSales>
+    */
+    getIndividualSale(id): Promise<IndividualSale> {
+        return this.db.rel.find('individualsale', id).then((data: any) => {
+            return data && data.individualsales ? data.individualsales[0] : null
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Update a individualsale
+    * @param {individualsale} individualsale
+    *
+    * @return Promise<IndividualSale>
+    */
+    updateIndividualSale(individualsale: IndividualSale): Promise<IndividualSale> {
+        return this.db.rel.save('individualsale', individualsale).then((data: any) => {
+            if (data && data.individualsales && data.individualsales[0]) {
+                return data.individualsales[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Remove a individualsale
+    * @param {individualsale} individualsale
+    *
+    * @return Promise<boolean>
+    */
+    deleteIndividualSale(individualsale: IndividualSale): Promise<boolean> {
+        return this.db.rel.del('individualsale', individualsale).then((data: any) => {
+            return data && data.deleted ? data.deleted : false
+        }).catch((err: any) => {
+            console.log(err)
+        })
+    }
+
+    /***********
+    * Damaged Product
+    **********/
+    /**
+     * Save an damagedproduct
+     * @param {damagedproduct} damagedproduct
+     *
+     * @return Promise<Damagedproduct>
+     */
+    saveDamagedproduct(damagedproduct: Damagedproduct): Promise<Damagedproduct> {
+        damagedproduct.id = Math.floor(Date.now()).toString();
+        return this.db.rel.save('damagedproduct', damagedproduct).then((data: any) => {
+            if (data && data.damagedproducts && data.damagedproducts[0]) {
+                return data.damagedproducts[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Return all the Damagedproducts
+    *
+    * @return Promise<Array<Damagedproduct>>
+    */
+    getDamagedproducts(): Promise<Array<Damagedproduct>> {
+        return this.db.rel.find('damagedproduct').then((data: any) => {
+            let damagedproducts = data.damagedproducts ? data.damagedproducts : [];
+            let sortBy = 'DESC';
+
+            switch (sortBy) {
+                case 'ASC':
+                    damagedproducts.sort((a: any, b: any) => {
+                        //return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        return new Date(a.checkindate).getTime() - new Date(b.checkindate).getTime();
+                    })
+                    break;
+                case 'DESC':
+                    damagedproducts.sort((a: any, b: any) => {
+                        //return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        return new Date(b.checkindate).getTime() - new Date(a.checkindate).getTime();
+                    });
+                    break;
+                default:
+                    break;
+            }
+            return damagedproducts;
+        }).catch((err: any) => {
+            console.log(err);
+        });
+    }
+
+    /**
+    * Read a damagedproduct
+    * @param {damagedproduct} damagedproduct
+    *
+    * @return Promise<Damagedproducts>
+    */
+    getDamagedproduct(id): Promise<Damagedproduct> {
+        return this.db.rel.find('damagedproduct', id).then((data: any) => {
+            return data && data.damagedproducts ? data.damagedproducts[0] : null
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Update a damagedproduct
+    * @param {damagedproduct} damagedproduct
+    *
+    * @return Promise<Damagedproduct>
+    */
+    updateDamagedproduct(damagedproduct: Damagedproduct): Promise<Damagedproduct> {
+        return this.db.rel.save('damagedproduct', damagedproduct).then((data: any) => {
+            if (data && data.damagedproducts && data.damagedproducts[0]) {
+                return data.damagedproducts[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Remove a damagedproduct
+    * @param {damagedproduct} damagedproduct
+    *
+    * @return Promise<boolean>
+    */
+    deleteDamagedproduct(damagedproduct: Damagedproduct): Promise<boolean> {
+        return this.db.rel.del('damagedproduct', damagedproduct).then((data: any) => {
+            return data && data.deleted ? data.deleted : false
+        }).catch((err: any) => {
+            console.log(err)
+        })
+    }
+
+    /***********
+    * Gross Profit
+    **********/
+    /**
+     * Save an grossprofit
+     * @param {grossprofit} grossprofit
+     *
+     * @return Promise<Grossprofit>
+     */
+    saveGrossprofit(grossprofit: Grossprofit): Promise<Grossprofit> {
+        grossprofit.id = Math.floor(Date.now()).toString();
+        return this.db.rel.save('grossprofit', grossprofit).then((data: any) => {
+            if (data && data.grossprofits && data.grossprofits[0]) {
+                return data.grossprofits[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Return all the Grossprofits
+    *
+    * @return Promise<Array<Grossprofit>>
+    */
+    getGrossprofits(): Promise<Array<Grossprofit>> {
+        return this.db.rel.find('grossprofit').then((data: any) => {
+            let grossprofits = data.grossprofits ? data.grossprofits : [];
+            let sortBy = 'DESC';
+
+            switch (sortBy) {
+                case 'ASC':
+                    grossprofits.sort((a: any, b: any) => {
+                        //return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        return new Date(a.date).getTime() - new Date(b.date).getTime();
+                    })
+                    break;
+                case 'DESC':
+                    grossprofits.sort((a: any, b: any) => {
+                        //return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        return new Date(b.date).getTime() - new Date(a.date).getTime();
+                    });
+                    break;
+                default:
+                    break;
+            }
+            return grossprofits;
+        }).catch((err: any) => {
+            console.log(err);
+        });
+    }
+
+    /**
+    * Read a grossprofit
+    * @param {grossprofit} grossprofit
+    *
+    * @return Promise<Grossprofits>
+    */
+    getGrossprofit(id): Promise<Grossprofit> {
+        return this.db.rel.find('grossprofit', id).then((data: any) => {
+            return data && data.grossprofits ? data.grossprofits[0] : null
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Update a grossprofit
+    * @param {grossprofit} grossprofit
+    *
+    * @return Promise<Grossprofit>
+    */
+    updateGrossprofit(grossprofit: Grossprofit): Promise<Grossprofit> {
+        return this.db.rel.save('grossprofit', grossprofit).then((data: any) => {
+            if (data && data.grossprofits && data.grossprofits[0]) {
+                return data.grossprofits[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Remove a grossprofit
+    * @param {grossprofit} grossprofit
+    *
+    * @return Promise<boolean>
+    */
+    deleteGrossprofit(grossprofit: Grossprofit): Promise<boolean> {
+        return this.db.rel.del('grossprofit', grossprofit).then((data: any) => {
+            return data && data.deleted ? data.deleted : false
+        }).catch((err: any) => {
+            console.log(err)
+        })
+    }
+
+    /***********
+    * Net Profit
+    **********/
+    /**
+     * Save an netprofit
+     * @param {netprofit} netprofit
+     *
+     * @return Promise<Netprofit>
+     */
+    saveNetprofit(netprofit: Netprofit): Promise<Netprofit> {
+        netprofit.id = Math.floor(Date.now()).toString();
+        return this.db.rel.save('netprofit', netprofit).then((data: any) => {
+            if (data && data.netprofits && data.netprofits[0]) {
+                return data.netprofits[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Return all the Netprofits
+    *
+    * @return Promise<Array<Netprofit>>
+    */
+    getNetprofits(): Promise<Array<Netprofit>> {
+        return this.db.rel.find('netprofit').then((data: any) => {
+            let netprofits = data.netprofits ? data.netprofits : [];
+            let sortBy = 'DESC';
+
+            switch (sortBy) {
+                case 'ASC':
+                    netprofits.sort((a: any, b: any) => {
+                        //return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                        return new Date(a.date).getTime() - new Date(b.date).getTime();
+                    })
+                    break;
+                case 'DESC':
+                    netprofits.sort((a: any, b: any) => {
+                        //return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                        return new Date(b.netdate).getTime() - new Date(a.netdate).getTime();
+                    });
+                    break;
+                default:
+                    break;
+            }
+            return netprofits;
+        }).catch((err: any) => {
+            console.log(err);
+        });
+    }
+
+    /**
+    * Read a netprofit
+    * @param {netprofit} netprofit
+    *
+    * @return Promise<Netprofits>
+    */
+    getNetprofit(id): Promise<Netprofit> {
+        return this.db.rel.find('netprofit', id).then((data: any) => {
+            return data && data.netprofits ? data.netprofits[0] : null
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Update a netprofit
+    * @param {netprofit} netprofit
+    *
+    * @return Promise<Netprofit>
+    */
+    updateNetprofit(netprofit: Netprofit): Promise<Netprofit> {
+        return this.db.rel.save('netprofit', netprofit).then((data: any) => {
+            if (data && data.netprofits && data.netprofits[0]) {
+                return data.netprofits[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Remove a netprofit
+    * @param {netprofit} netprofit
+    *
+    * @return Promise<boolean>
+    */
+    deleteNetprofit(netprofit: Netprofit): Promise<boolean> {
+        return this.db.rel.del('netprofit', netprofit).then((data: any) => {
+            return data && data.deleted ? data.deleted : false
+        }).catch((err: any) => {
+            console.log(err)
+        })
+    }
+
+    /***********
+    * Department Dispatch
+    **********/
+    /**
+     * Save a department dispatch
+     * @param {departmentdispatch} departmentdispatch
+     *
+     * @return Promise<departmentdispatch>
+     */
+    saveDepartmentDispatch(departmentdispatch: DepartmentDispatch): Promise<DepartmentDispatch> {
+        //departmentdispatch.id = Math.floor(Date.now()).toString();
+        return this.db.rel.save('departmentdispatch', departmentdispatch).then((data: any) => {
+            if (data && data.departmentdispatchs && data.departmentdispatchs[0]) {
+                return data.departmentdispatchs[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+     * Return all the departmentdispatchs
+     *
+     * @return Promise<Array<DepartmentDispatch>>
+     */
+    getDepartmentDispatchs(): Promise<Array<DepartmentDispatch>> {
+        return this.db.rel.find('departmentdispatch').then((data: any) => {
+            let departmentdispatchs = data.departmentdispatchs ? data.departmentdispatchs : [];
+            let sortBy = 'DESC';
+
+            switch (sortBy) {
+                case 'ASC':
+                    departmentdispatchs.sort((a: any, b: any) => {
+                        return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                    })
+                    break;
+                case 'DESC':
+                    departmentdispatchs.sort((a: any, b: any) => {
+                        return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                    });
+                    break;
+                default:
+                    break;
+            }
+            return departmentdispatchs;
+        }).catch((err: any) => {
+            console.log(err);
+        });
+    }
+
+    /**
+     * Read a DepartmentDispatch
+     * @param {departmentdispatch} departmentdispatch
+     *
+     * @return Promise<DepartmentDispatch>
+     */
+    getDepartmentDispatch(id): Promise<DepartmentDispatch> {
+        return this.db.rel.find('departmentdispatch', id).then((data: any) => {
+            return data && data.departmentdispatchs ? data.departmentdispatchs[0] : null
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Update a DepartmentDispatch
+    * @param {departmentdispatch} departmentdispatch
+    *
+    * @return Promise<departmentdispatch>
+    */
+    updateDepartmentDispatch(departmentdispatch: DepartmentDispatch): Promise<DepartmentDispatch> {
+        return this.db.rel.save('departmentdispatch', departmentdispatch).then((data: any) => {
+            if (data && data.departmentdispatchs && data.departmentdispatchs[0]) {
+                return data.departmentdispatchs[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Remove a DepartmentDispatch
+    * @param {departmentdispatch} departmentdispatch
+    *
+    * @return Promise<boolean>
+    */
+    deleteDepartmentDispatch(departmentdispatch: DepartmentDispatch): Promise<boolean> {
+        return this.db.rel.del('departmentdispatch', departmentdispatch).then((data: any) => {
+            return data && data.deleted ? data.deleted : false
+        }).catch((err: any) => {
+            console.log(err)
+        })
+    }
+
+//Stock
+ /***********
+    * Department Stock
+    **********/
+    /**
+     * Save a Stock
+     * @param {stock} stock
+     *
+     * @return Promise<stock>
+     */
+    saveStock(stock: Stock): Promise<Stock> {
+        //departmentdispatch.id = Math.floor(Date.now()).toString();
+        return this.db.rel.save('stock', stock).then((data: any) => {
+            if (data && data.stocks && data.stocks[0]) {
+                return data.stocks[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+     * Return all the stocks
+     *
+     * @return Promise<Array<Stock>>
+     */
+    getStocks(): Promise<Array<Stock>> {
+        return this.db.rel.find('stock').then((data: any) => {
+            let stocks = data.stocks ? data.stocks : [];
+            let sortBy = 'DESC';
+
+            switch (sortBy) {
+                case 'ASC':
+                    stocks.sort((a: any, b: any) => {
+                        return (a.id > b.id) ? 1 : ((a.id > b.id) ? -1 : 0);
+                    })
+                    break;
+                case 'DESC':
+                    stocks.sort((a: any, b: any) => {
+                        return (a.id > b.id) ? -1 : ((a.id > b.id) ? 1 : 0);
+                    });
+                    break;
+                default:
+                    break;
+            }
+            return stocks;
+        }).catch((err: any) => {
+            console.log(err);
+        });
+    }
+
+    /**
+     * Read a Stock
+     * @param {stock} stock
+     *
+     * @return Promise<stock>
+     */
+    getStock(id): Promise<Stock> {
+        return this.db.rel.find('stock', id).then((data: any) => {
+            return data && data.stocks ? data.stocks[0] : null
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Update a Stock
+    * @param {stock} stock
+    *
+    * @return Promise<stock>
+    */
+    updateStock(stock: Stock): Promise<Stock> {
+        return this.db.rel.save('stock', stock).then((data: any) => {
+            if (data && data.stocks && data.stocks[0]) {
+                return data.stocks[0];
+            }
+            return null;
+        }).catch((err: any) => {
+            console.log(err);
+        })
+    }
+
+    /**
+    * Remove a Stock
+    * @param {stock} stock
+    *
+    * @return Promise<boolean>
+    */
+    deleteStock(stock: Stock): Promise<boolean> {
+        return this.db.rel.del('stock', stock).then((data: any) => {
+            return data && data.deleted ? data.deleted : false
+        }).catch((err: any) => {
+            console.log(err)
+        })
+    }
+
+    userPermission(): Promise<any> {
+        var localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return staff;
+        }).catch((err: Error) => {
+            console.log(err);
+        });
+    }
 
 }

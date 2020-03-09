@@ -10,3 +10,7 @@
 .btn-color {
     background-color: #00254e !important;
 }
+.scrollbar {
+    overflow: auto;
+    height: 550px;
+}

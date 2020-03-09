@@ -17,6 +17,7 @@ export class AddCentralStoreBcComponent implements OnInit {
   title;
   public product: Products;
   products = [];
+  vendors = [];
   files: FileList;
   isEditTotalItem = false;
   costPrice = 0;
@@ -48,7 +49,13 @@ export class AddCentralStoreBcComponent implements OnInit {
     expenseid: new FormControl(),
     stockvalue: new FormControl(),
     unitstock: new FormControl(),
-    sales: new FormControl()
+    sales: new FormControl(),
+    vendorid: new FormControl(),
+    vendoraddress: new FormControl(),
+    vendorphone: new FormControl(),
+    isnoticed: new FormControl(),
+    isquantitynoticed: new FormControl(),
+    vendorname: new FormControl()
   });
 
   constructor(private router: Router, public dialogRef: MatDialogRef<AddCentralStoreBcComponent>, @Inject(MAT_DIALOG_DATA) public data: any, public toastr: ToastrService, public _DomSanitizer: DomSanitizer, public pouchService: PouchService, private formBuilder: FormBuilder) {
@@ -73,12 +80,18 @@ export class AddCentralStoreBcComponent implements OnInit {
         refund: false,
         totalsubitem: 0,
         productcatid: '',
+        vendorid: '',
+        vendoraddress: '',
+        vendorphone: '',
+        vendorname: '',
         unitstock: 0,
         stockvalue: 0,
         isoncredit: false,
         iscompletepayment: false,
         isowing: false,
         isdispatched: false,
+        isnoticed: false,
+        isquantitynoticed: false,
         sales: []
       }
     }
@@ -117,17 +130,34 @@ export class AddCentralStoreBcComponent implements OnInit {
       totalsubitem: [this.product.totalsubitem],
       stockvalue: [this.product.stockvalue],
       unitstock: [this.product.unitstock],
+      vendorid: [this.product.vendorid],
+      vendoraddress: [this.product.vendoraddress],
+      vendorphone: [this.product.vendorphone],
+      vendorname: [this.product.vendorname],
+      isnoticed: [this.product.isnoticed],
+      isquantitynoticed: [this.product.isquantitynoticed],
       sales: []
     });
+    this.productForm.controls.vendoraddress.disable();
+    this.productForm.controls.vendorphone.disable();
 
     this.pouchService.getProductcategorys().then(items => {
       items = items.filter(data => data.department == 'Central Store' && data.branch == 'Benin Centre')
       this.products = items;
     });
+
+    this.loadVendors();
   }
 
   onNoClick(): void {
     this.dialogRef.close();
+  }
+
+  loadVendors() {
+    this.pouchService.getVendors().then(vendors => {
+      vendors = vendors.filter(data => data.branch == 'Benin Centre');
+      this.vendors = vendors;
+    });
   }
 
   selectProduct(product) {
@@ -145,13 +175,22 @@ export class AddCentralStoreBcComponent implements OnInit {
 
   }
 
+  selectVendor(vendor) {
+    if (typeof vendor !== "string") {
+      this.product.vendorid = vendor.id;
+      this.product.vendorname = vendor.fullname;
+      this.product.vendoraddress = vendor.address;
+      this.product.vendorphone = vendor.mobile;
+    }
+  }
+
   handleFiles(event) {
     var myThis = this;
     this.files = event.target.files;
     this.product.attachments = this.files[0];
     var reader = new FileReader();
     reader.readAsDataURL(this.product.attachments);
-    reader.onloadend = function() {
+    reader.onloadend = function () {
       myThis.product.productimage = reader.result;
     }
     reader.onerror = function (error) {

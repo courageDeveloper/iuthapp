@@ -34,7 +34,7 @@ export class AddCentralStoreCategoryBcComponent implements OnInit {
       productname: '',
       subgroup: '',
       costprice: 0,
-      subitemno: 0,
+      subitemno: 1,
       branch: '',
       department: 'Central Store',
       products: []

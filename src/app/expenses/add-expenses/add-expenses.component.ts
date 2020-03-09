@@ -15,6 +15,8 @@ export class AddExpensesComponent implements OnInit {
   title;
   expenses: Expenses;
   disableBalance = false;
+  totalAmountPaid: number;
+  discountedAmount: number;
 
   expensesForm = new FormGroup({
     id: new FormControl(),
@@ -45,11 +47,18 @@ export class AddExpensesComponent implements OnInit {
     evacuatedmessage: new FormControl(),
     branch: new FormControl(),
     posproduct: new FormControl(),
+    allowancebonus: new FormControl(),
+    tax: new FormControl(),
+    discount: new FormControl(),
+    totalamount: new FormControl(),
     referencenumber: new FormControl(),
     serviceorder: new FormControl(),
     productorder: new FormControl(),
     products: new FormControl(),
-    services: new FormControl()
+    services: new FormControl(),
+    vendorid: new FormControl(),
+    vendordebt: new FormControl(),
+    paymentstatus: new FormControl()
   });
 
   constructor(public dialogRef: MatDialogRef<AddExpensesComponent>, @Inject(MAT_DIALOG_DATA) public data: any, private router: Router, public toastr: ToastrService, public pouchService: PouchService, private formBuilder: FormBuilder) {
@@ -83,9 +92,16 @@ export class AddExpensesComponent implements OnInit {
         isreconciled: true,
         iscomplete: false,
         isowing: false,
+        allowancebonus: 0,
+        tax: 0,
+        discount: 0,
+        totalamount: 0,
         color: '',
         departmentloan: false,
-        branch: ''
+        branch: '',
+        vendorid: '',
+        vendordebt: 0,
+        paymentstatus: ''
       }
     }
     else {
@@ -94,15 +110,17 @@ export class AddExpensesComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.totalAmountPaid = 0;
+
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(item => {
       if (item.branch == "IUTH(Okada)") {
-        this.expenses.departmentname = "Revenue";
-        this.expenses.departmentloaning = "Revenue";
+        this.expenses.departmentname = item.department;
+        this.expenses.departmentloaning = item.department;
       }
       else if (item.branch == "Benin Centre") {
-        this.expenses.departmentname = "Account";
-        this.expenses.departmentloaning = "Account";
+        this.expenses.departmentname = item.department;
+        this.expenses.departmentloaning = item.department;
       }
     });
 
@@ -129,14 +147,21 @@ export class AddExpensesComponent implements OnInit {
       departmentid: [this.expenses.departmentid],
       staffid: [this.expenses.staffid],
       date: [this.expenses.date],
+      allowancebonus: [this.expenses.allowancebonus],
+      tax: [this.expenses.tax],
+      discount: [this.expenses.discount],
       pending: [this.expenses.pending],
       staffloan: [this.expenses.staffloan],
       isreconciled: [this.expenses.isreconciled],
       iscomplete: [this.expenses.iscomplete],
+      totalamount: [this.expenses.totalamount],
       isowing: [this.expenses.isowing],
       color: [this.expenses.color],
       departmentloan: [this.expenses.departmentloan],
-      branch: [this.expenses.branch]
+      branch: [this.expenses.branch],
+      vendorid: [this.expenses.vendorid],
+      vendordebt: [this.expenses.vendordebt],
+      paymentstatus: [this.expenses.paymentstatus]
     });
   }
 
@@ -149,6 +174,7 @@ export class AddExpensesComponent implements OnInit {
       this.expenses.isoncredit = true;
       this.expenses.loanstatus = true;
       this.expenses.balance = 0;
+      this.expenses.amount = this.expenses.amount - (this.expenses.amount * this.expenses.discount / 100);
       this.disableBalance = true;
       this.expensesForm.controls.balance.disable();
     }
@@ -160,28 +186,41 @@ export class AddExpensesComponent implements OnInit {
     }
   }
 
+  currentAmount() {
+    this.totalAmountPaid = this.expenses.amount;
+  }
+
+  discounted() {
+    this.discountedAmount = this.expenses.amount - (this.expenses.amount * this.expenses.discount / 100);
+  }
+
   submit() {
+    this.expenses.totalamount = this.expenses.amount - (this.expenses.amount * this.expenses.discount / 100);
     this.expenses.date = new Date(this.expenses.date).toString();
     if (this.expenses.isoncredit != true) {
-      this.expenses.amount = this.expenses.amount;
+      if (this.totalAmountPaid == this.expenses.amount) {
+        this.totalAmountPaid = this.totalAmountPaid - (this.totalAmountPaid * this.expenses.discount / 100);
+      }
+      this.expenses.amount = this.expenses.amount - (this.expenses.amount * this.expenses.discount / 100);
+      this.expenses.balance = this.expenses.amount - this.totalAmountPaid;
     }
     else if (this.expenses.isoncredit == true) {
       this.expenses.balance = this.expenses.amount;
       //this.expenses.amount = 0;
     }
 
-    this.expenses.expensename = `Item bought by ${this.expenses.departmentname}`;
+    this.expenses.expensename = `${this.expenses.expensename} bought by ${this.expenses.departmentname}`;
 
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(item => {
       this.expenses.branch = item.branch;
       if (item.branch == "IUTH(Okada)") {
-        this.expenses.departmentname = "Revenue";
-        this.expenses.departmentloaning = "Revenue";
+        this.expenses.departmentname = item.department;
+        this.expenses.departmentloaning = item.department;
       }
       else if (item.branch == "Benin Centre") {
-        this.expenses.departmentname = "Account";
-        this.expenses.departmentloaning = "Account";
+        this.expenses.departmentname = item.department;
+        this.expenses.departmentloaning = item.department;
       }
 
       if (this.expenses.balance > 0) {

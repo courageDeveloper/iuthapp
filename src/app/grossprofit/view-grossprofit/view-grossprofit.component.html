@@ -1,0 +1,178 @@
+<div class="main-content">
+    <div class="container-fluid">
+        <div *ngIf="tableCheck" class="icon-align"><i style="font-size: 45px; cursor: pointer;"
+                class="material-icons delete-color" matTooltip="Delete Selected Gross Profit"
+                (click)="deleteSelectedGrossprofit()">delete</i> </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div> <button mat-raised-button class="btn pull-right card-color" (click)="export()">EXPORT <i
+                            class="material-icons" style="color: white;">reply</i></button></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header card-header-iuth">
+                        <h4 class="card-title" style="color:white;"><b>View Gross Profit</b></h4>
+                        <p class="card-category" style="color:white;"> Records of all gross profit at IUTH</p>
+                    </div>
+                    <div class="card-body">
+                        <mat-form-field class="example-full-width" style="float: right;">
+                            <input matInput placeholder="Search" (change)="filterString($event)">
+                        </mat-form-field>
+                        <div class="table-responsive">
+                            <div class="row">
+                                <div class="col-md-3">
+                                    <mat-form-field class="example-full-width">
+                                        <mat-label>Select Year</mat-label>
+                                        <mat-select [value]="selectedYear" placeholder="Select Year"
+                                            [(ngModel)]="selectedYear" name="selectedyear">
+                                            <mat-option [value]="selectedYear" *ngFor="let selectedYear of years"
+                                                (click)="selectYear(selectedYear)">
+                                                {{selectedYear}}</mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                </div>
+                                <div class="col-sm-3">
+                                    <button mat-stroked-button class="btn btn-success" style="margin-right: 10px;"
+                                        (click)="filterByYear()">
+                                        Filter</button>
+                                </div>
+                                <div class="col-sm-3" *ngIf="isFinanceDept">
+                                    <button style="float: right; margin-right: 10px;color: white;"
+                                        (click)="navexpenses()" mat-stroked-button class="card-color"> Expenses
+                                    </button>
+                                </div>
+                                <div class="col-sm-3" *ngIf="isFinanceDept">
+                                    <button style="float: right; margin-right: 10px;" (click)="navnetprofit()"
+                                        mat-stroked-button class="btn btn-danger"> View Net Profits </button>
+                                </div>
+                            </div>
+                            <div class="row" *ngIf="isFinanceDept">
+                                <div class="col-md-2">
+                                    <mat-form-field class="example-full-width">
+                                        <mat-label>Select Department</mat-label>
+                                        <mat-select [value]="selectedDepartment" placeholder="Select Department"
+                                            [(ngModel)]="selectedDepartment" name="selecteddepartment">
+                                            <mat-option [value]="selectedDepartment"
+                                                *ngFor="let selectedDepartment of departments">
+                                                {{selectedDepartment}}</mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                </div>
+                                <div class="col-sm-2">
+                                    <button mat-stroked-button class="btn btn-success" style="margin-right: 10px;"
+                                        (click)="filterByDepartment()">
+                                        Filter</button>
+                                </div>
+                                <div class="col-sm-4" *ngIf="isFinanceDept">
+                                    <button style="float: right; margin-right: 10px;" (click)="addNetProfit()"
+                                        mat-stroked-button class="btn btn-info"> Add Net Profit </button>
+                                </div>
+                            </div>
+                            <table id="dtBasicExample" class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th *ngIf="isSupervisor">
+
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Month
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Year
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Date
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Department
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Sales for Month
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Cost of Goods Sold
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Expenses
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Gross Profit
+                                        </th>
+                                        <!-- <th style="font-weight: bold;">
+                                            Net Profit
+                                        </th> -->
+                                        <th *ngIf="isSupervisor">
+
+                                        </th>
+                                        <th *ngIf="isSupervisor">
+
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let grossprofit of paginatedGrossProfits">
+                                        <th scope="row" *ngIf="isSupervisor">
+                                            <mat-checkbox (change)="selectedGrossprofit(grossprofit, $event)">
+                                            </mat-checkbox>
+                                        </th>
+                                        <td>
+                                            {{grossprofit.month}}
+                                        </td>
+                                        <td>
+                                            {{grossprofit.year}}
+                                        </td>
+                                        <td>
+                                            {{grossprofit.date | date: 'fullDate'}}
+                                        </td>
+                                        <td>
+                                            {{grossprofit.department}}
+                                        </td>
+                                        <td class="text-primary">
+                                            {{grossprofit.salespermonth}}
+                                        </td>
+                                        <td class="text-primary">
+                                            {{grossprofit.cogs}}
+                                        </td>
+                                        <td class="text-primary">
+                                            {{grossprofit.expenses}}
+                                        </td>
+                                        <td class="text-primary">
+                                            {{grossprofit.grossprofit}}
+                                        </td>
+                                        <!-- <td class="text-primary">
+                                            {{grossprofit.netprofit}}
+                                        </td> -->
+                                        <td style="cursor: pointer;" *ngIf="isSupervisor">
+                                            <i class="material-icons" matTooltip="Edit Gross Profit"
+                                                (click)="editGrossprotif(grossprofit)">edit</i>
+                                        </td>
+                                        <td style="cursor: pointer;" *ngIf="isSupervisor">
+                                            <i class="material-icons delete-color" matTooltip="Delete Gross Profit"
+                                                (click)="deleteGrossprofit(grossprofit)">delete</i>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="row" style="margin-top: 5px;">
+                                <div class="col-lg-12">
+                                    <div style="float: right">
+                                        <h4>Gross Profit(#): {{grossProfit}}</h4>
+                                        <!-- <h4> Net Profit(#): {{netProfit}}</h4> -->
+                                    </div>
+                                </div>
+                            </div>
+                            <button mat-stroked-button style="float: right; margin: 5px;" class="btn btn-info"
+                                (click)="next()" [disabled]="!isNextActive"> NEXT </button>
+                            <button mat-stroked-button style="float: right; margin: 5px;" class="btn btn-warning"
+                                (click)="previous()" [disabled]="!isPreviousActive"> PREVIOUS </button>
+                            <button mat-stroked-button style="float: right; margin: 5px;" class="btn btn-success"
+                                (click)="goToStart()" [disabled]="!isPreviousActive"> GO TO START </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

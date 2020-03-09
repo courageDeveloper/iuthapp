@@ -1,0 +1,8 @@
+<h1 mat-dialog-title>{{data.content.name}}</h1>
+<div mat-dialog-content>
+  {{data.content.message}} proceed to view them?
+</div>
+<div mat-dialog-actions>
+  <button mat-button (click)="dialogRef.close(false)" class="btn btn-danger">No Thanks</button>
+  <button mat-button (click)="dialogRef.close(true)" [routerLink]="[data.content.url]" class="btn btn-success" cdkFocusInitial>OK</button>
+</div>

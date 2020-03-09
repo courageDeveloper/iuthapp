@@ -1,0 +1,103 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <i class="material-icons" style="color: #00254e; cursor: pointer; text-align: left" matTooltip="Close"
+      (click)="onNoClick()">close</i>
+    <div class="row">
+      <div class="col-md-12">
+        <!-- <div class="card"> -->
+        <div style="text-align: center;">
+          <h2 style="color:#00254e;"><b>{{title}} Stock</b></h2>
+          <p style="color:#00254e; text-transform: lowercase" text-lowercase>You can {{title}} stock here</p>
+        </div>
+        <div>
+          <form [formGroup]="stockForm">
+            <div class="row">
+              <div class="col-md-12">
+                <mat-form-field class="example-full-width">
+                  <mat-label>Select Stock Type</mat-label>
+                  <mat-select [value]="stock.openingstock" [(ngModel)]="stock.openingstock" name="openingstock"
+                    [formControl]="stockForm.controls['openingstock']" required>
+                    <mat-option [value]="stock" *ngFor="let stock of stocks" (click)="changeStockType(stock)">
+                      {{stock}}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="row" *ngIf="isOpeningStock">
+              <div class="col-md-12">
+                <mat-form-field class="example-full-width">
+                  <input matInput placeholder="Opening Stock Amount for Month" type="number"
+                    [(ngModel)]="stock.openingstockamount" name="openingstockamount"
+                    [formControl]="stockForm.controls['openingstockamount']" required>
+                </mat-form-field>
+              </div>
+            </div>
+            <!--  <div class="row">
+              <div class="col-md-12">
+                <mat-form-field class="example-full-width">
+                  <mat-label>Select Stock Type</mat-label>
+                  <mat-select [value]="stock.closingstock" [(ngModel)]="stock.closingstock" name="closingstock"
+                    [formControl]="stockForm.controls['closingstock']" required>
+                    <mat-option [value]="closingstock" *ngFor="let closingstock of closingstocks">
+                      {{closingstock}}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div> -->
+            <div class="row" *ngIf="!isOpeningStock">
+              <div class="col-md-12">
+                <mat-form-field class="example-full-width">
+                  <input matInput placeholder="Closing Stock Amount for Month" type="number"
+                    [(ngModel)]="stock.closingstockamount" name="closingstockamount"
+                    [formControl]="stockForm.controls['closingstockamount']" required>
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <mat-form-field class="example-full-width">
+                  <mat-label>Select Month</mat-label>
+                  <mat-select [value]="stock.month" placeholder="Select Month" [(ngModel)]="stock.month" name="month"
+                    [formControl]="stockForm.controls['month']" required>
+                    <mat-option [value]="month" *ngFor="let month of months">
+                      {{month}}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <mat-form-field class="example-full-width">
+                  <mat-label>Select Year</mat-label>
+                  <mat-select [value]="stock.year" placeholder="Select Year" [(ngModel)]="stock.year"
+                    [formControl]="stockForm.controls['year']" name="year" required>
+                    <mat-option [value]="year" *ngFor="let year of years">
+                      {{year}}</mat-option>
+                  </mat-select>
+                </mat-form-field>
+              </div>
+            </div>
+            <div class="row">
+              <div class="col-md-12">
+                <mat-form-field class="example-full-width">
+                  <textarea matInput placeholder="Description" type="text" [(ngModel)]="stock.description"
+                    name="description" [formControl]="stockForm.controls['description']" required></textarea>
+                </mat-form-field>
+              </div>
+            </div>
+            <div *ngIf="title=='Add'">
+              <button mat-raised-button (click)="submit()" type="submit" class="btn btn-color pull-right"
+                [disabled]="stockForm.invalid">{{title}} Stock</button>
+            </div>
+            <div *ngIf="title=='Edit'">
+              <button mat-raised-button (click)="edit()" type="submit" class="btn btn-color pull-right"
+                [disabled]="stockForm.invalid">{{title}} Stock</button>
+            </div>
+            <div class="clearfix"></div>
+          </form>
+        </div>
+        <!-- </div> -->
+      </div>
+    </div>
+  </div>
+</div>

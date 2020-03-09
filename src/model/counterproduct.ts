@@ -24,5 +24,7 @@ export interface CounterProducts {
     costprice: number,
     dispatchid: string,
     refund: any,
+    isnoticed: any;
+    isquantitynoticed: any;
     sales: Array<any>
 }

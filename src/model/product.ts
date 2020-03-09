@@ -20,7 +20,13 @@ export interface Products {
     isexpired: any;
     isoncredit: any;
     isowing: any;
+    vendorid: string;
+    vendoraddress: string;
+    vendorphone: string;
+    vendorname: string;
     iscompletepayment: any;
     isdispatched: any;
+    isnoticed: any;
+    isquantitynoticed: any;
     sales: Array<any>
 }

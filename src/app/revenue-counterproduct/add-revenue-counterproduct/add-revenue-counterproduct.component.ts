@@ -50,6 +50,8 @@ export class AddRevenueCounterProductComponent implements OnInit {
     costprice: new FormControl(),
     dispatchid: new FormControl(),
     refund: new FormControl(),
+    isnoticed: new FormControl(),
+    isquantitynoticed: new FormControl(),
     sales: new FormControl()
   });
 
@@ -83,6 +85,8 @@ export class AddRevenueCounterProductComponent implements OnInit {
         costprice: 0,
         dispatchid: '',
         refund: false,
+        isnoticed: false,
+        isquantitynoticed: false,
         sales: []
       }
     }
@@ -123,6 +127,8 @@ export class AddRevenueCounterProductComponent implements OnInit {
       costprice: [this.counterProduct.costprice],
       dispatchid: [this.counterProduct.dispatchid],
       refund: [this.counterProduct.refund],
+      isnoticed: [this.counterProduct.isnoticed],
+      isquantitynoticed: [this.counterProduct.isquantitynoticed],
       sales: [this.counterProduct.sales]
     });
     this.counterProductForm.controls['productname'].disable();

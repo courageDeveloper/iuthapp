@@ -9,6 +9,8 @@ export interface DispatchedProducts {
     branch: string,
     unitquantity: number,
     sourcedepartment: string,
+    costprice: number,
+    subitemno: number
     return: any,
     sales: Array<any>
 }

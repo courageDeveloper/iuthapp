@@ -40,4 +40,8 @@ td:nth-last-child(1) {
      margin-left: 5px;
  }
 
- 
+ .btn-load {
+    border-radius: 5% !important;
+    width: 35%;
+    box-shadow: 2px 5px #888888 !important;
+}

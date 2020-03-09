@@ -37,14 +37,14 @@ export class NavbarComponent implements OnInit {
             }
         });
 
-        setInterval(() => {
+        /* setInterval(() => {
             var localStorageItem = JSON.parse(localStorage.getItem('user'));
             this.pouchService.getStaff(localStorageItem).then(item => {
                 item.notification = item.notification.filter(data => data.viewed == false);
                 this.notificationNumber = item.notification.length;
                 this.notifications = item.notification.slice(Math.max(item.notification.length - 5, 0));
             });
-        }, 60000);
+        }, 60000); */
     }
 
     sidebarOpen() {
@@ -148,6 +148,11 @@ export class NavbarComponent implements OnInit {
 
     //My code
     navLogin() {
+        localStorage.removeItem('user');
         this.router.navigate(['login']);
+    }
+
+    navDashboard(){
+        this.router.navigate(['dashboard']);
     }
 }

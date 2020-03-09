@@ -5,6 +5,12 @@
                 (click)="deleteSelectedCounterProduct()">delete</i> </div>
         <div class="row">
             <div class="col-md-12">
+                <button style="float: left" (click)="navdamagedproducts()" mat-stroked-button class="btn btn-info">
+                    View Damaged Products </button>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
                 <cdk-virtual-scroll-viewport style="height: 1000px" itemSize="90">
                     <ng-container *cdkVirtualFor="let counterproduct of counterProducts; let i = index">
                         <div class="card" style="border: solid #00254e 2px;">
@@ -14,7 +20,8 @@
                                 </div>
                                 <div class="pharm-img" *ngIf="counterproduct.productimage != ''">
                                     <img class="img-avatar" style="cursor: pointer;"
-                                        [src]="_DomSanitizer.bypassSecurityTrustUrl(counterproduct.productimage)" (click)="viewImage(counterproduct, i)" matTooltip="View Image">
+                                        [src]="_DomSanitizer.bypassSecurityTrustUrl(counterproduct.productimage)"
+                                        (click)="viewImage(counterproduct, i)" matTooltip="View Image">
                                 </div>
                                 <mat-checkbox (change)="selectedCounterProduct(counterproduct, $event)"></mat-checkbox>
                                 <mat-card-title style="margin: 0 0 5px 10px;">Product Name:
@@ -25,12 +32,13 @@
                                     </div>
                                 </div>
                                 <div class="row">
-                                        <div class="col-md-6">
-                                                <strong>Sub Item/Tablet Selliing Price:</strong> {{counterproduct.subitemsellingprice}}
-                                            </div>
-                                        <div class="col-md-6">
-                                                <strong>Unit Selliing Price:</strong> {{counterproduct.unitsellingprice}}
-                                            </div>
+                                    <div class="col-md-6">
+                                        <strong>Sub Item/Tablet Selliing Price:</strong>
+                                        {{counterproduct.subitemsellingprice}}
+                                    </div>
+                                    <div class="col-md-6">
+                                        <strong>Unit Selliing Price:</strong> {{counterproduct.unitsellingprice}}
+                                    </div>
                                 </div>
                                 <div class="row">
                                     <div class="col-md-6">
@@ -63,6 +71,10 @@
                                             (click)="refundCounterProduct(counterproduct)" mat-mini-fab><i
                                                 class="material-icons" style="color: whitesmoke"
                                                 matTooltip="Refund Product">reply</i></button>
+                                        <button class="icon-product-cat" style="background-color: #1b5006"
+                                            (click)="addDamagedProduct(counterproduct)" mat-mini-fab><i
+                                                class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Add Damaged Product">block</i></button>
                                     </div>
                                 </div>
 

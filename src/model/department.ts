@@ -7,5 +7,7 @@ export interface Department {
     departmentowed: string,
     dateofloan: any,
     branch: string,
+    isswitchedtable: any,
+    producthistory: Array<any>,
     staffs: Array<string>
 }

@@ -16,6 +16,7 @@ export class EditPatientComponent implements OnInit {
   errorMessageUser;
   errorMessage;
   currentUseremail;
+  isUserPermitted = false;
   disabled = false;
   emailValidate = "[A-Za-z0-9._%+-]{3,}@[a-zA-Z]{3,}([.]{1}[a-zA-Z]{2,}|[.]{1}[a-zA-Z]{2,}[.]{1}[a-zA-Z]{2,})";
   patientForm = new FormGroup({
@@ -60,6 +61,12 @@ export class EditPatientComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.pouchService.userPermission().then(result => {      
+      if (result.department == 'Admin') {
+        this.isUserPermitted = true;
+      }
+    })
+
     let id = this.activatedRoute.snapshot.params['id'];
     this.pouchService.getPatient(id).then(item => {
       item.dob = new Date(item.dob);

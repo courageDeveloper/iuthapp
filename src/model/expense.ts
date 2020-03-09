@@ -12,12 +12,17 @@ export interface Expenses {
     departmentloaning: string,
     dateofloan: any,
     expensename: string,
+    allowancebonus: number,
+    tax: number,
+    discount: number,
     amount: number,
     isoncredit: any,
     isowing: any,
     iscomplete: any,
     isreconciled: any,
     balance: number,
+    totalamount: number,
+    paymentstatus: string,
     color: string,
     expensetype: string,
     expenseproduct: string,
@@ -28,5 +33,7 @@ export interface Expenses {
     pending: any,
     staffloan: any,
     departmentloan: any,
-    branch: string
+    branch: string,
+    vendorid: string,
+    vendordebt: number
 }

@@ -8,6 +8,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 import { DataService } from '../services/data.service';
+var converter = require('number-to-words');
 
 @Component({
   selector: 'app-receipt-account',
@@ -21,6 +22,11 @@ export class ReceiptAccountComponent implements OnInit {
   seviceError;
   productError;
   receiptSource: any;
+  localStorageItem: any;
+  serverName: any;
+  staffCode;
+  currentDate: any;
+  amountInWords: any;
 
   constructor(private router: Router, private dataService: DataService, public dialogRef: MatDialogRef<ReceiptAccountComponent>, @Inject(MAT_DIALOG_DATA) public data: any, public toastr: ToastrService, public _DomSanitizer: DomSanitizer, public pouchService: PouchService, private formBuilder: FormBuilder) {
 
@@ -31,6 +37,7 @@ export class ReceiptAccountComponent implements OnInit {
       var patientName = this.data.sale.salename.substring(indexOfBy + 2,indexOfFrom);
       this.data.sale['patientName'] = patientName;
       this.sale = this.data.sale;
+      this.amountInWords = converter.toWords(this.sale.amount);
        
       if(this.sale.productorder.length == 0) {
          this.productError = 'No Product has been added to cart';
@@ -42,6 +49,14 @@ export class ReceiptAccountComponent implements OnInit {
   }
 
   ngOnInit() {
+    this.currentDate = new Date();
+
+    this.localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(this.localStorageItem).then(staff => {
+      this.serverName = staff.firstname + ' ' + staff.lastname;
+      this.staffCode = staff.staffcode;
+    });
+
     this.dataService.receiptSource.subscribe(receiptsource => this.receiptSource = receiptsource);
     
     setTimeout(() => {

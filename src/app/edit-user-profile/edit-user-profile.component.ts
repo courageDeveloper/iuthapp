@@ -18,7 +18,10 @@ export class EditUserProfileComponent implements OnInit {
   errorMessageUser;
   currentUsername;
   currentUseremail;
+  isUserPermitted = false;
+  checkboxes: any;
   errorMessage;
+  isChecked = false;
   disabled = false;
   emailValidate = "[A-Za-z0-9._%+-]{3,}@[a-zA-Z]{3,}([.]{1}[a-zA-Z]{2,}|[.]{1}[a-zA-Z]{2,}[.]{1}[a-zA-Z]{2,})";
   staffForm = new FormGroup({
@@ -42,6 +45,8 @@ export class EditUserProfileComponent implements OnInit {
     email: new FormControl(),
     dateofentry: new FormControl(),
     sex: new FormControl(),
+    roles: new FormControl(),
+    isswitchedtable: new FormControl(),
     notification: new FormControl(),
     expenses: new FormControl()
   })
@@ -66,14 +71,23 @@ export class EditUserProfileComponent implements OnInit {
       mobile: '',
       address: '',
       email: '',
+      isswitchedtable: false,
       dateofentry: new Date(),
       sex: 'Male',
+      roles: [],
       notification: [],
       expenses: []
     }
   }
 
   ngOnInit() {
+    this.staff.roles = [{ role: 'Supervisor', isChecked: false }, { role: 'Evacuate', isChecked: false }, { role: 'Refund/Return', isChecked: false }, { role: 'Pay Loan', isChecked: false }];
+    this.pouchService.userPermission().then(result => {
+      if (result.department == 'Admin') {
+        this.isUserPermitted = true;
+      }
+    });
+
     let id = this.activatedRoute.snapshot.params['id'];
     this.pouchService.getStaff(id).then(item => {
       item.dob = new Date(item.dob);
@@ -105,10 +119,12 @@ export class EditUserProfileComponent implements OnInit {
       accountnumber: [this.staff.accountnumber],
       bankaccount: [this.staff.bankaccount],
       mobile: [this.staff.mobile],
+      isswitchedtable: [this.staff.isswitchedtable],
       address: [this.staff.address],
-      email: [this.staff.email, Validators.compose([Validators.required, Validators.pattern(this.emailValidate)])],
+      email: [this.staff.email, Validators.compose([Validators.pattern(this.emailValidate)])],
       dateofentry: [this.staff.dateofentry],
       sex: [this.staff.sex],
+      roles: [this.staff.roles],
       notification: [this.staff.notification],
       expenses: [this.staff.expenses]
     })
@@ -168,7 +184,17 @@ export class EditUserProfileComponent implements OnInit {
       this.staff.dob = new Date(res.dob);
       this.staff.dateofentry = new Date(res.dateofentry);
     });
+  }
 
+  selectCheckbox(event, i) {
+    if (event.checked) {
+      var role = this.staff.roles[i];
+      role.isChecked = true;
+    }
+    else {
+      var role = this.staff.roles[i];
+      role.isChecked = false;
+    }
   }
 
 }

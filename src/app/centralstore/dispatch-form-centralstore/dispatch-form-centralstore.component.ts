@@ -52,6 +52,8 @@ export class DispatchFormCentralStoreComponent implements OnInit {
         dispatchdepartment: '',
         sourcedepartment: this.data.centralstore.store,
         dispatched: false,
+        subitemno: 0,
+        costprice: 0,
         datedispatched: new Date(),
         branch: '',
         unitquantity: 0,
@@ -63,7 +65,6 @@ export class DispatchFormCentralStoreComponent implements OnInit {
   }
 
   ngOnInit() {
-    console.log(this.data.centralstore);
     this.errorMessage = "";
     if (this.data.centralstore.unitstock <= 0) {
       this.errorMessage = "You can not dispatch this item as it is out of stock.";
@@ -72,7 +73,8 @@ export class DispatchFormCentralStoreComponent implements OnInit {
 
     if (this.data.centralstore)
       this.localStorageItem = JSON.parse(localStorage.getItem('user'));
-    this.departments = ['Main Pharmacy', 'GOPD Pharmacy', 'Laboratory', 'Radiology', 'Pharmacy Store', 'Theatre'];
+    this.departments = ['Main Pharmacy', 'GOPD Pharmacy', 'Laboratory',
+    'Radiology', 'Revenue', 'Account', 'Audit', 'Theatre', 'Admin'];
 
     this.dispatchProductForm = this.formBuilder.group({
       id: [this.dispatchedProducts.id],
@@ -90,6 +92,11 @@ export class DispatchFormCentralStoreComponent implements OnInit {
     });
 
     this.dispatchProductForm.controls.productname.disable();
+
+    this.pouchService.getProductcategory(this.data.centralstore.productcatid).then(item => {
+      this.dispatchedProducts.costprice = item.costprice;
+      this.dispatchedProducts.subitemno = item.subitemno;
+    });
   }
 
   onNoClick(): void {
@@ -172,6 +179,8 @@ export class DispatchFormCentralStoreComponent implements OnInit {
             refund: false,
             isUnitSelling: true,
             isexpired: this.data.centralstore.isexpired,
+            isnoticed: false,
+            isquantitynoticed: false,
             sales: []
           }
 

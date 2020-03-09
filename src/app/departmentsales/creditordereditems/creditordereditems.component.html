@@ -1,0 +1,154 @@
+<div class="main-content">
+    <div class="container-fluid">
+        <div class="row">
+            <div class="col-md-12">
+                <div> <button mat-raised-button class="btn pull-right card-color" (click)="export()">EXPORT <i
+                            class="material-icons" style="color: white;">reply</i></button></div>
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-header card-header-iuth">
+                        <h4 class="card-title" style="color:white;"><b>View Credits</b></h4>
+                        <p class="card-category" style="color:white;"> Records of all credits at IUTH {{department}}</p>
+                    </div>
+                    <div class="card-body">
+                        <mat-form-field class="example-full-width" style="float: right;">
+                            <input matInput placeholder="Search" (change)="filterString($event)">
+                        </mat-form-field>
+                        <div class="table-responsive">
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <mat-form-field class="example-full-width">
+                                        <input matInput name="datefrom" [matDatepicker]="from" [(ngModel)]="dateFrom"
+                                            placeholder="Date from">
+                                        <mat-datepicker-toggle matSuffix [for]="from"></mat-datepicker-toggle>
+                                        <mat-datepicker touchUi #from></mat-datepicker>
+                                    </mat-form-field>
+                                    <mat-form-field class="example-full-width">
+                                        <input matInput name="timefrom" placeholder="Time from" type="time"
+                                            [(ngModel)]="timeFrom">
+                                    </mat-form-field>
+                                </div>
+                                <div class="col-md-2">
+                                    <mat-form-field class="example-full-width">
+                                        <input matInput name="dateto" [matDatepicker]="to" [(ngModel)]="dateTo"
+                                            placeholder="Date to">
+                                        <mat-datepicker-toggle matSuffix [for]="to"></mat-datepicker-toggle>
+                                        <mat-datepicker touchUi #to></mat-datepicker>
+                                    </mat-form-field>
+                                    <mat-form-field class="example-full-width">
+                                        <input matInput name="timeto" placeholder="Time to" type="time"
+                                            [(ngModel)]="timeTo">
+                                    </mat-form-field>
+                                </div>
+                                <div class="col-sm-2">
+                                    <button mat-stroked-button class="btn"
+                                        style="background-color: #00254e; margin-right: 10px; margin-top:45px;"
+                                        (click)="filterDate()">
+                                        Check Date</button>
+                                </div>
+                            </div>
+                            <div class="row">
+                                <div class="col-md-2">
+                                    <mat-form-field class="example-full-width">
+                                        <mat-label>Select Month</mat-label>
+                                        <mat-select [value]="selectedMonth" placeholder="Select Month"
+                                            [(ngModel)]="selectedMonth" name="selectedmonth">
+                                            <mat-option [value]="selectedMonth" *ngFor="let selectedMonth of months">
+                                                {{selectedMonth}}</mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                </div>
+                                <div class="col-md-2">
+                                    <mat-form-field class="example-full-width">
+                                        <mat-label>Select Year</mat-label>
+                                        <mat-select [value]="selectedYear" placeholder="Select Year"
+                                            [(ngModel)]="selectedYear" name="selectedyear">
+                                            <mat-option [value]="selectedYear" *ngFor="let selectedYear of years"
+                                                (click)="selectYear(selectedYear)">
+                                                {{selectedYear}}</mat-option>
+                                        </mat-select>
+                                    </mat-form-field>
+                                </div>
+                                <div class="col-sm-2">
+                                    <button mat-stroked-button class="btn btn-success" style="margin-right: 10px;"
+                                        (click)="filterByMonth()">
+                                        Filter</button>
+                                </div>
+                            </div>
+                            <table id="dtBasicExample" class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th style="font-weight: bold;">
+                                            Sale Name
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Description
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Amount Loaned
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Balance
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Date of Loaned
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Completed Order
+                                        </th>
+                                        <th>
+
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let loan of paginatedLoans" [style.background-color]="loan.color">
+                                        <td>
+                                            {{loan.salename}}
+                                        </td>
+                                        <td>
+                                            {{loan.description}}
+                                        </td>
+                                        <td class="text-primary">
+                                            {{loan.amountloaned}}
+                                        </td>
+                                        <td class="text-primary">
+                                            {{loan.balance}}
+                                        </td>
+                                        <td>
+                                            {{loan.date}}
+                                        </td>
+                                        <td *ngIf="loan.iscomplete">
+                                            Transaction Completed
+                                        </td>
+                                        <td *ngIf="!loan.iscomplete">
+                                            Pending Transaction
+                                        </td>
+                                        <td>
+                                            <i *ngIf="!loan.isowing" class="material-icons" matTooltip="Generate Pin"
+                                                (click)="generatePin(loan)">settings</i>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                            <div class="row">
+                                <div class="col-md-12" style="font-size: 20px;">
+                                    <strong> Total Loans: </strong> {{getTotalLoans(loans)}}
+                                </div>
+                            </div>
+                            <button mat-stroked-button style="float: right; margin: 5px;" class="btn btn-info"
+                                (click)="next()" [disabled]="!isNextActive"> NEXT </button>
+                            <button mat-stroked-button style="float: right; margin: 5px;" class="btn btn-warning"
+                                (click)="previous()" [disabled]="!isPreviousActive"> PREVIOUS </button>
+                            <button mat-stroked-button style="float: right; margin: 5px;" class="btn btn-success"
+                                (click)="goToStart()" [disabled]="!isPreviousActive"> GO TO START </button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>

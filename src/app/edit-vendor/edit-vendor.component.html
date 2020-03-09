@@ -1,0 +1,89 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <div class="row">
+      <div class="col-md-10">
+        <div class="card">
+          <div class="card-header card-header-iuth">
+            <h4 class="card-title" style="color:white;"><b>Edit Vendor</b></h4>
+            <p class="card-category" style="color:white;">Edit your profile</p>
+          </div>
+          <div class="card-body">
+            <form [formGroup]="vendorForm" (ngSubmit)="submit()">
+              <div class="row">
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Vendor Full Name" [(ngModel)]="vendor.fullname" name="fullname"
+                     [formControl]="vendorForm.controls['fullname']">
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Email address" type="email" [(ngModel)]="vendor.email" name="email"
+                      (ngModelChange)="checkEmail()" [formControl]="vendorForm.controls['email']">
+                  </mat-form-field>
+                  <span class="text-danger"
+                    *ngIf="!vendorForm.controls.email.valid && vendorForm.controls.email.dirty">Please
+                    enter a valid email.</span>
+                  <span class="text-danger" no-margin>{{errorMessage}}</span>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <mat-form-field class="example-full-width">
+                    <mat-label>Branch</mat-label>
+                    <mat-select [value]="vendor.branch" [(ngModel)]="vendor.branch" name="branch"
+                      [formControl]="vendorForm.controls['branch']" required>
+                      <mat-option [value]="branch" *ngFor="let branch of branchNames">
+                        {{branch}}</mat-option>
+                    </mat-select>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-12">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Address" type="text" [(ngModel)]="vendor.address" name="address"
+                      [formControl]="vendorForm.controls['address']">
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Phone Number" type="text" [(ngModel)]="vendor.mobile" name="mobile"
+                      [formControl]="vendorForm.controls['mobile']">
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput [matDatepicker]="picker" placeholder="Date of Registration" [(ngModel)]="vendor.dateofregistration"
+                      name="dateofregistration" [formControl]="vendorForm.controls['dateofregistration']">
+                    <mat-datepicker-toggle matSuffix [for]="picker"></mat-datepicker-toggle>
+                    <mat-datepicker touchUi #picker></mat-datepicker>
+                  </mat-form-field>
+                </div>
+              </div>
+              <div class="row">
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Preferred Account Number" type="text" [(ngModel)]="vendor.accountnumber"
+                      name="accountnumber" [formControl]="vendorForm.controls['accountnumber']">
+                  </mat-form-field>
+                </div>
+                <div class="col-md-6">
+                  <mat-form-field class="example-full-width">
+                    <input matInput placeholder="Preferred Bank Account" type="text" [(ngModel)]="vendor.bankname"
+                      name="bankname" [formControl]="vendorForm.controls['bankname']">
+                  </mat-form-field>
+                </div>
+              </div>
+              <button mat-raised-button type="submit" class="btn btn-color pull-right"
+                [disabled]='vendorForm.invalid || disabled || !isUserPermitted'>Update</button>
+              <div class="clearfix"></div>
+            </form>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</div>

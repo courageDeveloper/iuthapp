@@ -12,9 +12,6 @@ export const Schema = [
             expenses: {
                 hasMany: {
                     type: 'expense',
-                    options: {
-                        async: true
-                    }
                 }
             }
         }
@@ -27,7 +24,7 @@ export const Schema = [
                 hasMany: {
                     type: 'staff',
                     options: {
-                        async: true
+                        queryInverse: 'department'
                     }
                 }
             },
@@ -36,6 +33,30 @@ export const Schema = [
     {
         singular: 'evacuate',
         plural: 'evacuates',
+    },
+    {
+        singular: 'stock',
+        plural: 'stocks',
+    },
+    {
+        singular: 'departmentdispatch',
+        plural: 'departmentdispatchs',
+    },
+    {
+        singular: 'damagedproduct',
+        plural: 'damagedproducts',
+    },
+    {
+        singular: 'individualsale',
+        plural: 'individualsales',
+    },
+    {
+        singular: 'grossprofit',
+        plural: 'grossprofits',
+    },
+    {
+        singular: 'netprofit',
+        plural: 'netprofits',
     },
     {
         singular: 'sale',
@@ -74,6 +95,9 @@ export const Schema = [
         relations: {
             staff: {
                 belongsTo: 'staff'
+            },
+            vendor: {
+                belongsTo: 'vendor'
             },
         }
     },
@@ -245,6 +269,20 @@ export const Schema = [
             sales: {
                 hasMany: {
                     type: 'sale',
+                    options: {
+                        async: true
+                    }
+                },
+            }
+        }
+    },
+    {
+        singular: 'vendor',
+        plural: 'vendors',
+        relations: {
+            expenses: {
+                hasMany: {
+                    type: 'expense',
                     options: {
                         async: true
                     }

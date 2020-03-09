@@ -1,0 +1,66 @@
+<div class="main-content">
+  <div class="container-fluid">
+    <i class="material-icons" style="color: #00254e; cursor: pointer; text-align: left" matTooltip="Close"
+      (click)="onNoClick()">close</i>
+    <div class="row">
+      <div class="col-md-12">
+        <!-- <div class="card"> -->
+        <div style="text-align: center;">
+          <h2 style="color:#00254e;"><b>{{title}}</b></h2>
+        </div>
+
+        <div>
+          <div class="row">
+            <div class="col-md-12">
+              <div class="info" style="display: block;margin-left: 0;">
+                <h2 style="font-size: 1.5em; text-align: center;">Igbinedion University Teaching Hospital</h2>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12" style="text-align: center;">
+              <h3> <b style="font-size: 1.5em;color: #666;line-height: 1.2em;"> Pin: {{sale.referencenumber}} </b> </h3>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12" style="text-align: center;">
+              <span class="text-danger">{{errorMessage}}</span>
+              <mat-form-field class="example-full-width">
+                <input matInput placeholder="Amount Paid" (click)="payAmount()" type="number" [(ngModel)]='amount'
+                  required>
+              </mat-form-field>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12">
+              <div style="text-align: center">
+                <div class="info" style="display: block;margin-left: 0;">
+                  <h5>
+                    <p>
+                      {{message}} {{sale.patientName}} for products bought on the {{sale.date | date:'fullDate'}}
+                    </p>
+                  </h5>
+                </div>
+              </div>
+            </div>
+          </div>
+          <div class="row">
+            <div class="col-md-12" style="text-align: center;">
+              <button mat-raised-button (click)="activatePin()" style=" color:white; border-radius: 5%;"
+                class="btn btn-info">ACTIVATE</button>
+            </div>
+          </div>
+          <div id="bot" style="border-bottom: 1px solid #EEE;min-height: 50px;">
+            <!--End Table-->
+            <div id="legalcopy" style="margin-top: 5mm;">
+              <p class="legal" style="font-size: 1em;color: #666;line-height: 1.2em; text-align:center;">This sale was
+                made by {{serverName}}({{staffCode}}) of {{sale.department}} on {{currentDate}} </p>
+            </div>
+          </div>
+          <div class="clearfix"></div>
+        </div>
+        <!-- </div> -->
+      </div>
+    </div>
+  </div>
+</div>

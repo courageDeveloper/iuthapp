@@ -42,12 +42,64 @@ export class ViewLoansComponent implements OnInit {
   promise5;
   dateFrom: any;
   dateTo: any;
+  timeFrom: any;
+  timeTo: any;
+  isUserPermitted = true;
+  isEvacuate = false;
+  isSupervisor = false;
+  isRefund = false;
+  isPayLoan = false;
+  paginatedLoans;
+  isPreviousActive = false;
+  isNextActive = false;
 
   constructor(public pouchService: PouchService, private router: Router, private dialog: MatDialog, public toastr: ToastrService) { }
 
   ngOnInit() {
+    this.timeFrom = '00:00';
+    this.timeTo = '00:00';
+
+    this.pouchService.userPermission().then(result => {
+      if (result.department == 'Admin') {
+        this.isUserPermitted = false;
+      }
+    });
+
+    this.checkRoles();
     this.loadLoans();
     this.loadTotalLoans();
+  }
+
+  checkRoles() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      staff.roles.map(role => {
+        if (role.role == "Pay Loan" && role.isChecked == true) {
+          this.isPayLoan = true;
+        }
+        if (role.role == "Refund/Return" && role.isChecked == true) {
+          this.isRefund = true;
+        }
+      })
+    });
+  }
+
+  reloadLoans() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+
+      this.pouchService.getSales().then(data => {
+        this.loans = data.filter(data => data.branch == staff.branch);
+        this.loans = this.loans.filter(data => data.isoncredit == true || data.isowing == true);
+        //this.loans = this.loans.filter(data => data.iscomplete == true);
+        this.pouchService.paginationId = this.loans[0].id; //Reverse of what is meant to be;
+        
+        this.pouchService.paginateBySaleRemoveItem('sale', this.pouchService.paginationId, undefined, true, true).then(paginatedata => {
+          this.paginatedLoans = paginatedata;
+
+        });
+      });
+    });
   }
 
   loadLoans() {
@@ -57,12 +109,63 @@ export class ViewLoansComponent implements OnInit {
       this.pouchService.getSales().then(data => {
         this.loans = data.filter(data => data.branch == staff.branch);
         this.loans = this.loans.filter(data => data.isoncredit == true || data.isowing == true);
-        this.loans = this.loans.filter(data => data.iscomplete == true);
-        console.log(this.loans);
-        $(document).ready(function () {
-          $('#dtBasicExample').DataTable();
-          $('.dataTables_length').addClass('bs-select');
+        //this.loans = this.loans.filter(data => data.iscomplete == true);
+        this.pouchService.paginationId = this.loans[0].id; //Reverse of what is meant to be;
+
+        this.pouchService.paginateBySale('sale', this.pouchService.paginationId, undefined, true, true).then(paginatedata => {
+          this.paginatedLoans = paginatedata;
+
+          $(document).ready(function () {
+            $('#dtBasicExample').DataTable({
+              "paging": false,
+              "searching": false
+            });
+            $('.dataTables_length').addClass('bs-select');
+          });
+          this.isNextActive = true;
         });
+      });
+    });
+  }
+
+  next() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.pouchService.paginationId = this.paginatedLoans[this.paginatedLoans.length - 1].id;  //Reverse of what is meant to be;
+
+      this.pouchService.paginateBySale('sale', this.pouchService.paginationId, undefined, true, true).then(paginatedata => {
+        this.paginatedLoans = paginatedata;
+
+        this.isPreviousActive = true;
+      });
+    });
+  }
+
+  previous() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.pouchService.paginationId = this.paginatedLoans[this.paginatedLoans.length - 1].id;  //Reverse of what is meant to be;
+
+      this.pouchService.paginateBySalePrev('sale', this.pouchService.paginationId, undefined, true, true).then(paginatedata => {
+        this.paginatedLoans = paginatedata;
+
+        if (this.paginatedLoans.length < this.pouchService.limitRange) {
+          this.isPreviousActive = false;
+        }
+      });
+    });
+  }
+
+  goToStart() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.isPreviousActive = false;
+
+      this.pouchService.paginationId = this.paginatedLoans[this.paginatedLoans.length - 1].id;  //Reverse of what is meant to be;
+
+      this.pouchService.paginateBySaleStart('sale', this.pouchService.paginationId, undefined, true, true).then(paginatedata => {
+        this.paginatedLoans = paginatedata;
+
       });
     });
   }
@@ -73,7 +176,7 @@ export class ViewLoansComponent implements OnInit {
       this.pouchService.getSales().then(data => {
         this.totalLoans = data.filter(data => data.branch == staff.branch);
         this.totalLoans = this.totalLoans.filter(data => data.isoncredit == true || data.isowing == true);
-        this.totalLoans = this.totalLoans.filter(data => data.iscomplete == true);
+        //this.totalLoans = this.totalLoans.filter(data => data.iscomplete == true);
         this.getTotalLoans(this.totalLoans);
       });
     });
@@ -105,25 +208,25 @@ export class ViewLoansComponent implements OnInit {
                 }
                 await this.pouchService.updateCounterProduct(counterproduct);
                 if (loan.staffloan) {
-                   this.pouchService.getStaff(loan.patientid).then(result => {
-                     if (result != undefined) {
-                       result.debt -= loan.amountloaned;
-                       this.pouchService.updateStaff(result);
-                     }
-                     else {
-                       this.pouchService.getPatient(loan.patientid).then(result => {
-                         result.debt -= loan.amountloaned;
-                         this.pouchService.updatePatient(result)
-                       });
-                     }
-                   });
-                 }
-                 else if (loan.departmentloan) {
-                   this.pouchService.getDepartment(loan.departmentid).then(result => {
-                     result.debt -= loan.amountloaned;
-                     this.pouchService.updateDepartment(result);
-                   });
-                 }
+                  this.pouchService.getStaff(loan.patientid).then(result => {
+                    if (result != undefined) {
+                      result.debt -= loan.amountloaned;
+                      this.pouchService.updateStaff(result);
+                    }
+                    else {
+                      this.pouchService.getPatient(loan.patientid).then(result => {
+                        result.debt -= loan.amountloaned;
+                        this.pouchService.updatePatient(result)
+                      });
+                    }
+                  });
+                }
+                else if (loan.departmentloan) {
+                  this.pouchService.getDepartment(loan.departmentid).then(result => {
+                    result.debt -= loan.amountloaned;
+                    this.pouchService.updateDepartment(result);
+                  });
+                }
                 if (loan.isowing) {
                   this.promise3 = this.pouchService.getStaff(loan.patientid).then(async result => {
                     if (result != undefined) {
@@ -150,8 +253,18 @@ export class ViewLoansComponent implements OnInit {
             });
             Promise.all([this.promise1, this.promise2, this.promise3, this.promise4, this.promise5]).then(res => {
               setTimeout(() => {
-                this.pouchService.deleteSale(loan).then(res => {
-                  this.loadLoans();
+                this.pouchService.getIndividualSales().then(individualsales => {
+                  individualsales.map(individualsale => {
+                    individualsale.saleids.filter(data => data == loan.id);
+                    if (individualsale.saleids.length != 0) {
+                      individualsale.totaldailysales -= loan.amount;
+                      this.pouchService.updateIndividualSale(individualsale).then(res => {
+                        this.pouchService.deleteSale(loan).then(res => {
+                          this.reloadLoans();
+                        });
+                      });
+                    }
+                  });
                 });
               }, 5000);
             })
@@ -163,8 +276,18 @@ export class ViewLoansComponent implements OnInit {
               if (result != undefined) {
                 result.debt -= loan.balance;
                 await this.pouchService.updateStaff(result).then(response => {
-                  this.pouchService.deleteSale(loan).then(res => {
-                    this.loadLoans();
+                  this.pouchService.getIndividualSales().then(individualsales => {
+                    individualsales.map(individualsale => {
+                      individualsale.saleids.filter(data => data == loan.id);
+                      if (individualsale.saleids.length != 0) {
+                        individualsale.totaldailysales -= loan.amount;
+                        this.pouchService.updateIndividualSale(individualsale).then(res => {
+                          this.pouchService.deleteSale(loan).then(res => {
+                            this.reloadLoans();
+                          });
+                        });
+                      }
+                    });
                   });
                 });
               }
@@ -173,8 +296,18 @@ export class ViewLoansComponent implements OnInit {
                   if (result != undefined) {
                     result.debt -= loan.balance;
                     await this.pouchService.updatePatient(result).then(response => {
-                      this.pouchService.deleteSale(loan).then(res => {
-                        this.loadLoans();
+                      this.pouchService.getIndividualSales().then(individualsales => {
+                        individualsales.map(individualsale => {
+                          individualsale.saleids.filter(data => data == loan.id);
+                          if (individualsale.saleids.length != 0) {
+                            individualsale.totaldailysales -= loan.amount;
+                            this.pouchService.updateIndividualSale(individualsale).then(res => {
+                              this.pouchService.deleteSale(loan).then(res => {
+                                this.reloadLoans();
+                              });
+                            });
+                          }
+                        });
                       });
                     });
                   }
@@ -182,8 +315,18 @@ export class ViewLoansComponent implements OnInit {
                     this.promise5 = this.pouchService.getDepartment(loan.departmentid).then(async result => {
                       result.debt -= loan.balance;
                       await this.pouchService.updateDepartment(result).then(response => {
-                        this.pouchService.deleteSale(loan).then(res => {
-                          this.loadLoans();
+                        this.pouchService.getIndividualSales().then(individualsales => {
+                          individualsales.map(individualsale => {
+                            individualsale.saleids.filter(data => data == loan.id);
+                            if (individualsale.saleids.length != 0) {
+                              individualsale.totaldailysales -= loan.amount;
+                              this.pouchService.updateIndividualSale(individualsale).then(res => {
+                                this.pouchService.deleteSale(loan).then(res => {
+                                  this.reloadLoans();
+                                });
+                              });
+                            }
+                          });
                         });
                       });
                     });
@@ -193,8 +336,18 @@ export class ViewLoansComponent implements OnInit {
             });
           }
           else {
-            this.pouchService.deleteSale(loan).then(res => {
-              this.loadLoans();
+            this.pouchService.getIndividualSales().then(individualsales => {
+              individualsales.map(individualsale => {
+                individualsale.saleids.filter(data => data == loan.id);
+                if (individualsale.saleids.length != 0) {
+                  individualsale.totaldailysales -= loan.amount;
+                  this.pouchService.updateIndividualSale(individualsale).then(res => {
+                    this.pouchService.deleteSale(loan).then(res => {
+                      this.reloadLoans();
+                    });
+                  });
+                }
+              });
             });
           }
         }
@@ -203,54 +356,141 @@ export class ViewLoansComponent implements OnInit {
   }
 
   getTotalLoans(loans) {
-
     var loanArray = [];
     loans = loans.filter(data => data.isreconciled == true);
     loans.forEach(loan => {
-      loanArray.push(loan.amount);
+      loanArray.push(loan.amountloaned);
+      loanArray.push(loan.balance);
     });
     return this.total = loanArray.reduce((a, b) => a + b, 0);
   }
 
   filterDate() {
     this.loans = [];
+    var inputTimeArray = this.timeFrom.split(':');
+    var hours = inputTimeArray[0];
+    var minutes = inputTimeArray[1];
+    var millisecondsHour = hours * 3600000;
+    var millisecondsMinute = minutes * 60000;
     this.dateFrom = new Date(this.dateFrom).getTime();
+    var totalMillisecondsFrom = millisecondsHour + millisecondsMinute + this.dateFrom;
+    var newDateFrom = new Date().setTime(totalMillisecondsFrom);
+
+    var inputTimeArrayTo = this.timeTo.split(':');
+    var hoursTo = inputTimeArrayTo[0];
+    var minutesTo = inputTimeArrayTo[1];
+    var millisecondsHourTo = hoursTo * 3600000;
+    var millisecondsMinuteTo = minutesTo * 60000;
     this.dateTo = new Date(this.dateTo).getTime();
+    var totalMillisecondsTo = millisecondsHourTo + millisecondsMinuteTo + this.dateTo;
+    var newDateTo = new Date().setTime(totalMillisecondsTo);
 
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(staff => {
       this.pouchService.getSales().then(loans => {
         loans = loans.filter(data => data.branch == staff.branch);
+        loans = loans.filter(data => data.isoncredit == true || data.isowing == true);
+        //loans = loans.filter(data => data.iscomplete == true);
 
         loans.map(loan => {
           loan['timestamp'] = new Date(loan.date).toLocaleString("en-US", { timeZone: "GMT" });
           loan['timestamp'] = new Date(loan['timestamp']).setSeconds(0);
-          loan['timestamp'] = new Date(loan['timestamp']).setMinutes(0);
-          loan['timestamp'] = new Date(loan['timestamp']).setHours(0);
+          /* loan['timestamp'] = new Date(loan['timestamp']).setMinutes(0);
+          loan['timestamp'] = new Date(loan['timestamp']).setHours(0); */
 
         });
-        loans = loans.filter(data => this.dateFrom <= data['timestamp']);
-        loans = loans.filter(data => this.dateTo >= data['timestamp']);
+        loans = loans.filter(data => newDateFrom <= data['timestamp']);
+        loans = loans.filter(data => newDateTo >= data['timestamp']);
         this.loans = loans;
+
+        this.pouchService.paginationId = this.loans[0].id; //Reverse of what is meant to be;
+
+        this.pouchService.paginateBySale('sale', this.pouchService.paginationId, undefined, true, true).then(paginatedata => {
+          this.paginatedLoans = paginatedata;
+
+          this.paginatedLoans.map(paginatedLoan => {
+            paginatedLoan['timestamp'] = new Date(paginatedLoan.date).toLocaleString("en-US", { timeZone: "GMT" });
+            paginatedLoan['timestamp'] = new Date(paginatedLoan['timestamp']).setSeconds(0);
+            /*  loan['timestamp'] = new Date(loan['timestamp']).setMinutes(0);
+             loan['timestamp'] = new Date(loan['timestamp']).setHours(0); */
+          });
+          this.paginatedLoans = this.paginatedLoans.filter(data => newDateFrom <= data['timestamp']);
+          this.paginatedLoans = this.paginatedLoans.filter(data => newDateTo >= data['timestamp']);
+        });
       });
     });
   }
 
-    payLoan(loan) {
-      console.log(loan);
-      let dialogRef = this.dialog.open(AddPayloanComponent, {
-        width: '450px',
-        data: {
-          action: 'add',
-          loan: loan
+  payLoan(loan) {
+    let dialogRef = this.dialog.open(AddPayloanComponent, {
+      width: '450px',
+      data: {
+        action: 'add',
+        loan: loan
+      }
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) {
+        return;
+      }
+      console.log(result);
+      this.reloadLoans();
+    })
+  }
+
+  public export(): void {
+    var exportedSalesArray = [];
+
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.pouchService.getSales().then(items => {
+        items = items.filter(data => data.branch == staff.branch);
+        items = items.filter(data => data.isoncredit == true || data.isowing == true);
+        //items = items.filter(data => data.iscomplete == true);
+
+        for (var i = 0; i < items.length; i++) {
+          var exportedSales = {
+            'S/NO': i + 1,
+            DEPARTMENT: items[i].department,
+            'AMOUNT LOANED': items[i].amountloaned,
+            'AMOUNT PAYABLE': items[i].amountpayable,
+            'DEPARTMENT LOANED': items[i].departmentloaned,
+            'DEPARTMENT LOANING': items[i].departmentloaning,
+            'DATE OF LOAN': items[i].dateofloan,
+            'SALE NAME': items[i].salename,
+            AMOUNT: items[i].amount,
+            DESCRIPTION: items[i].description,
+            COLOR: items[i].color,
+            DATE: items[i].date,
+            BALANCE: items[i].balance,
+            'EVACUATED MESSAGE': items[i].evacuatedmessage,
+            'BRANCH': items[i].branch
+          }
+          exportedSalesArray.push(exportedSales);
+          this.worksheet = XLSX.utils.json_to_sheet(exportedSalesArray);
         }
+        const workbook: XLSX.WorkBook = { Sheets: { 'data': this.worksheet }, SheetNames: ['data'] };
+        this.excelBuffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+        this.saveAsExcelFile(this.excelBuffer, 'IUTH Loans');
       });
-      dialogRef.afterClosed().subscribe(result => {
-        if (!result) {
-          return;
-        }
-        console.log(result);
-        this.loadLoans();
-      })
+    });
+  }
+
+  private saveAsExcelFile(buffer: any, fileName: string): void {
+    const data: Blob = new Blob([buffer], { type: EXCEL_TYPE });
+    FileSaver.saveAs(data, fileName + '_export_' + new Date().getTime() + EXCEL_EXTENSION);
+  }
+
+  filterString(event: any): void {
+    const value: string = event.target.value ? event.target.value.toLowerCase() : '';
+    this.paginatedLoans = [];
+
+    for (let loan of this.loans) {
+      if ((loan.salename).toLowerCase().indexOf(value) !== -1) {
+        this.paginatedLoans.push(loan);
+
+        this.paginatedLoans = this.paginatedLoans.slice(0, this.pouchService.limitRange);
+      }
     }
+  }
 }

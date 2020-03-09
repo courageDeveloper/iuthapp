@@ -19,7 +19,9 @@ import * as FileSaver from "file-saver";
 const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 const EXCEL_EXTENSION = '.xlsx';
 import { DataService } from '../../services/data.service';
+import { AddDamagedproductsComponent } from '../../damagedproducts/add-damagedproducts/add-damagedproducts.component';
 import { ExpensedialogmessageComponent } from '../../expensedialogmessage/expensedialogmessage.component';
+import { AddVendorDialogComponent } from '../../add-vendor-dialog/add-vendor-dialog.component';
 
 @Component({
   selector: 'app-view-centralstore_bc',
@@ -31,6 +33,8 @@ export class ViewCentralStoreBcComponent implements OnInit {
   public tableWidget: any;
   tableCheck = false;
   newCentralStoresBc: any;
+  isUserPermitted = false;
+  isUserMakePaymentPermitted = false;
   show = false;
   files: FileList;
   currentMonthNumber;
@@ -42,26 +46,125 @@ export class ViewCentralStoreBcComponent implements OnInit {
   worksheet: XLSX.WorkSheet;
   workbook: XLSX.WorkBook;
   arrayImages: any[];
-
+  isStaffSwitchedTable = false;
+  isDepartmentSwitchedTable = false;
+  isSupervisor = false;
+  isPayLoan = false;
+  itemSize: number;
+  paginatedCentralStoresBc;
+  isPreviousActive = false;
+  isNextActive = false;
 
   constructor(private dialog: MatDialog, private data: DataService, private router: Router, public pouchService: PouchService, public _DomSanitizer: DomSanitizer, public toastr: ToastrService) { }
 
   ngOnInit() {
+    this.pouchService.userPermission().then(result => {
+      if (result.department == 'Central Store') {
+        this.isUserPermitted = true;
+      }
+      if (result.department == 'Account') {
+        this.isUserMakePaymentPermitted = true;
+      }
+    });
+
     this.arrayImages = ['assets/img/image_placeholder.png', 'assets/img/cover.jpeg'];
-    this.loadCentralStoresBc();
+    
+    this.checkViewStatus();
+    this.checkRoles();
 
     setInterval(() => {
       this.checkedExpired();
     }, 300000);
   }
 
+  reloadCentralStoresBc() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.pouchService.getProducts().then(items => {
+        items = items.filter(data => data.branch == 'Benin Centre' && data.store == "Central Store");
+        this.centralstoresbc = items;
+        this.itemSize = this.centralstoresbc.length;
+
+        this.pouchService.paginationId = this.centralstoresbc[0].id; //Reverse of what is meant to be;
+
+        this.pouchService.paginateByCentralStoreRemoveItem('product', this.pouchService.paginationId).then(paginatedata => {
+          this.paginatedCentralStoresBc = paginatedata;
+
+          this.isNextActive = true;
+        });
+      });
+    });
+
+  }
+
   loadCentralStoresBc() {
     this.pouchService.getProducts().then(items => {
       items = items.filter(data => data.branch == 'Benin Centre' && data.store == "Central Store");
       this.centralstoresbc = items;
+      this.itemSize = this.centralstoresbc.length;
+
+      this.pouchService.paginationId = this.centralstoresbc[0].id; //Reverse of what is meant to be;
+      this.pouchService.paginateByCentralStore('product', this.pouchService.paginationId).then(paginatedata => {
+        this.paginatedCentralStoresBc = paginatedata;
+        $(document).ready(function () {
+          $('#dtBasicExample').DataTable({
+            "paging": false,
+            "searching": false
+          });
+          $('.dataTables_length').addClass('bs-select');
+        });
+        this.isNextActive = true;
+      });
     });
   }
 
+  next() {
+    this.pouchService.paginationId = this.paginatedCentralStoresBc[this.paginatedCentralStoresBc.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByCentralStore('product', this.pouchService.paginationId).then(paginatedata => {
+      this.paginatedCentralStoresBc = paginatedata;
+
+      this.isPreviousActive = true;
+    });
+  }
+
+  previous() {
+    this.pouchService.paginationId = this.paginatedCentralStoresBc[this.paginatedCentralStoresBc.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByCentralStorePrev('product', this.pouchService.paginationId).then(paginatedata => {
+      this.paginatedCentralStoresBc = paginatedata;
+
+      if (this.paginatedCentralStoresBc.length < this.pouchService.limitRange) {
+        this.isPreviousActive = false;
+      }
+    });
+  }
+
+  goToStart() {
+    this.isPreviousActive = false;
+
+    this.pouchService.paginationId = this.paginatedCentralStoresBc[this.paginatedCentralStoresBc.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByCentralStoreStart('product', this.pouchService.paginationId).then(paginatedata => {
+      this.paginatedCentralStoresBc = paginatedata;
+
+    });
+  }
+
+
+  checkRoles() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      staff.roles.map(role => {
+        if (role.role == "Supervisor" && role.isChecked == true) {
+          this.isSupervisor = true;
+        }
+        if (role.role == "Pay Loan" && role.isChecked == true) {
+          this.isPayLoan = true;
+        }
+      })
+    });
+  }
 
   checkedExpired() {
     this.pouchService.getProducts().then(items => {
@@ -100,8 +203,34 @@ export class ViewCentralStoreBcComponent implements OnInit {
       if (!result) {
         return;
       }
-      this.loadCentralStoresBc();
+      //this.reloadCentralStoresBc();
     })
+  }
+
+  addDamagedProduct(centralstorebc) {
+    let dialogRef = this.dialog.open(AddDamagedproductsComponent, {
+      height: '500px',
+      width: '500px',
+      data: {
+        content: centralstorebc,
+        action: 'add'
+      }
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      console.log(result);
+      if (!result) {
+        return;
+      }
+      //this.reloadCentralStoresBc();
+    })
+  }
+
+  navdamagedproducts() {
+    this.router.navigate(['/view-damagedproducts']);
+  }
+
+  navdepartmentexpenses() {
+    this.router.navigate(['/department-expenses']);
   }
 
   makepaymentCentralStoreBc(centralstorebc) {
@@ -118,7 +247,7 @@ export class ViewCentralStoreBcComponent implements OnInit {
       if (!result) {
         return;
       }
-      this.loadCentralStoresBc();
+      this.reloadCentralStoresBc();
     })
   }
 
@@ -138,9 +267,55 @@ export class ViewCentralStoreBcComponent implements OnInit {
         if (!result) {
           return;
         }
-        this.loadCentralStoresBc();
+        this.reloadCentralStoresBc();
       })
     });
+  }
+
+  checkViewStatus() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.isStaffSwitchedTable = staff.isswitchedtable;
+      this.pouchService.getDepartments().then(departments => {
+        departments = departments.filter(data => data.name == "Central Store" && data.branch == staff.branch);
+        this.isDepartmentSwitchedTable = departments[0].isswitchedtable;
+        this.loadCentralStoresBc();
+      });
+    });
+  }
+
+  switchView(event) {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    if (event.checked) {
+      this.pouchService.getStaff(localStorageItem).then(staff => {
+        staff.isswitchedtable = true;
+        this.isStaffSwitchedTable = staff.isswitchedtable;
+        this.pouchService.updateStaff(staff);
+        this.pouchService.getDepartments().then(departments => {
+          departments = departments.filter(data => data.name == "Central Store" && data.branch == staff.branch);
+          departments[0].isswitchedtable = true;
+          this.isDepartmentSwitchedTable = departments[0].isswitchedtable;
+          this.pouchService.updateDepartment(departments[0]).then(result => {  //For changes to be made based on department
+            this.loadCentralStoresBc();
+          });
+        });
+      });
+    }
+    else {
+      this.pouchService.getStaff(localStorageItem).then(staff => {
+        staff.isswitchedtable = false;
+        this.isStaffSwitchedTable = staff.isswitchedtable;
+        this.pouchService.updateStaff(staff);
+        this.pouchService.getDepartments().then(departments => {
+          departments = departments.filter(data => data.name == "Central Store" && data.branch == staff.branch);
+          departments[0].isswitchedtable = false;
+          this.isDepartmentSwitchedTable = departments[0].isswitchedtable;
+          this.pouchService.updateDepartment(departments[0]).then(result => {
+            this.loadCentralStoresBc();
+          });
+        });
+      });
+    }
   }
 
   oncreditCentralStoreBc(centralstorebc) {
@@ -159,7 +334,7 @@ export class ViewCentralStoreBcComponent implements OnInit {
         if (!result) {
           return;
         }
-        this.loadCentralStoresBc();
+        this.reloadCentralStoresBc();
       })
     });
   }
@@ -177,7 +352,7 @@ export class ViewCentralStoreBcComponent implements OnInit {
       if (result) {
         this.pouchService.deleteProduct(centralstorebc).then(res => {
           this.toastr.success('Product has been deleted successfully');
-          this.loadCentralStoresBc();
+          this.reloadCentralStoresBc();
         });
       }
     });
@@ -187,7 +362,7 @@ export class ViewCentralStoreBcComponent implements OnInit {
     centralstorebc.refund = true;
     this.pouchService.updateProduct(centralstorebc).then(result => {
       this.sendRefundNotification(centralstorebc);
-      this.loadCentralStoresBc();
+      this.reloadCentralStoresBc();
       this.toastr.success(`A refund request has been made for product ${centralstorebc.productname}`);
     });
   }
@@ -209,12 +384,21 @@ export class ViewCentralStoreBcComponent implements OnInit {
     }
     else if (!centralstorebc.isdispatched) {
       this.pouchService.getExpense(centralstorebc.expenseid).then(result => {
-        this.pouchService.deleteExpense(result).then(response => {
+        if (result != undefined) {
+          this.pouchService.deleteExpense(result).then(response => {
+            this.pouchService.deleteProduct(centralstorebc).then(res => {
+              this.updateVendorSubtract(result.vendorid, result.balance)
+              this.toastr.success(`${centralstorebc.productname} has been refunded successfully`);
+              this.reloadCentralStoresBc();
+            });
+          });
+        }
+        else {
           this.pouchService.deleteProduct(centralstorebc).then(res => {
             this.toastr.success(`${centralstorebc.productname} has been refunded successfully`);
-            this.loadCentralStoresBc();
+            this.reloadCentralStoresBc();
           });
-        });
+        }
       });
     }
   }
@@ -223,7 +407,14 @@ export class ViewCentralStoreBcComponent implements OnInit {
     centralstorebc.refund = false;
     this.pouchService.updateProduct(centralstorebc).then(result => {
       this.sendDisapprovedRefundNotification(centralstorebc);
-      this.loadCentralStoresBc();
+      this.reloadCentralStoresBc();
+    });
+  }
+
+  updateVendorSubtract(id, balance) {
+    this.pouchService.getVendor(id).then(vendor => {
+      vendor.balance -= balance;
+      this.pouchService.updateVendor(vendor);
     });
   }
 
@@ -307,7 +498,7 @@ export class ViewCentralStoreBcComponent implements OnInit {
       if (result) {
         this.newCentralStoresBc.forEach(product => {
           this.pouchService.deleteProduct(product).then(res => {
-            this.loadCentralStoresBc();
+            this.reloadCentralStoresBc();
             this.tableCheck = false;
           });
         });
@@ -340,7 +531,24 @@ export class ViewCentralStoreBcComponent implements OnInit {
         return;
       }
       console.log(result);
-      this.loadCentralStoresBc();
+      this.reloadCentralStoresBc();
+    })
+  }
+
+  addVendor() {
+    let dialogRef = this.dialog.open(AddVendorDialogComponent, {
+      height: '500px',
+      width: '500px',
+      data: {
+        action: 'add'
+      }
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      if (!result) {
+        return;
+      }
+      console.log(result);
+      //this.reloadCentralStoresBc();
     })
   }
 
@@ -358,7 +566,7 @@ export class ViewCentralStoreBcComponent implements OnInit {
       if (!result) {
         return;
       }
-      this.loadCentralStoresBc();
+      //this.reloadCentralStoresBc();
     })
   }
 
@@ -395,5 +603,17 @@ export class ViewCentralStoreBcComponent implements OnInit {
   private saveAsExcelFile(buffer: any, fileName: string): void {
     const data: Blob = new Blob([buffer], { type: EXCEL_TYPE });
     FileSaver.saveAs(data, fileName + '_export_' + new Date().getTime() + EXCEL_EXTENSION);
+  }
+
+  filterString(event: any): void {
+    const value: string = event.target.value ? event.target.value.toLowerCase() : '';
+    this.paginatedCentralStoresBc = [];
+
+    for (let centralstorebc of this.centralstoresbc) {
+      if ((centralstorebc.productname).toLowerCase().indexOf(value) !== -1) {
+        this.paginatedCentralStoresBc.push(centralstorebc);
+        this.paginatedCentralStoresBc = this.paginatedCentralStoresBc.slice(0, this.pouchService.limitRange);
+      }
+    }
   }
 }

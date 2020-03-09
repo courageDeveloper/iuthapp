@@ -3,8 +3,8 @@ import 'datatables.net';
 import 'datatables.net-bs4';
 import * as $ from 'jquery';
 import * as _ from 'lodash'; // to help loop over files more succinctly
-import {AddCentralStoreCategoryComponent} from '../../centralstorecategory/add-centralstorecategory/add-centralstorecategory.component';
-import {MatDialog, MatDialogRef} from '@angular/material/dialog';
+import { AddCentralStoreCategoryComponent } from '../../centralstorecategory/add-centralstorecategory/add-centralstorecategory.component';
+import { MatDialog, MatDialogRef } from '@angular/material/dialog';
 import { PouchService } from '../../../providers/pouch-service';
 import { ProductCategory } from '../../../model/productcategory';
 import { Router } from '@angular/router';
@@ -31,30 +31,119 @@ export class ViewCentralStoreCategoryComponent implements OnInit {
   currentMonthNumber;
   currentMonth;
   months;
+  isUserPermitted = false;
   convertFiles;
   newArray;
+  isStaffSwitchedTable = false;
+  isDepartmentSwitchedTable = false;
   excelBuffer: any;
   public productCategorys: Array<ProductCategory> = [];
   worksheet: XLSX.WorkSheet;
   workbook: XLSX.WorkBook;
+  isSupervisor = false;
+  itemSize: number;
+  paginatedCentralStorecats;
+  isPreviousActive = false;
+  isNextActive = false;
 
   constructor(public pouchService: PouchService, private dialog: MatDialog, public toastr: ToastrService) { }
 
   ngOnInit() {
-   this.loadCentralStoreCategorys();
+    this.pouchService.userPermission().then(result => {
+      if (result.department == 'Central Store') {
+        this.isUserPermitted = true;
+      }
+    });
+
+    this.checkViewStatus();
+    this.checkRoles();
+  }
+
+  reloadCentralStoreCategorys() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.pouchService.getProductcategorys().then(items => {
+        items = items.filter(data => data.branch == staff.branch && data.department == "Central Store");
+        this.centralstorecategorys = items;
+        this.itemSize = this.centralstorecategorys.length;
+
+        this.pouchService.paginationId = this.centralstorecategorys[0].id; //Reverse of what is meant to be;
+
+        this.pouchService.paginateByDepartmentRemoveItem('productcategory', this.pouchService.paginationId, 'Central Store').then(paginatedata => {
+          this.paginatedCentralStorecats = paginatedata;
+
+          this.isNextActive = true;
+        });
+      });
+    });
   }
 
   loadCentralStoreCategorys() {
     this.pouchService.getProductcategorys().then(items => {
       items = items.filter(data => data.branch == 'IUTH(Okada)' && data.department == "Central Store");
       this.centralstorecategorys = items;
-      $(document).ready(function () {
-        $('#dtBasicExample').DataTable();
-        $('.dataTables_length').addClass('bs-select');
+      this.itemSize = this.centralstorecategorys.length;
+
+      this.pouchService.paginationId = this.centralstorecategorys[this.centralstorecategorys.length - 1].id; //Reverse of what is meant to be;
+
+      this.pouchService.paginateByDepartment2('productcategory', this.pouchService.paginationId, 'Central Store').then(paginatedata => {
+        this.paginatedCentralStorecats = paginatedata;
+
+        $(document).ready(function () {
+          $('#dtBasicExample').DataTable({
+            "paging": false,
+            "searching": false
+          });
+          $('.dataTables_length').addClass('bs-select');
+        });
+        this.isNextActive = true;
       });
     });
   }
 
+  next() {
+    this.pouchService.paginationId = this.paginatedCentralStorecats[this.paginatedCentralStorecats.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByDepartment2('productcategory', this.pouchService.paginationId, 'Central Store').then(paginatedata => {
+      this.paginatedCentralStorecats = paginatedata;
+
+      this.isPreviousActive = true;
+    });
+  }
+
+  previous() {
+    this.pouchService.paginationId = this.paginatedCentralStorecats[this.paginatedCentralStorecats.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByDepartmentPrev2('productcategory', this.pouchService.paginationId, 'Central Store').then(paginatedata => {
+      this.paginatedCentralStorecats = paginatedata;
+
+      if (this.paginatedCentralStorecats.length < this.pouchService.limitRange) {
+        this.isPreviousActive = false;
+      }
+    });
+  }
+
+  goToStart() {
+    this.isPreviousActive = false;
+
+    this.pouchService.paginationId = this.paginatedCentralStorecats[this.paginatedCentralStorecats.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByDepartmentStart('productcategory', this.pouchService.paginationId, 'Central Store').then(paginatedata => {
+      this.paginatedCentralStorecats = paginatedata;
+
+    });
+  }
+
+  checkRoles() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      staff.roles.map(role => {
+        if (role.role == "Supervisor" && role.isChecked == true) {
+          this.isSupervisor = true;
+        }
+      })
+    });
+  }
 
   editCentralStoreCategory(centralstorecategory) {
     let dialogRef = this.dialog.open(AddCentralStoreCategoryComponent, {
@@ -66,10 +155,10 @@ export class ViewCentralStoreCategoryComponent implements OnInit {
     });
     dialogRef.afterClosed().subscribe(result => {
       console.log(result);
-      if(!result) {
+      if (!result) {
         return;
       }
-      this.loadCentralStoreCategorys();
+      //this.loadCentralStoreCategorys();
     })
   }
 
@@ -86,20 +175,66 @@ export class ViewCentralStoreCategoryComponent implements OnInit {
       if (result) {
         this.pouchService.deleteProductcategory(centralstorecategory).then(res => {
           this.toastr.success('Category has been deleted successfully');
-          this.loadCentralStoreCategorys();
+          this.reloadCentralStoreCategorys();
         });
       }
     });
   }
 
+  checkViewStatus() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.isStaffSwitchedTable = staff.isswitchedtable;
+      this.pouchService.getDepartments().then(departments => {
+        departments = departments.filter(data => data.name == "Central Store" && data.branch == staff.branch);
+        this.isDepartmentSwitchedTable = departments[0].isswitchedtable;
+        this.loadCentralStoreCategorys();
+      });
+    });
+  }
+
+  switchView(event) {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    if (event.checked) {
+      this.pouchService.getStaff(localStorageItem).then(staff => {
+        staff.isswitchedtable = true;
+        this.isStaffSwitchedTable = staff.isswitchedtable;
+        this.pouchService.updateStaff(staff);
+        this.pouchService.getDepartments().then(departments => {
+          departments = departments.filter(data => data.name == "Central Store" && data.branch == staff.branch);
+          departments[0].isswitchedtable = true;
+          this.isDepartmentSwitchedTable = departments[0].isswitchedtable;
+          this.pouchService.updateDepartment(departments[0]).then(result => {  //For changes to be made based on department
+            this.loadCentralStoreCategorys();
+          });
+        });
+      });
+    }
+    else {
+      this.pouchService.getStaff(localStorageItem).then(staff => {
+        staff.isswitchedtable = false;
+        this.isStaffSwitchedTable = staff.isswitchedtable;
+        this.pouchService.updateStaff(staff);
+        this.pouchService.getDepartments().then(departments => {
+          departments = departments.filter(data => data.name == "Central Store" && data.branch == staff.branch);
+          departments[0].isswitchedtable = false;
+          this.isDepartmentSwitchedTable = departments[0].isswitchedtable;
+          this.pouchService.updateDepartment(departments[0]).then(result => {
+            this.loadCentralStoreCategorys();
+          });
+        });
+      });
+    }
+  }
+
   selectedCentralStoreCategory(centralstorecategory, event) {
-   if (event.checked) {
-    centralstorecategory['selected'] = true;
+    if (event.checked) {
+      centralstorecategory['selected'] = true;
     }
     else {
       centralstorecategory['selected'] = false;
     }
-    this.newCentralStoreCategorys = this.centralstorecategorys.filter(data => data['selected'] == true);
+    this.newCentralStoreCategorys = this.paginatedCentralStorecats.filter(data => data['selected'] == true);
     if (this.newCentralStoreCategorys.length > 0) {
       this.tableCheck = true;
     }
@@ -112,7 +247,7 @@ export class ViewCentralStoreCategoryComponent implements OnInit {
     this.show = true;
   }
 
-  handleFiles(event) { 
+  handleFiles(event) {
     this.files = event.target.files;
 
     var reader: FileReader = new FileReader();
@@ -158,7 +293,7 @@ export class ViewCentralStoreCategoryComponent implements OnInit {
                   subitemno: item['TABLETS/SUB-ITEM NUMBER'],
                   subgroup: item['SUB GROUP'],
                   branch: item['BRANCH'],
-                  department: item['DEPARTMENT'],               
+                  department: item['DEPARTMENT'],
                   products: []
                 }
 
@@ -167,7 +302,7 @@ export class ViewCentralStoreCategoryComponent implements OnInit {
 
                 this.newArray.forEach(arrayProductCategory => {
                   this.pouchService.saveProductcategory(arrayProductCategory).then(res => {
-                    this.loadCentralStoreCategorys();
+                    this.reloadCentralStoreCategorys();
                   });
                 });
               }, 3000);
@@ -191,11 +326,11 @@ export class ViewCentralStoreCategoryComponent implements OnInit {
       }
     });
     dialogRef.afterClosed().subscribe(result => {
-      if(!result) {
+      if (!result) {
         return;
       }
       console.log(result);
-      this.loadCentralStoreCategorys();
+      this.reloadCentralStoreCategorys();
     })
   }
 
@@ -209,7 +344,7 @@ export class ViewCentralStoreCategoryComponent implements OnInit {
       if (result) {
         this.newCentralStoreCategorys.forEach(productcategory => {
           this.pouchService.deleteProductcategory(productcategory).then(res => {
-            this.loadCentralStoreCategorys();
+            this.reloadCentralStoreCategorys();
             this.tableCheck = false;
           });
         });
@@ -230,7 +365,7 @@ export class ViewCentralStoreCategoryComponent implements OnInit {
           'TABLETS/SUB-ITEM NUMBER': items[i].subitemno,
           'SUB GROUP': items[i].subgroup,
           BRANCH: items[i].branch,
-          DEPARTMENT: items[i].department 
+          DEPARTMENT: items[i].department
         }
         exportedProductCategorysArray.push(exportedProductCategorys);
         this.worksheet = XLSX.utils.json_to_sheet(exportedProductCategorysArray);
@@ -244,6 +379,18 @@ export class ViewCentralStoreCategoryComponent implements OnInit {
   private saveAsExcelFile(buffer: any, fileName: string): void {
     const data: Blob = new Blob([buffer], { type: EXCEL_TYPE });
     FileSaver.saveAs(data, fileName + '_export_' + new Date().getTime() + EXCEL_EXTENSION);
+  }
+
+  filterString(event: any): void {
+    const value: string = event.target.value ? event.target.value.toLowerCase() : '';
+    this.paginatedCentralStorecats = [];
+
+    for (let centralstorecategory of this.centralstorecategorys) {
+      if ((centralstorecategory.productname).toLowerCase().indexOf(value) !== -1) {
+        this.paginatedCentralStorecats.push(centralstorecategory);
+        this.paginatedCentralStorecats = this.paginatedCentralStorecats.slice(0, this.pouchService.limitRange);
+      }
+    }
   }
 
 }

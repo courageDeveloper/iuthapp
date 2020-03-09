@@ -28,29 +28,102 @@ export class ViewPatientComponent implements OnInit {
   files: FileList;
   convertFiles;
   newArray;
+  isUserPermitted = false;
   excelBuffer: any;
   public patients: Array<Patient> = [];
   worksheet: XLSX.WorkSheet;
   workbook: XLSX.WorkBook
   exportedPatientsArray: any;
+  paginatedPatients;
+  isPreviousActive = false;
+  isNextActive = false;
 
   constructor(public pouchService: PouchService, private router: Router, public dialog: MatDialog, public toastr: ToastrService) { }
 
   ngOnInit() {
+    this.pouchService.userPermission().then(result => {
+      if (result.department == 'Admin') {
+        this.isUserPermitted = true;
+      }
+    });
+
     this.loadPatients();
   }
 
-  loadPatients() {
-    this.pouchService.getPatients().then(data => {
-      this.patients = data;
+  reloadPatients() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.pouchService.getPatients().then(data => {
+        this.patients = data.filter(data => data.branch == staff.branch);
 
-      $(document).ready(function () {
-        $('#dtBasicExample').DataTable();
-        $('.dataTables_length').addClass('bs-select');
+        this.pouchService.paginationId = this.patients[0].id; //Reverse of what is meant to be;
+
+        this.pouchService.paginateByBranchRemoveItem('patient', this.pouchService.paginationId).then(paginatedata => {
+          this.paginatedPatients = paginatedata;
+
+        });
+
       });
     });
   }
 
+  loadPatients() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      this.pouchService.getPatients().then(data => {
+        this.patients = data.filter(data => data.branch == staff.branch);
+
+        this.pouchService.paginationId = this.patients[this.patients.length - 1].id; //Reverse of what is meant to be;
+
+        this.pouchService.paginateByBranch2('patient', this.pouchService.paginationId).then(paginatedata => {
+          this.paginatedPatients = paginatedata;
+
+          $(document).ready(function () {
+            $('#dtBasicExample').DataTable({
+              "paging": false,
+              "searching": false
+            });
+            $('.dataTables_length').addClass('bs-select');
+          });
+          this.isNextActive = true;
+        });
+
+      });
+    });
+  }
+
+  next() {
+    this.pouchService.paginationId = this.paginatedPatients[this.paginatedPatients.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByBranch2('patient', this.pouchService.paginationId).then(paginatedata => {
+      this.paginatedPatients = paginatedata;
+
+      this.isPreviousActive = true;
+    });
+  }
+
+  previous() {
+    this.pouchService.paginationId = this.paginatedPatients[this.paginatedPatients.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByBranchPrev2('patient', this.pouchService.paginationId).then(paginatedata => {
+      this.paginatedPatients = paginatedata;
+
+      if (this.paginatedPatients.length < this.pouchService.limitRange) {
+        this.isPreviousActive = false;
+      }
+    });
+  }
+
+  goToStart() {
+    this.isPreviousActive = false;
+
+    this.pouchService.paginationId = this.paginatedPatients[this.paginatedPatients.length - 1].id;  //Reverse of what is meant to be;
+
+    this.pouchService.paginateByBranchStart('patient', this.pouchService.paginationId).then(paginatedata => {
+      this.paginatedPatients = paginatedata;
+      
+    });
+  }
 
   editPatient(patient) {
     this.router.navigate(['edit-patient', patient.id]);
@@ -69,14 +142,14 @@ export class ViewPatientComponent implements OnInit {
       if (result) {
         this.pouchService.deletePatient(patient).then(res => {
           this.toastr.success('Patient has been deleted successfully');
-          this.loadPatients();
+          this.reloadPatients();
         });
       }
     });
   }
 
-  viewHistory() {
-
+  viewHistory(patient) {
+    this.router.navigate(['view-history-patient', patient.id]);
   }
 
   deleteSelectedPatient() {
@@ -89,7 +162,7 @@ export class ViewPatientComponent implements OnInit {
       if (result) {
         this.newPatients.forEach(patient => {
           this.pouchService.deletePatient(patient).then(res => {
-            this.loadPatients();
+            this.reloadPatients();
             this.tableCheck = false;
           });
         });
@@ -105,7 +178,7 @@ export class ViewPatientComponent implements OnInit {
     else {
       patient['selected'] = false;
     }
-    this.newPatients = this.patients.filter(data => data['selected'] == true);
+    this.newPatients = this.paginatedPatients.filter(data => data['selected'] == true);
     if (this.newPatients.length > 0) {
       this.tableCheck = true;
     }
@@ -182,7 +255,7 @@ export class ViewPatientComponent implements OnInit {
                   arrayPatient.dob = new Date((arrayPatient.dob - (25567 + 2)) * 86400 * 1000);
                   arrayPatient.dateofregistration = new Date((arrayPatient.dateofregistration - (25567 + 2)) * 86400 * 1000);
                   this.pouchService.savePatient(arrayPatient).then(res => {
-                    this.loadPatients();
+                    this.reloadPatients();
                   });
                 });
               }, 3000);
@@ -229,5 +302,18 @@ export class ViewPatientComponent implements OnInit {
   private saveAsExcelFile(buffer: any, fileName: string): void {
     const data: Blob = new Blob([buffer], { type: EXCEL_TYPE });
     FileSaver.saveAs(data, fileName + '_export_' + new Date().getTime() + EXCEL_EXTENSION);
+  }
+
+  
+  filterString(event: any): void {
+    const value: string = event.target.value ? event.target.value.toLowerCase() : '';
+    this.paginatedPatients = [];
+
+    for (let patient of this.patients) {
+      if ((patient.firstname + ' ' + patient.lastname).toLowerCase().indexOf(value) !== -1) {
+        this.paginatedPatients.push(patient);
+        this.paginatedPatients = this.paginatedPatients.slice(0, this.pouchService.limitRange);
+      }
+    }
   }
 }

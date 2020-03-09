@@ -17,6 +17,7 @@ import * as FileSaver from "file-saver";
 const EXCEL_TYPE = 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet;charset=UTF-8';
 const EXCEL_EXTENSION = '.xlsx';
 import { DataService } from '../../services/data.service';
+import { AddDamagedproductsComponent } from '../../damagedproducts/add-damagedproducts/add-damagedproducts.component';
 
 @Component({
   selector: 'app-view-account-counterproduct',
@@ -161,7 +162,7 @@ export class ViewAccountCounterProductComponent implements OnInit {
 
     this.pouchService.getStaffs().then(staffs => {
       staffs = staffs.filter(data => data.branch == notification.branch);
-      staffs = staffs.filter(data => data.department == 'Account' || data.department == counterproduct.sourcedepartment  || data.department == 'Account' || data.department == 'Audit');
+      staffs = staffs.filter(data => data.department == 'Account' || data.department == counterproduct.sourcedepartment || data.department == 'Account' || data.department == 'Audit');
       staffs.forEach(staff => {
         staff.notification.push(notification);
         this.pouchService.updateStaff(staff).then(result => {
@@ -188,7 +189,7 @@ export class ViewAccountCounterProductComponent implements OnInit {
 
     this.pouchService.getStaffs().then(staffs => {
       staffs = staffs.filter(data => data.branch == notification.branch);
-      staffs = staffs.filter(data => data.department == 'Account' || data.department == counterproduct.sourcedepartment  || data.department == 'Account' || data.department == 'Audit');
+      staffs = staffs.filter(data => data.department == 'Account' || data.department == counterproduct.sourcedepartment || data.department == 'Account' || data.department == 'Audit');
       staffs.forEach(staff => {
         staff.notification.push(notification);
         this.pouchService.updateStaff(staff).then(result => {
@@ -233,6 +234,29 @@ export class ViewAccountCounterProductComponent implements OnInit {
       }
     });
   }
+
+  addDamagedProduct(counterproduct) {
+    let dialogRef = this.dialog.open(AddDamagedproductsComponent, {
+      height: '500px',
+      width: '500px',
+      data: {
+        content: counterproduct,
+        action: 'add'
+      }
+    });
+    dialogRef.afterClosed().subscribe(result => {
+      console.log(result);
+      if (!result) {
+        return;
+      }
+      this.loadCounterProducts();
+    })
+  }
+
+  navdamagedproducts() {
+    this.router.navigate(['/view-damagedproducts']);
+  }
+
 
   viewImage(counterproduct, i) {
     this.data.changeDepartment(counterproduct.department);

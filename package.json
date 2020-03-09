@@ -1,5 +1,5 @@
 {
-  "name": "material-dashboard-angular",
+  "name": "iuthaccountmanager",
   "version": "2.3.0",
   "license": "MIT",
   "scripts": {
@@ -7,9 +7,35 @@
     "start": "ng serve",
     "build": "ng build",
     "test": "ng test",
+    "electron dist": "electron .",
+    "electron": "ng build && electron .",
+    "electron-aot": "ng build --prod && electron .",
     "lint": "ng lint",
+    "dist": "build",
     "e2e": "ng e2e",
     "install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && ng serve -o"
+  },
+  "main": "electron/electron.js",
+  "build": {
+    "appId": "com.iuth.accountmanager",
+    "productName": "IUTH Account Manager",
+    "asar": false,
+    "files": [
+      "public/**/*",
+      "electron/*"
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": [
+            "x64",
+            "ia32"
+          ]
+        }
+      ],
+      "icon": "src/assets/img/IUTHlogo.ico"
+    }
   },
   "engines": {
     "node": "6.11.1",
@@ -41,6 +67,7 @@
     "bootstrap-material-design": "4.1.2",
     "bootstrap-notify": "3.1.3",
     "bootstrap-select": "^1.13.10",
+    "chart.js": "^2.8.0",
     "chartist": "0.11.2",
     "classlist.js": "1.1.20150312",
     "core-js": "3.1.3",
@@ -60,7 +87,9 @@
     "ngx-image-viewer": "^1.0.13",
     "ngx-spinner": "^8.0.3",
     "ngx-toastr": "^10.0.4",
-    "perfect-scrollbar": "1.1.0",
+    "node-sass": "^4.13.1",
+    "number-to-words": "^1.2.4",
+    "perfect-scrollbar": "^1.1.0",
     "popper.js": "1.15.0",
     "pouchdb-adapter-websql": "^7.0.0",
     "pouchdb-all-dbs": "^1.0.2",
@@ -74,8 +103,8 @@
     "zone.js": "0.9.1"
   },
   "devDependencies": {
-    "@angular-devkit/build-angular": "0.800.2",
-    "@angular/cli": "8.0.2",
+    "@angular-devkit/build-angular": "^0.803.23",
+    "@angular/cli": "8.0.0",
     "@angular/compiler-cli": "8.0.0",
     "@angular/language-service": "8.0.0",
     "@types/bootstrap": "4.3.0",
@@ -85,6 +114,9 @@
     "@types/jquery": "3.3.29",
     "@types/node": "12.0.7",
     "codelyzer": "5.1.0",
+    "electron": "^2.0.18",
+    "electron-builder": "^21.2.0",
+    "electron-packager": "^14.0.6",
     "jasmine-core": "3.4.0",
     "jasmine-spec-reporter": "4.2.1",
     "karma": "4.1.0",

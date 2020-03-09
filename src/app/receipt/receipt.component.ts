@@ -8,6 +8,7 @@ import { DomSanitizer } from '@angular/platform-browser';
 import { ToastrService } from 'ngx-toastr';
 import { Router } from '@angular/router';
 import { DataService } from '../services/data.service';
+var converter = require('number-to-words');
 
 @Component({
   selector: 'app-receipt',
@@ -21,6 +22,12 @@ export class ReceiptComponent implements OnInit {
   seviceError;
   productError;
   receiptSource: any;
+  localStorageItem: any;
+  serverName: any;
+  staffCode;
+  currentDate: any;
+  amountInWords: any;
+
 
   constructor(private router: Router, private dataService: DataService, public dialogRef: MatDialogRef<ReceiptComponent>, @Inject(MAT_DIALOG_DATA) public data: any, public toastr: ToastrService, public _DomSanitizer: DomSanitizer, public pouchService: PouchService, private formBuilder: FormBuilder) {
 
@@ -28,23 +35,34 @@ export class ReceiptComponent implements OnInit {
       this.title = 'Print';
       var indexOfBy = this.data.sale.salename.indexOf('by');
       var indexOfFrom = this.data.sale.salename.indexOf('from');
-      var patientName = this.data.sale.salename.substring(indexOfBy + 2,indexOfFrom);
+      var patientName = this.data.sale.salename.substring(indexOfBy + 2, indexOfFrom);
       this.data.sale['patientName'] = patientName;
       this.sale = this.data.sale;
-       
-      if(this.sale.productorder.length == 0) {
-         this.productError = 'No Product has been added to cart';
+      if(!this.data.sale.isoncredit) {
+      this.amountInWords = converter.toWords(this.sale.amount);
       }
-      else if(this.sale.serviceorder.length == 0) {
+      else if(this.data.sale.isoncredit) {
+        this.amountInWords = converter.toWords(this.sale.amountloaned);
+      }
+
+      if (this.sale.productorder.length == 0) {
+        this.productError = 'No Product has been added to cart';
+      }
+      else if (this.sale.serviceorder.length == 0) {
         this.seviceError = 'No Service has been added to cart';
       }
     }
   }
 
   ngOnInit() {
+    this.currentDate = new Date();
+
+    this.localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.pouchService.getStaff(this.localStorageItem).then(staff => {
+      this.serverName = staff.firstname + ' ' + staff.lastname;
+      this.staffCode = staff.staffcode;
+    });
     this.dataService.receiptSource.subscribe(receiptsource => this.receiptSource = receiptsource);
-    
-    console.log(this.receiptSource)
     setTimeout(() => {
       this.printReceipt();
     }, 1000);

@@ -51,6 +51,8 @@ export class DispatchFormCentralStoreBcComponent implements OnInit {
         productid: this.data.centralstorebc.id,
         dispatchdepartment: '',
         sourcedepartment: this.data.centralstorebc.store,
+        subitemno: 0,
+        costprice: 0,
         dispatched: false,
         datedispatched: new Date(),
         branch: '',
@@ -89,6 +91,11 @@ export class DispatchFormCentralStoreBcComponent implements OnInit {
     });
 
     this.dispatchProductForm.controls.productname.disable();
+
+    this.pouchService.getProductcategory(this.data.centralstorebc.productcatid).then(item => {
+      this.dispatchedProducts.costprice = item.costprice;
+      this.dispatchedProducts.subitemno = item.subitemno;
+    });
   }
 
   onNoClick(): void {
@@ -170,6 +177,8 @@ export class DispatchFormCentralStoreBcComponent implements OnInit {
             refund: false,
             isUnitSelling: true,
             isexpired: this.data.centralstorebc.isexpired,
+            isnoticed: false,
+            isquantitynoticed: false,
             sales: []
           }
 

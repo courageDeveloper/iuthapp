@@ -34,7 +34,7 @@ export class AddPharmacyStoreCategoryComponent implements OnInit {
       productname: '',
       subgroup: '',
       costprice: 0,
-      subitemno: 0,
+      subitemno: 1,
       branch: '',
       department: 'Pharmacy Store',
       products: []

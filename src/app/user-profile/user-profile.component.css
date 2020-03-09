@@ -6,3 +6,7 @@
 .btn-color {
     background-color: #00254e !important;
 }
+
+mat-checkbox {
+    margin-left: 5px;
+}

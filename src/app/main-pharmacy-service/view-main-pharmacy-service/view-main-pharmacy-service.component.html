@@ -3,54 +3,150 @@
         <div *ngIf="tableCheck" class="icon-align"><i style="font-size: 45px; cursor: pointer;"
                 class="material-icons delete-color" matTooltip="Delete Selected Serive"
                 (click)="deleteSelectedRenderService()">delete</i> </div>
-                <div class="row">
-                        <div class="col-md-12">
-                            <div *ngIf="!show"> <button mat-raised-button class="btn import-btn pull-right"
-                                    (click)="import()">IMPORT <i class="material-icons"
-                                        style="color: white;">get_app</i></button>
-                            </div>
-                            <div *ngIf="show"> <button mat-raised-button class="btn import-btn pull-right" text-uppercase><a
-                                        href="assets/excel/IUTH Main Pharmacy Services.xlsx" style="color: white;">Download Sample</a> <i
-                                        class="material-icons" style="color: white;">get_app</i></button></div>
-                            <div> <button mat-raised-button class="btn pull-right card-color" (click)="export()">EXPORT <i
-                                        class="material-icons" style="color: white;">reply</i></button></div>
-                            <input accept="*" *ngIf="show" class="margin-btm" type="file" (change)="handleFiles($event)" />
-                        </div>
-                    </div>
         <div class="row">
             <div class="col-md-12">
-                    <cdk-virtual-scroll-viewport  style="height: 500px" itemSize="90" >
-                        <ng-container *cdkVirtualFor="let renderService of renderServices" >
-                <div class="card" style="border: solid #00254e 2px;">
-                    <div class="card-body">
-                            <mat-checkbox (change)="selectedRenderService(renderService, $event)"></mat-checkbox>
-                            <mat-card-title style="margin: 0 0 5px 10px;">Service Name: {{renderService.servicename}}</mat-card-title>
-                            <div class="row">
+                <div *ngIf="!show"> <button mat-raised-button class="btn import-btn pull-right"
+                        (click)="import()">IMPORT <i class="material-icons" style="color: white;">get_app</i></button>
+                </div>
+                <div *ngIf="show"> <button mat-raised-button class="btn import-btn pull-right" text-uppercase><a
+                            href="assets/excel/IUTH Main Pharmacy Services.xlsx" style="color: white;">Download
+                            Sample</a> <i class="material-icons" style="color: white;">get_app</i></button></div>
+                <div> <button mat-raised-button class="btn pull-right card-color" (click)="export()">EXPORT <i
+                            class="material-icons" style="color: white;">reply</i></button></div>
+                <input accept="*" *ngIf="show" class="margin-btm" type="file" (change)="handleFiles($event)" />
+            </div>
+        </div>
+        <div class="row">
+            <div class="col-md-12">
+                <mat-checkbox (change)="switchView($event)" [checked]="isStaffSwitchedTable">Change View of Items
+                </mat-checkbox>
+            </div>
+        </div>
+        <div class="row" *ngIf="!isStaffSwitchedTable">
+            <div class="col-md-12">
+                <cdk-virtual-scroll-viewport style="height: 500px" itemSize="itemSize">
+                    <ng-container *cdkVirtualFor="let renderService of paginatedRenderServices">
+                        <div class="card" style="border: solid #00254e 2px;">
+                            <div class="card-body">
+                                <mat-checkbox (change)="selectedRenderService(renderService, $event)"
+                                    [disabled]="!isUserPermitted || !isSupervisor"></mat-checkbox>
+                                <mat-card-title style="margin: 0 0 5px 10px;">Service Name:
+                                    {{renderService.servicename}}</mat-card-title>
+                                <div class="row">
                                     <div class="col-md-6">
                                         <strong>Set Price:</strong> {{renderService.cost}}
-                                        </div>
-                                        <div class="col-md-6 ">
-                                            <strong>Department:</strong> {{renderService.department}}
-                                            </div>
-                                </div>
-                                 <div class="row">
-                                    <div class="col-md-12">
-                                        <button class="icon-service" style="background-color: #4d0000"
-                                            (click)="deleteRenderService(renderService)" mat-mini-fab><i
-                                                class="material-icons" style="color: whitesmoke"
-                                                matTooltip="Delete Service">delete</i></button>
-                                        <button class="icon-service" style="background-color: #00254e"
-                                            (click)="editRenderService(renderService)" mat-mini-fab> <i
-                                                class="material-icons" style="color: whitesmoke"
-                                                matTooltip="Edit Service">edit</i></button>
+                                    </div>
+                                    <div class="col-md-6 ">
+                                        <strong>Department:</strong> {{renderService.department}}
                                     </div>
                                 </div>
+                                <div class="row">
+                                    <div class="col-md-12">
+                                        <button class="icon-service" style="background-color: #4d0000"
+                                            (click)="deleteRenderService(renderService)" mat-mini-fab
+                                            [disabled]="!isUserPermitted || !isSupervisor"><i class="material-icons"
+                                                style="color: whitesmoke"
+                                                matTooltip="Delete Service">delete</i></button>
+                                        <button class="icon-service" style="background-color: #00254e"
+                                            (click)="editRenderService(renderService)" mat-mini-fab
+                                            [disabled]="!isUserPermitted || !isSupervisor"> <i class="material-icons"
+                                                style="color: whitesmoke" matTooltip="Edit Service">edit</i></button>
+                                    </div>
+                                </div>
+                            </div>
+                        </div>
+                    </ng-container>
+                    <div style="text-align: center;">
+                        <button mat-raised-button class="btn btn-warning btn-load" (click)="previous()"
+                            [disabled]="!isPreviousActive"><i class="material-icons" style='color: white;'
+                                matTooltip="Go to Previous">keyboard_arrow_left</i> Load Previous.... </button>
                     </div>
-                </div>
-                </ng-container>
+                    <div style="text-align: center;">
+                        <button mat-raised-button class="btn btn-info btn-load" (click)="next()"
+                            [disabled]="!isNextActive"> Load More.... <i class="material-icons" style='color: white;'
+                                matTooltip="Go to Next">keyboard_arrow_right</i></button>
+                    </div>
+                    <button mat-fab class='btn btn-success' (click)="goToStart()" [disabled]="!isPreviousActive">
+                        <i class="material-icons" style='color: white;'
+                            matTooltip="Go to Start">keyboard_arrow_up</i></button>
                 </cdk-virtual-scroll-viewport>
             </div>
         </div>
-        <button mat-fab class='fab-button' (click)="addRenderService()"> <i class="material-icons" style='color: white;' matTooltip="Add Service">add</i></button>
+        <div class="row" *ngIf="isStaffSwitchedTable">
+            <div class="col-md-12">
+                <div class="card">
+                    <div class="card-body">
+                        <mat-form-field class="example-full-width" style="float: right;">
+                            <input matInput placeholder="Search" (change)="filterString($event)">
+                        </mat-form-field>
+                        <div class="table-responsive">
+                            <table id="dtBasicExample" class="table table-striped table-bordered">
+                                <thead>
+                                    <tr>
+                                        <th>
+
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Service Name
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Set Price
+                                        </th>
+                                        <th style="font-weight: bold;">
+                                            Department
+                                        </th>
+                                        <th>
+
+                                        </th>
+                                        <th>
+
+                                        </th>
+                                    </tr>
+                                </thead>
+                                <tbody>
+                                    <tr *ngFor="let renderService of paginatedRenderServices">
+                                        <td>
+                                            <mat-checkbox (change)="selectedRenderService(renderService, $event)"
+                                                [disabled]="!isUserPermitted || !isSupervisor"></mat-checkbox>
+                                        </td>
+                                        <td>
+                                            {{renderService.servicename}}
+                                        </td>
+                                        <td>
+                                            {{renderService.cost}}
+                                        </td>
+                                        <td class="text-primary">
+                                            {{renderService.department}}
+                                        </td>
+                                        <td>
+                                            <button class="icon-service" style="background-color: #4d0000"
+                                                (click)="deleteRenderService(renderService)" mat-mini-fab
+                                                [disabled]="!isUserPermitted || !isSupervisor"><i class="material-icons"
+                                                    style="color: whitesmoke"
+                                                    matTooltip="Delete Service">delete</i></button>
+                                        </td>
+                                        <td>
+                                            <button class="icon-service" style="background-color: #00254e"
+                                                (click)="editRenderService(renderService)" mat-mini-fab
+                                                [disabled]="!isUserPermitted || !isSupervisor"> <i
+                                                    class="material-icons" style="color: whitesmoke"
+                                                    matTooltip="Edit Service">edit</i></button>
+                                        </td>
+                                    </tr>
+                                </tbody>
+                            </table>
+                        </div>
+                        <button mat-stroked-button style="float: right; margin: 5px;" class="btn btn-info"
+                            (click)="next()" [disabled]="!isNextActive"> NEXT </button>
+                        <button mat-stroked-button style="float: right; margin: 5px;" class="btn btn-warning"
+                            (click)="previous()" [disabled]="!isPreviousActive"> PREVIOUS </button>
+                        <button mat-stroked-button style="float: right; margin: 5px;" class="btn btn-success"
+                            (click)="goToStart()" [disabled]="!isPreviousActive"> GO TO START </button>
+                    </div>
+                </div>
+            </div>
+        </div>
+        <button mat-fab class='fab-button' (click)="addRenderService()" [disabled]="!isUserPermitted"> <i
+                class="material-icons" style='color: white;' matTooltip="Add Service">add</i></button>
     </div>
 </div>
