@@ -111,7 +111,7 @@ export class EditPatientComponent implements OnInit {
     this.errorMessage = "";
     this.pouchService.getPatients().then(data => {
       data.forEach(item => {
-        if (this.patient.email == item.email && item.email != this.currentUseremail) {
+        if (this.patient.email == item.email && item.email != this.currentUseremail && this.patient.email != "") {
           this.errorMessage = "This email already exists";
           this.disabled = true;
         }

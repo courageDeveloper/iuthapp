@@ -86,6 +86,7 @@ export class ViewMainPharmacyCounterProductComponent implements OnInit, AfterVie
         if (role.role == "Supervisor" && role.isChecked == true) {
           this.isSupervisor = true;
         }
+        
       })
     });
   }
@@ -147,7 +148,7 @@ export class ViewMainPharmacyCounterProductComponent implements OnInit, AfterVie
         });
         this.noOfProduct = this.counterProducts.length;
 
-        this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, "Main Pharmacy").then(paginatedata => {
+        this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, "Main Pharmacy", undefined, undefined, undefined, undefined, 0).then(paginatedata => {
           this.paginatedCounterProducts = paginatedata;
           this.paginatedCounterProducts = this.paginatedCounterProducts.filter(data => {
             var dbMonth = this.months[new Date(data.datesupplied).getMonth()];
@@ -189,7 +190,7 @@ export class ViewMainPharmacyCounterProductComponent implements OnInit, AfterVie
 
   reloadCounterProducts() {
     this.pouchService.getCounterProducts().then(items => {
-      items = items.filter(data => data.branch == 'IUTH(Okada)' && data.department == "Main Pharmacy");
+      items = items.filter(data => data.branch == 'IUTH(Okada)' && data.department == "Main Pharmacy" && data.totalsubitem > 0);
       this.counterProducts = items;
       this.itemSize = this.counterProducts.length;
       this.noOfProduct = this.counterProducts.length;
@@ -223,7 +224,7 @@ export class ViewMainPharmacyCounterProductComponent implements OnInit, AfterVie
 
       this.pouchService.paginationId = this.counterProducts[0].id; //Reverse of what is meant to be;
 
-      this.pouchService.paginateByDepartmentRemoveItem('counterproduct', this.pouchService.paginationId, 'Main Pharmacy').then(paginatedata => {
+      this.pouchService.paginateByDepartmentRemoveItem('counterproduct', this.pouchService.paginationId, 'Main Pharmacy', undefined, undefined, undefined, undefined, 0).then(paginatedata => {
         this.paginatedCounterProducts = paginatedata;
 
         this.isNextActive = true;
@@ -233,7 +234,7 @@ export class ViewMainPharmacyCounterProductComponent implements OnInit, AfterVie
 
   loadCounterProducts() {
     this.pouchService.getCounterProducts().then(items => {
-      items = items.filter(data => data.branch == 'IUTH(Okada)' && data.department == "Main Pharmacy");
+      items = items.filter(data => data.branch == 'IUTH(Okada)' && data.department == "Main Pharmacy" && data.totalsubitem > 0);
       this.counterProducts = items;
       this.itemSize = this.counterProducts.length;
       this.noOfProduct = this.counterProducts.length;
@@ -267,7 +268,7 @@ export class ViewMainPharmacyCounterProductComponent implements OnInit, AfterVie
 
       this.pouchService.paginationId = this.counterProducts[0].id; //Reverse of what is meant to be;
 
-      this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, 'Main Pharmacy').then(paginatedata => {
+      this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, 'Main Pharmacy', undefined, undefined, undefined, undefined, 0 ).then(paginatedata => {
         this.paginatedCounterProducts = paginatedata;
 
         $(document).ready(function () {
@@ -289,7 +290,7 @@ export class ViewMainPharmacyCounterProductComponent implements OnInit, AfterVie
 
       this.pouchService.paginationId = this.paginatedCounterProducts[this.paginatedCounterProducts.length - 1].id;  //Reverse of what is meant to be;
 
-      this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, "Main Pharmacy").then(paginatedata => {
+      this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, "Main Pharmacy", undefined, undefined, undefined, undefined, 0).then(paginatedata => {
         this.paginatedCounterProducts = paginatedata;
 
         this.isPreviousActive = true;
@@ -304,7 +305,7 @@ export class ViewMainPharmacyCounterProductComponent implements OnInit, AfterVie
       //this.department = staff.department;
       this.pouchService.paginationId = this.paginatedCounterProducts[this.paginatedCounterProducts.length - 1].id;  //Reverse of what is meant to be;
 
-      this.pouchService.paginateByDepartmentPrev2('counterproduct', this.pouchService.paginationId, "Main Pharmacy").then(paginatedata => {
+      this.pouchService.paginateByDepartmentPrev2('counterproduct', this.pouchService.paginationId, "Main Pharmacy", undefined, undefined, undefined, undefined, 0).then(paginatedata => {
         this.paginatedCounterProducts = paginatedata;
 
       });
@@ -323,7 +324,7 @@ export class ViewMainPharmacyCounterProductComponent implements OnInit, AfterVie
 
       this.pouchService.paginationId = this.paginatedCounterProducts[this.paginatedCounterProducts.length - 1].id;  //Reverse of what is meant to be;
 
-      this.pouchService.paginateByDepartmentStart('counterproduct', this.pouchService.paginationId, "Main Pharmacy").then(paginatedata => {
+      this.pouchService.paginateByDepartmentStart('counterproduct', this.pouchService.paginationId, "Main Pharmacy", undefined, undefined, undefined, undefined, 0).then(paginatedata => {
         this.paginatedCounterProducts = paginatedata;
 
         this.isPreviousActive = true;

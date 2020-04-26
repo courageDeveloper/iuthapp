@@ -597,7 +597,7 @@ if (content.locals) {
 
 /***/ }),
 
-/***/ 3:
+/***/ 5:
 /*!************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************!*\
   !*** multi ./node_modules/bootstrap/dist/css/bootstrap.min.css ./node_modules/bootstrap-select/dist/css/bootstrap-select.css ./node_modules/datatables.net-bs4/css/dataTables.bootstrap4.css ./node_modules/perfect-scrollbar/css/perfect-scrollbar.css ./src/assets/scss/material-dashboard.scss ./src/assets/css/demo.css ./node_modules/ngx-toastr/toastr.css ./node_modules/datatables.net-select-bs/css/select.bootstrap.css ***!
   \************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************************/
@@ -616,5 +616,5 @@ module.exports = __webpack_require__(/*! C:\Users\IRORO\Desktop\angularprojects\
 
 /***/ })
 
-},[[3,"runtime"]]]);
+},[[5,"runtime"]]]);
 //# sourceMappingURL=styles.js.map

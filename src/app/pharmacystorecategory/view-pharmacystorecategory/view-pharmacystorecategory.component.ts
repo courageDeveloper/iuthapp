@@ -81,7 +81,7 @@ export class ViewPharmacyStoreCategoryComponent implements OnInit {
 
       this.pouchService.paginateByDepartment2('productcategory', this.pouchService.paginationId, 'Pharmacy Store').then(paginatedata => {
         this.paginatedPharmacyStorecats = paginatedata;
-
+        
         $(document).ready(function () {
           $('#dtBasicExample').DataTable({
             "paging": false,
@@ -380,7 +380,7 @@ export class ViewPharmacyStoreCategoryComponent implements OnInit {
     const value: string = event.target.value ? event.target.value.toLowerCase() : '';
     this.paginatedPharmacyStorecats = [];
 
-    for (let pharmacystorecategory of this.paginatedPharmacyStorecats) {
+    for (let pharmacystorecategory of this.pharmacystorecategorys) {
       if ((pharmacystorecategory.productname).toLowerCase().indexOf(value) !== -1) {
         this.paginatedPharmacyStorecats.push(pharmacystorecategory);
         this.paginatedPharmacyStorecats = this.paginatedPharmacyStorecats.slice(0, this.pouchService.limitRange);

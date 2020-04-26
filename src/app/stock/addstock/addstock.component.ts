@@ -40,7 +40,7 @@ export class AddstockComponent implements OnInit {
       rev: '',
       branch: '',
       department: '',
-      date: new Date(),
+      date: new Date().toString(),
       month: '',
       year: new Date().getFullYear(),
       openingstock: 'Opening Stock',

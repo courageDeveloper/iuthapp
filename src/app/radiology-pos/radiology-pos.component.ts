@@ -118,12 +118,12 @@ export class RadiologyPosComponent implements OnInit {
       departmentloaned: '',
       individualloanid: '',
       departmentloaning: 'Radiology',
-      dateofloan: new Date(),
+      dateofloan: new Date().toString(),
       salename: '',
       amount: 0,
       description: '',
       color: '',
-      date: new Date(),
+      date: new Date().toString(),
       iscomplete: false,
       isowing: false,
       isoncredit: false,
@@ -160,7 +160,7 @@ export class RadiologyPosComponent implements OnInit {
       
       this.pouchService.paginationId = this.counterproducts[0].id; //Reverse of what is meant to be;
 
-      this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, "Radiology", undefined, undefined, undefined, false).then(paginatedata => {
+      this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, "Radiology", undefined, undefined, undefined, false, 0).then(paginatedata => {
         this.paginatedCounterProducts = paginatedata;
 
         this.isNextActive = true;
@@ -174,7 +174,7 @@ export class RadiologyPosComponent implements OnInit {
   next() {
     this.pouchService.paginationId = this.paginatedCounterProducts[this.paginatedCounterProducts.length - 1].id;  //Reverse of what is meant to be;
 
-    this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, "Radiology", undefined, undefined, undefined, false).then(paginatedata => {
+    this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, "Radiology", undefined, undefined, undefined, false, 0).then(paginatedata => {
       this.paginatedCounterProducts = paginatedata;
 
       this.isPreviousActive = true;
@@ -184,7 +184,7 @@ export class RadiologyPosComponent implements OnInit {
   previous() {
     this.pouchService.paginationId = this.paginatedCounterProducts[this.paginatedCounterProducts.length - 1].id;  //Reverse of what is meant to be;
 
-    this.pouchService.paginateByDepartmentPrev2('counterproduct', this.pouchService.paginationId, "Radiology", undefined, undefined, undefined, false).then(paginatedata => {
+    this.pouchService.paginateByDepartmentPrev2('counterproduct', this.pouchService.paginationId, "Radiology", undefined, undefined, undefined, false, 0).then(paginatedata => {
       this.paginatedCounterProducts = paginatedata;
 
       if (this.paginatedCounterProducts.length < this.pouchService.limitRange) {
@@ -198,7 +198,7 @@ export class RadiologyPosComponent implements OnInit {
 
     this.pouchService.paginationId = this.paginatedCounterProducts[this.paginatedCounterProducts.length - 1].id;  //Reverse of what is meant to be;
 
-    this.pouchService.paginateByDepartmentStart('counterproduct', this.pouchService.paginationId, "Radiology", undefined, undefined, undefined, false).then(paginatedata => {
+    this.pouchService.paginateByDepartmentStart('counterproduct', this.pouchService.paginationId, "Radiology", undefined, undefined, undefined, false, 0).then(paginatedata => {
       this.paginatedCounterProducts = paginatedata;
 
     });
@@ -820,6 +820,7 @@ export class RadiologyPosComponent implements OnInit {
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(item => {
       this.sales.branch = item.branch;
+      this.sales['dispenserName'] = `${item.firstname } ${item.lastname}`;
 
       if (!this.sales.isoncredit) {
         var randomString = this.generateRandomStrings(4);

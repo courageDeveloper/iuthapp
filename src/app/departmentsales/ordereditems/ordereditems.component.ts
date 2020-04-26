@@ -724,7 +724,7 @@ export class OrderedItemsComponent implements OnInit {
         sales = sales.filter(data => data.isoncredit == false);
 
         sales.map(sale => {
-          sale['timestamp'] = new Date(sale.date).toLocaleString("en-US", { timeZone: "GMT" });
+          sale['timestamp'] = new Date(sale.date);
           sale['timestamp'] = new Date(sale['timestamp']).setSeconds(0);
           /* sale['timestamp'] = new Date(sale['timestamp']).setMinutes(0);
           sale['timestamp'] = new Date(sale['timestamp']).setHours(0); */
@@ -740,7 +740,7 @@ export class OrderedItemsComponent implements OnInit {
           this.paginatedSales = paginatedata;
 
           this.paginatedSales.map(paginatedSale => {
-            paginatedSale['timestamp'] = new Date(paginatedSale.date).toLocaleString("en-US", { timeZone: "GMT" });
+            paginatedSale['timestamp'] = new Date(paginatedSale.date);
             paginatedSale['timestamp'] = new Date(paginatedSale['timestamp']).setSeconds(0);
             /*  loan['timestamp'] = new Date(loan['timestamp']).setMinutes(0);
              loan['timestamp'] = new Date(loan['timestamp']).setHours(0); */

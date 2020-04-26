@@ -38,6 +38,7 @@ export class ReceiptComponent implements OnInit {
       var patientName = this.data.sale.salename.substring(indexOfBy + 2, indexOfFrom);
       this.data.sale['patientName'] = patientName;
       this.sale = this.data.sale;
+      console.log(this.sale);
       if(!this.data.sale.isoncredit) {
       this.amountInWords = converter.toWords(this.sale.amount);
       }

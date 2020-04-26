@@ -158,14 +158,14 @@ export class ViewGeneralCounterProductComponent implements OnInit, AfterViewInit
         if (!this.isFilterMonth) {
           this.pouchService.paginationId = this.counterProducts[0].id; //Reverse of what is meant to be;
 
-          this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, this.selectedDepartment).then(paginatedata => {
+          this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, this.selectedDepartment, undefined, undefined, undefined, undefined, 0).then(paginatedata => {
             this.paginatedCounterProducts = paginatedata;
           });
         }
         else {
           this.pouchService.paginationId = this.counterProducts[0].id; //Reverse of what is meant to be;
 
-          this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, this.selectedDepartment).then(paginatedata => {
+          this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, this.selectedDepartment, undefined, undefined, undefined, undefined, 0).then(paginatedata => {
             this.paginatedCounterProducts = paginatedata;
             this.paginatedCounterProducts = this.paginatedCounterProducts.filter(data => {
               var dbMonth = this.months[new Date(data.datesupplied).getMonth()];
@@ -247,7 +247,7 @@ export class ViewGeneralCounterProductComponent implements OnInit, AfterViewInit
         this.noOfProduct = this.counterProducts.length;
 
         if (!this.isFilterDepartment) {
-          this.pouchService.paginateByBranch2('counterproduct', this.pouchService.paginationId).then(paginatedata => {
+          this.pouchService.paginateByBranch2('counterproduct', this.pouchService.paginationId, undefined, undefined, 0).then(paginatedata => {
             this.paginatedCounterProducts = paginatedata;
             this.paginatedCounterProducts = this.paginatedCounterProducts.filter(data => {
               var dbMonth = this.months[new Date(data.datesupplied).getMonth()];
@@ -258,7 +258,7 @@ export class ViewGeneralCounterProductComponent implements OnInit, AfterViewInit
           });
         }
         else {
-          this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, this.selectedDepartment).then(paginatedata => {
+          this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, this.selectedDepartment, undefined, undefined, undefined, undefined, 0).then(paginatedata => {
             this.paginatedCounterProducts = paginatedata;
             this.paginatedCounterProducts = this.paginatedCounterProducts.filter(data => {
               var dbMonth = this.months[new Date(data.datesupplied).getMonth()];
@@ -311,7 +311,7 @@ export class ViewGeneralCounterProductComponent implements OnInit, AfterViewInit
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(staff => {
       this.pouchService.getCounterProducts().then(items => {
-        items = items.filter(data => data.branch == staff.branch);
+        items = items.filter(data => data.branch == staff.branch && data.totalsubitem > 0);
         
         this.counterProducts = items;
         this.itemSize = this.counterProducts.length;
@@ -347,7 +347,7 @@ export class ViewGeneralCounterProductComponent implements OnInit, AfterViewInit
 
         this.pouchService.paginationId = this.counterProducts[0].id; //Reverse of what is meant to be;
 
-        this.pouchService.paginateByBranch2('counterproduct', this.pouchService.paginationId).then(paginatedata => {
+        this.pouchService.paginateByBranch2('counterproduct', this.pouchService.paginationId, undefined, undefined, 0 ).then(paginatedata => {
           this.paginatedCounterProducts = paginatedata;
           
           $(document).ready(function () {
@@ -373,7 +373,7 @@ export class ViewGeneralCounterProductComponent implements OnInit, AfterViewInit
 
       if (this.isFilterDepartment) {
 
-        this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, this.selectedDepartment).then(paginatedata => {
+        this.pouchService.paginateByDepartment2('counterproduct', this.pouchService.paginationId, this.selectedDepartment, undefined, undefined, undefined, undefined, 0).then(paginatedata => {
           this.paginatedCounterProducts = paginatedata;
 
           this.isPreviousActive = true;
@@ -381,7 +381,7 @@ export class ViewGeneralCounterProductComponent implements OnInit, AfterViewInit
 
       }
       else {
-        this.pouchService.paginateByBranch2('counterproduct', this.pouchService.paginationId).then(paginatedata => {
+        this.pouchService.paginateByBranch2('counterproduct', this.pouchService.paginationId, undefined, undefined, 0).then(paginatedata => {
           this.paginatedCounterProducts = paginatedata;
 
           this.isPreviousActive = true;
@@ -399,7 +399,7 @@ export class ViewGeneralCounterProductComponent implements OnInit, AfterViewInit
 
       if (this.isFilterDepartment) {
 
-        this.pouchService.paginateByDepartmentPrev2('counterproduct', this.pouchService.paginationId, this.selectedDepartment).then(paginatedata => {
+        this.pouchService.paginateByDepartmentPrev2('counterproduct', this.pouchService.paginationId, this.selectedDepartment, undefined, undefined, undefined, undefined, 0).then(paginatedata => {
           this.paginatedCounterProducts = paginatedata;
 
         });
@@ -408,7 +408,7 @@ export class ViewGeneralCounterProductComponent implements OnInit, AfterViewInit
         }
       }
       else {
-        this.pouchService.paginateByBranchPrev2('counterproduct', this.pouchService.paginationId).then(paginatedata => {
+        this.pouchService.paginateByBranchPrev2('counterproduct', this.pouchService.paginationId, undefined, undefined, 0).then(paginatedata => {
           this.paginatedCounterProducts = paginatedata;
 
           if (this.paginatedCounterProducts.length < this.pouchService.limitRange) {
@@ -430,13 +430,13 @@ export class ViewGeneralCounterProductComponent implements OnInit, AfterViewInit
 
       if (this.isFilterDepartment) {
 
-        this.pouchService.paginateByDepartmentStart('counterproduct', this.pouchService.paginationId, this.selectedDepartment).then(paginatedata => {
+        this.pouchService.paginateByDepartmentStart('counterproduct', this.pouchService.paginationId, this.selectedDepartment, undefined, undefined, undefined, undefined, 0).then(paginatedata => {
           this.paginatedCounterProducts = paginatedata;
 
         });
       }
       else {
-        this.pouchService.paginateByBranchStart('counterproduct', this.pouchService.paginationId).then(paginatedata => {
+        this.pouchService.paginateByBranchStart('counterproduct', this.pouchService.paginationId, undefined, undefined, 0).then(paginatedata => {
           this.paginatedCounterProducts = paginatedata;
 
         });

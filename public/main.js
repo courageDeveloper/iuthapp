@@ -201,7 +201,7 @@ var AppComponent = /** @class */ (function () {
     AppComponent.prototype.expired = function () {
         var currentDateString = new Date().toISOString().split('T')[0];
         var currentDate = new Date(currentDateString);
-        var expiryDateString = new Date('2020-04-30').toISOString().split('T')[0];
+        var expiryDateString = new Date('2020-05-15').toISOString().split('T')[0];
         var expiryDate = new Date(expiryDateString);
         if (currentDate.getTime() >= expiryDate.getTime()) {
             return true;
@@ -1974,7 +1974,7 @@ var __importDefault = (undefined && undefined.__importDefault) || function (mod)
  */
 
 
-pouchdb__WEBPACK_IMPORTED_MODULE_1__["default"].plugin(__webpack_require__(/*! pouchdb-find */ "./node_modules/pouchdb-find/lib/index-browser.es.js").default);
+pouchdb__WEBPACK_IMPORTED_MODULE_1__["default"].plugin(__webpack_require__(/*! pouchdb-find */ "../node_modules/pouchdb-find/lib/index.js"));
 pouchdb__WEBPACK_IMPORTED_MODULE_1__["default"].plugin(__webpack_require__(/*! relational-pouch */ "./node_modules/relational-pouch/lib/index.js"));
 pouchdb__WEBPACK_IMPORTED_MODULE_1__["default"].plugin(__webpack_require__(/*! pouchdb-upsert */ "./node_modules/pouchdb-upsert/index.js"));
 __webpack_require__(/*! pouchdb-all-dbs */ "./node_modules/pouchdb-all-dbs/lib/index.js")(pouchdb__WEBPACK_IMPORTED_MODULE_1__["default"]);
@@ -1989,22 +1989,26 @@ var PouchService = /** @class */ (function () {
     function PouchService(spinner) {
         this.spinner = spinner;
         this.paginationId = null;
-        this.limitRange = 31;
+        this.limitRange = 21;
         console.log('constructor');
     }
     /**
     * Initialize PouchDB database
     */
     PouchService.prototype.initDB = function () {
-        this.db = new pouchdb__WEBPACK_IMPORTED_MODULE_1__["default"]('iuth', { adapter: 'websql' });
+        //
+        this.db = new pouchdb__WEBPACK_IMPORTED_MODULE_1__["default"]('iuth', { revs_limit: 1, auto_compaction: true });
         this.db.setSchema(_model_relational_schema__WEBPACK_IMPORTED_MODULE_3__["Schema"]);
         this.enableSyncing();
-        //this.checkRemoteSync();
+        this.checkRemoteSync();
+        this.db.info().then(function (info) {
+            console.log(info);
+        });
         this.db.createIndex({
             index: {
                 fields: ['data.branch', 'data.store', 'data.sourcedepartment', 'data.department', 'data.departmentname',
                     'data.isoncredit', 'data.isowing', 'data.iscomplete', 'data.isnoticed', 'data.isquantitynoticed', 'data.year',
-                    'data.notification', 'data.expensetype', 'data.isexpired', 'data.patientid', 'data.vendorid']
+                    'data.notification', 'data.expensetype', 'data.isexpired', 'data.patientid', 'data.vendorid', 'data.totalsubitem']
             }
         });
     };
@@ -2016,8 +2020,9 @@ var PouchService = /** @class */ (function () {
             },
             live: true,
             retry: true,
-            continuous: true
+            batch_size: 10
         };
+        /* this.remote = 'http://127.0.0.1:5984/iuth'; */
         this.remote = 'http://169.254.232.218:5984/iuth';
         this.db.sync(this.remote, options).on('change', function (change) {
             console.log('check change', change);
@@ -2105,13 +2110,13 @@ var PouchService = /** @class */ (function () {
          });
      } */
     /* Faster choice than using the query method; */
-    PouchService.prototype.paginateByBranchRemoveItem = function (type, id, year, expired) {
+    PouchService.prototype.paginateByBranchRemoveItem = function (type, id, year, expired, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': { $eq: year }, 'data.totalsubitem': { $ne: productquantity }, 'data.isexpired': { $eq: expired }, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(function (res) {
@@ -2124,13 +2129,13 @@ var PouchService = /** @class */ (function () {
             });
         });
     };
-    PouchService.prototype.paginateByCentralStoreRemoveItem = function (type, id) {
+    PouchService.prototype.paginateByCentralStoreRemoveItem = function (type, id, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, 'data.totalsubitem': { $ne: productquantity }, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(function (res) {
@@ -2143,13 +2148,13 @@ var PouchService = /** @class */ (function () {
             });
         });
     };
-    PouchService.prototype.paginateByStoreRemoveItem = function (type, id, store, isnoticed, isquantitynoticed) {
+    PouchService.prototype.paginateByStoreRemoveItem = function (type, id, store, isnoticed, isquantitynoticed, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.totalsubitem': { $ne: productquantity }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(function (res) {
@@ -2200,13 +2205,13 @@ var PouchService = /** @class */ (function () {
             });
         });
     };
-    PouchService.prototype.paginateByDepartmentRemoveItem = function (type, id, department, isnoticed, isquantitynoticed, year, expired) {
+    PouchService.prototype.paginateByDepartmentRemoveItem = function (type, id, department, isnoticed, isquantitynoticed, year, expired, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, 'data.totalsubitem': { $ne: productquantity }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(function (res) {
@@ -2258,16 +2263,17 @@ var PouchService = /** @class */ (function () {
         });
     };
     /* Faster choice than using the query method; */
-    PouchService.prototype.paginateByBranch2 = function (type, id, year, expired) {
+    PouchService.prototype.paginateByBranch2 = function (type, id, year, expired, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': { $eq: year }, 'data.totalsubitem': { $ne: productquantity }, 'data.isexpired': { $eq: expired }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(function (res) {
+                console.log(res);
                 return _this.db.rel.parseRelDocs(type, res.docs).then(function (result) {
                     var paginatedtypes = result[type + "s"] ? result[type + "s"] : [];
                     return paginatedtypes;
@@ -2298,13 +2304,13 @@ var PouchService = /** @class */ (function () {
         });
     };
     /* Faster choice than using the query method; */
-    PouchService.prototype.paginateByCentralStore = function (type, id) {
+    PouchService.prototype.paginateByCentralStore = function (type, id, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, 'data.totalsubitem': { $ne: productquantity }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(function (res) {
@@ -2318,13 +2324,13 @@ var PouchService = /** @class */ (function () {
         });
     };
     /* Faster choice than using the query method; */
-    PouchService.prototype.paginateByStore = function (type, id, store, isnoticed, isquantitynoticed) {
+    PouchService.prototype.paginateByStore = function (type, id, store, isnoticed, isquantitynoticed, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.totalsubitem': { $ne: productquantity }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(function (res) {
@@ -2378,13 +2384,13 @@ var PouchService = /** @class */ (function () {
         });
     };
     /* Faster choice than using the query method; */
-    PouchService.prototype.paginateByDepartment2 = function (type, id, department, isnoticed, isquantitynoticed, year, expired) {
+    PouchService.prototype.paginateByDepartment2 = function (type, id, department, isnoticed, isquantitynoticed, year, expired, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, 'data.totalsubitem': { $ne: productquantity }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(function (res) {
@@ -2439,13 +2445,13 @@ var PouchService = /** @class */ (function () {
         });
     };
     /* Faster choice than using the query method; */
-    PouchService.prototype.paginateByBranchPrev2 = function (type, id, year, expired) {
+    PouchService.prototype.paginateByBranchPrev2 = function (type, id, year, expired, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': { $eq: year }, 'data.totalsubitem': { $ne: productquantity }, 'data.isexpired': { $eq: expired }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'asc' }]
             }).then(function (res) {
@@ -2459,13 +2465,13 @@ var PouchService = /** @class */ (function () {
         });
     };
     /* Faster choice than using the query method; */
-    PouchService.prototype.paginateByCentralStorePrev = function (type, id) {
+    PouchService.prototype.paginateByCentralStorePrev = function (type, id, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, 'data.totalsubitem': { $ne: productquantity }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'asc' }]
             }).then(function (res) {
@@ -2479,13 +2485,13 @@ var PouchService = /** @class */ (function () {
         });
     };
     /* Faster choice than using the query method; */
-    PouchService.prototype.paginateByStorePrev = function (type, id, store, isnoticed, isquantitynoticed) {
+    PouchService.prototype.paginateByStorePrev = function (type, id, store, isnoticed, isquantitynoticed, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.totalsubitem': { $ne: productquantity }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'asc' }]
             }).then(function (res) {
@@ -2539,13 +2545,13 @@ var PouchService = /** @class */ (function () {
         });
     };
     /* Faster choice than using the query method; */
-    PouchService.prototype.paginateByDepartmentPrev2 = function (type, id, department, isnoticed, isquantitynoticed, year, expired) {
+    PouchService.prototype.paginateByDepartmentPrev2 = function (type, id, department, isnoticed, isquantitynoticed, year, expired, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, 'data.totalsubitem': { $ne: productquantity }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'asc' }]
             }).then(function (res) {
@@ -2599,13 +2605,13 @@ var PouchService = /** @class */ (function () {
         });
     };
     /* Go to begin of page; */
-    PouchService.prototype.paginateByBranchStart = function (type, id, year, expired) {
+    PouchService.prototype.paginateByBranchStart = function (type, id, year, expired, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': { $eq: year }, 'data.totalsubitem': { $ne: productquantity }, 'data.isexpired': { $eq: expired }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(function (res) {
@@ -2619,13 +2625,13 @@ var PouchService = /** @class */ (function () {
         });
     };
     /* Go to begin of page; */
-    PouchService.prototype.paginateByCentralStoreStart = function (type, id) {
+    PouchService.prototype.paginateByCentralStoreStart = function (type, id, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, 'data.totalsubitem': { $ne: productquantity }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(function (res) {
@@ -2639,13 +2645,13 @@ var PouchService = /** @class */ (function () {
         });
     };
     /* Go to begin of page; */
-    PouchService.prototype.paginateByStoreStart = function (type, id, store, isnoticed, isquantitynoticed) {
+    PouchService.prototype.paginateByStoreStart = function (type, id, store, isnoticed, isquantitynoticed, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.totalsubitem': { $ne: productquantity }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(function (res) {
@@ -2699,13 +2705,13 @@ var PouchService = /** @class */ (function () {
         });
     };
     /* Go to begin of page; */
-    PouchService.prototype.paginateByDepartmentStart = function (type, id, department, isnoticed, isquantitynoticed, year, expired) {
+    PouchService.prototype.paginateByDepartmentStart = function (type, id, department, isnoticed, isquantitynoticed, year, expired, productquantity) {
         var _this = this;
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, 'data.totalsubitem': { $ne: productquantity }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(function (res) {
@@ -5155,6 +5161,28 @@ var PouchService = /** @class */ (function () {
 
 module.exports = __webpack_require__(/*! C:\Users\IRORO\Desktop\angularprojects\iuthApp\src\main.ts */"./src/main.ts");
 
+
+/***/ }),
+
+/***/ 1:
+/*!************************!*\
+  !*** crypto (ignored) ***!
+  \************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+/* (ignored) */
+
+/***/ }),
+
+/***/ 2:
+/*!************************!*\
+  !*** crypto (ignored) ***!
+  \************************/
+/*! no static exports found */
+/***/ (function(module, exports) {
+
+/* (ignored) */
 
 /***/ })
 

@@ -97,7 +97,7 @@ export class AddPatientDialogComponent implements OnInit {
     this.errorMessage = "";
     this.pouchService.getPatients().then(data => {
       data.forEach(item => {
-        if (this.patient.email == item.email) {
+        if (this.patient.email == item.email && this.patient.email != "") {
           this.errorMessage = "This email already exists";
           this.disabled = true;
         }

@@ -53,7 +53,7 @@ export class AppComponent implements OnInit {
   expired() {
     var currentDateString = new Date().toISOString().split('T')[0];
     var currentDate = new Date(currentDateString);
-    var expiryDateString = new Date('2020-04-30').toISOString().split('T')[0];
+    var expiryDateString = new Date('2020-05-15').toISOString().split('T')[0];
     var expiryDate = new Date(expiryDateString);
 
     if (currentDate.getTime() >= expiryDate.getTime()) {

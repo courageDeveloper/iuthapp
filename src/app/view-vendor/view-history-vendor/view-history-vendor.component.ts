@@ -209,7 +209,7 @@ export class ViewHistoryVendorComponent implements OnInit {
         balances = balances.filter(data => data.vendorid == id);
 
         balances.map(balance => {
-          balance['timestamp'] = new Date(balance.date).toLocaleString("en-US", { timeZone: "GMT" });
+          balance['timestamp'] = new Date(balance.date);
           balance['timestamp'] = new Date(balance['timestamp']).setSeconds(0);
           balance['timestamp'] = new Date(balance['timestamp']).setMinutes(0);
           balance['timestamp'] = new Date(balance['timestamp']).setHours(0);
@@ -225,7 +225,7 @@ export class ViewHistoryVendorComponent implements OnInit {
           this.paginatedBalances = paginatedata;
 
           this.paginatedBalances.map(paginatedBalance => {
-            paginatedBalance['timestamp'] = new Date(paginatedBalance.date).toLocaleString("en-US", { timeZone: "GMT" });
+            paginatedBalance['timestamp'] = new Date(paginatedBalance.date);
             paginatedBalance['timestamp'] = new Date(paginatedBalance['timestamp']).setSeconds(0);
             paginatedBalance['timestamp'] = new Date(paginatedBalance['timestamp']).setMinutes(0);
             paginatedBalance['timestamp'] = new Date(paginatedBalance['timestamp']).setHours(0);

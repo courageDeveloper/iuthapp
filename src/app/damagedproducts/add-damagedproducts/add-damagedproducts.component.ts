@@ -39,7 +39,7 @@ export class AddDamagedproductsComponent implements OnInit {
       productid: '',
       department: '',
       amount: 0,
-      date: new Date(),
+      date: new Date().toString(),
       isunit: false,
       issubitem: false,
       description: '',

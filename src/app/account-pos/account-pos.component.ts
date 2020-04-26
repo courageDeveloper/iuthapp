@@ -127,12 +127,12 @@ export class AccountPosComponent implements OnInit {
       departmentloaned: '',
       individualloanid: '',
       departmentloaning: 'Account',
-      dateofloan: new Date(),
+      dateofloan: new Date().toString(),
       salename: '',
       amount: 0,
       description: '',
       color: '',
-      date: new Date(),
+      date: new Date().toString(),
       iscomplete: false,
       isowing: false,
       isoncredit: false,
@@ -171,7 +171,7 @@ export class AccountPosComponent implements OnInit {
       staffid: '',
       ischeckedin: false,
       ischeckedout: true,
-      checkindate: new Date(),
+      checkindate: new Date().toLocaleString(),
       checkoutdate: 'Has not checked out yet.',
       initiallogincount: 0,
       branch: '',
@@ -214,7 +214,7 @@ export class AccountPosComponent implements OnInit {
       
       this.pouchService.paginationId = this.counterproducts[0].id; //Reverse of what is meant to be;
 
-      this.pouchService.paginateByBranch2('counterproduct', this.pouchService.paginationId, undefined, false).then(paginatedata => {
+      this.pouchService.paginateByBranch2('counterproduct', this.pouchService.paginationId, undefined, false, 0).then(paginatedata => {
         this.paginatedCounterProducts = paginatedata;
 
         this.isNextActive = true;
@@ -228,7 +228,7 @@ export class AccountPosComponent implements OnInit {
   next() {
     this.pouchService.paginationId = this.paginatedCounterProducts[this.paginatedCounterProducts.length - 1].id;  //Reverse of what is meant to be;
 
-    this.pouchService.paginateByBranch2('counterproduct', this.pouchService.paginationId, undefined, false).then(paginatedata => {
+    this.pouchService.paginateByBranch2('counterproduct', this.pouchService.paginationId, undefined, false, 0).then(paginatedata => {
       this.paginatedCounterProducts = paginatedata;
 
       this.isPreviousActive = true;
@@ -238,7 +238,7 @@ export class AccountPosComponent implements OnInit {
   previous() {
     this.pouchService.paginationId = this.paginatedCounterProducts[this.paginatedCounterProducts.length - 1].id;  //Reverse of what is meant to be;
 
-    this.pouchService.paginateByBranchPrev2('counterproduct', this.pouchService.paginationId, undefined, false).then(paginatedata => {
+    this.pouchService.paginateByBranchPrev2('counterproduct', this.pouchService.paginationId, undefined, false, 0).then(paginatedata => {
       this.paginatedCounterProducts = paginatedata;
 
       if (this.paginatedCounterProducts.length < this.pouchService.limitRange) {
@@ -252,7 +252,7 @@ export class AccountPosComponent implements OnInit {
 
     this.pouchService.paginationId = this.paginatedCounterProducts[this.paginatedCounterProducts.length - 1].id;  //Reverse of what is meant to be;
 
-    this.pouchService.paginateByBranchStart('counterproduct', this.pouchService.paginationId, undefined, false).then(paginatedata => {
+    this.pouchService.paginateByBranchStart('counterproduct', this.pouchService.paginationId, undefined, false, 0).then(paginatedata => {
       this.paginatedCounterProducts = paginatedata;
 
     });
@@ -854,6 +854,7 @@ export class AccountPosComponent implements OnInit {
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(item => {
       this.sales.branch = item.branch;
+      this.sales['dispenserName'] = `${item.firstname } ${item.lastname}`;
 
       var randomString = this.generateRandomStrings(4);
       this.sales.referencenumber = 'IUTH' + randomString;

@@ -155,7 +155,7 @@ export class EditUserProfileComponent implements OnInit {
     this.errorMessageUser = "";
     this.pouchService.getStaffs().then(data => {
       data.forEach(item => {
-        if (this.staff.username == item.username && item.username != this.currentUsername) {
+        if (this.staff.username == item.username && item.username != this.currentUsername && this.staff.email != "") {
           this.errorMessageUser = "This User name is already taken";
           this.disabled = true;
         }

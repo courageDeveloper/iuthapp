@@ -54,10 +54,13 @@ export class ViewCentralStoreBcComponent implements OnInit {
   paginatedCentralStoresBc;
   isPreviousActive = false;
   isNextActive = false;
+  isAdmin = false
 
   constructor(private dialog: MatDialog, private data: DataService, private router: Router, public pouchService: PouchService, public _DomSanitizer: DomSanitizer, public toastr: ToastrService) { }
 
   ngOnInit() {
+    this.checkDepartment();
+    
     this.pouchService.userPermission().then(result => {
       if (result.department == 'Central Store') {
         this.isUserPermitted = true;
@@ -77,17 +80,26 @@ export class ViewCentralStoreBcComponent implements OnInit {
     }, 300000);
   }
 
+  checkDepartment() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'))
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      if (staff.department == 'Admin') {
+        this.isAdmin = true
+      }
+    })
+  }
+
   reloadCentralStoresBc() {
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(staff => {
       this.pouchService.getProducts().then(items => {
-        items = items.filter(data => data.branch == 'Benin Centre' && data.store == "Central Store");
+        items = items.filter(data => data.branch == 'Benin Centre' && data.store == "Central Store" && data.totalsubitem > 0);
         this.centralstoresbc = items;
         this.itemSize = this.centralstoresbc.length;
 
         this.pouchService.paginationId = this.centralstoresbc[0].id; //Reverse of what is meant to be;
 
-        this.pouchService.paginateByCentralStoreRemoveItem('product', this.pouchService.paginationId).then(paginatedata => {
+        this.pouchService.paginateByCentralStoreRemoveItem('product', this.pouchService.paginationId, 0).then(paginatedata => {
           this.paginatedCentralStoresBc = paginatedata;
 
           this.isNextActive = true;
@@ -99,12 +111,12 @@ export class ViewCentralStoreBcComponent implements OnInit {
 
   loadCentralStoresBc() {
     this.pouchService.getProducts().then(items => {
-      items = items.filter(data => data.branch == 'Benin Centre' && data.store == "Central Store");
+      items = items.filter(data => data.branch == 'Benin Centre' && data.store == "Central Store" && data.totalsubitem > 0);
       this.centralstoresbc = items;
       this.itemSize = this.centralstoresbc.length;
 
       this.pouchService.paginationId = this.centralstoresbc[0].id; //Reverse of what is meant to be;
-      this.pouchService.paginateByCentralStore('product', this.pouchService.paginationId).then(paginatedata => {
+      this.pouchService.paginateByCentralStore('product', this.pouchService.paginationId, 0).then(paginatedata => {
         this.paginatedCentralStoresBc = paginatedata;
         $(document).ready(function () {
           $('#dtBasicExample').DataTable({

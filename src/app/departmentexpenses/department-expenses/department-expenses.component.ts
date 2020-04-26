@@ -442,7 +442,7 @@ export class DepartmentExpensesComponent implements OnInit {
         expenses = expenses.filter(data => data.isoncredit == false);
 
         expenses.map(expense => {
-          expense['timestamp'] = new Date(expense.date).toLocaleString("en-US", { timeZone: "GMT" });
+          expense['timestamp'] = new Date(expense.date);
           expense['timestamp'] = new Date(expense['timestamp']).setSeconds(0);
           /*  expense['timestamp'] = new Date(expense['timestamp']).setMinutes(0);
            expense['timestamp'] = new Date(expense['timestamp']).setHours(0); */
@@ -458,7 +458,7 @@ export class DepartmentExpensesComponent implements OnInit {
           this.paginatedExpenses = paginatedata;
 
           this.paginatedExpenses.map(paginateExpense => {
-            paginateExpense['timestamp'] = new Date(paginateExpense.date).toLocaleString("en-US", { timeZone: "GMT" });
+            paginateExpense['timestamp'] = new Date(paginateExpense.date);
             paginateExpense['timestamp'] = new Date(paginateExpense['timestamp']).setSeconds(0);
             /*  expense['timestamp'] = new Date(expense['timestamp']).setMinutes(0);
              expense['timestamp'] = new Date(expense['timestamp']).setHours(0); */

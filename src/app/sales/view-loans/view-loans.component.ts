@@ -393,7 +393,7 @@ export class ViewLoansComponent implements OnInit {
         //loans = loans.filter(data => data.iscomplete == true);
 
         loans.map(loan => {
-          loan['timestamp'] = new Date(loan.date).toLocaleString("en-US", { timeZone: "GMT" });
+          loan['timestamp'] = new Date(loan.date);
           loan['timestamp'] = new Date(loan['timestamp']).setSeconds(0);
           /* loan['timestamp'] = new Date(loan['timestamp']).setMinutes(0);
           loan['timestamp'] = new Date(loan['timestamp']).setHours(0); */
@@ -409,7 +409,7 @@ export class ViewLoansComponent implements OnInit {
           this.paginatedLoans = paginatedata;
 
           this.paginatedLoans.map(paginatedLoan => {
-            paginatedLoan['timestamp'] = new Date(paginatedLoan.date).toLocaleString("en-US", { timeZone: "GMT" });
+            paginatedLoan['timestamp'] = new Date(paginatedLoan.date);
             paginatedLoan['timestamp'] = new Date(paginatedLoan['timestamp']).setSeconds(0);
             /*  loan['timestamp'] = new Date(loan['timestamp']).setMinutes(0);
              loan['timestamp'] = new Date(loan['timestamp']).setHours(0); */

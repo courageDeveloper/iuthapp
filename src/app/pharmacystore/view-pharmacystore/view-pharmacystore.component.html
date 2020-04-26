@@ -99,15 +99,20 @@
                                             [disabled]="pharmacystore.isoncredit || pharmacystore.iscompletepayment || pharmacystore.isowing || !isUserPermitted || !isSupervisor"><i
                                                 class="material-icons" style="color: whitesmoke"
                                                 matTooltip="Delete Product">delete</i></button>
-                                        <button class="icon-product-cat" style="background-color: #00254e"
+                                        <button *ngIf="!isAdmin" class="icon-product-cat" style="background-color: #00254e"
                                             (click)="editPharmacyStore(pharmacystore)" mat-mini-fab
                                             [disabled]="pharmacystore.isexpired || pharmacystore.isoncredit || pharmacystore.iscompletepayment || pharmacystore.isowing || !isUserPermitted || !isSupervisor">
                                             <i class="material-icons" style="color: whitesmoke"
                                                 matTooltip="Edit Product">edit</i></button>
+                                        <button *ngIf="isAdmin" class="icon-product-cat" style="background-color: #00254e"
+                                            (click)="editPharmacyStore(pharmacystore)" mat-mini-fab
+                                            [disabled]="pharmacystore.isexpired">
+                                            <i class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Edit Product">edit</i></button>
                                         <button class="icon-product-cat" style="background-color: green"
                                             (click)="dispatchItem(pharmacystore)" mat-mini-fab
-                                            [disabled]="pharmacystore.isexpired || !isUserPermitted || !pharmacystore.isoncredit && !pharmacystore.iscompletepayment && !pharmacystore.isowing"> <i
-                                                class="material-icons" style="color: whitesmoke"
+                                            [disabled]="pharmacystore.isexpired || !isUserPermitted || !pharmacystore.isoncredit && !pharmacystore.iscompletepayment && !pharmacystore.isowing">
+                                            <i class="material-icons" style="color: whitesmoke"
                                                 matTooltip="Dispatch Item">local_shipping</i></button>
                                         <button class="icon-product-cat btn btn-info"
                                             (click)="refundPharmacyStore(pharmacystore)" mat-mini-fab
@@ -230,8 +235,8 @@
                                         <td>
                                             <button class="icon-product-cat" style="background-color: green"
                                                 (click)="dispatchItem(pharmacystore)" mat-mini-fab
-                                                [disabled]="pharmacystore.isexpired || !isUserPermitted || !pharmacystore.isoncredit && !pharmacystore.iscompletepayment && !pharmacystore.isowing"> <i
-                                                    class="material-icons" style="color: whitesmoke"
+                                                [disabled]="pharmacystore.isexpired || !isUserPermitted || !pharmacystore.isoncredit && !pharmacystore.iscompletepayment && !pharmacystore.isowing">
+                                                <i class="material-icons" style="color: whitesmoke"
                                                     matTooltip="Dispatch Item">local_shipping</i></button>
                                         </td>
                                         <td>
@@ -241,10 +246,17 @@
                                                     class="material-icons" style="color: whitesmoke"
                                                     matTooltip="Delete Product">delete</i></button>
                                         </td>
-                                        <td>
+                                        <td *ngIf="!isAdmin">
                                             <button class="icon-product-cat" style="background-color: #00254e"
                                                 (click)="editPharmacyStore(pharmacystore)" mat-mini-fab
                                                 [disabled]="pharmacystore.isexpired || pharmacystore.isoncredit || pharmacystore.iscompletepayment || pharmacystore.isowing || !isUserPermitted || !isSupervisor">
+                                                <i class="material-icons" style="color: whitesmoke"
+                                                    matTooltip="Edit Product">edit</i></button>
+                                        </td>
+                                        <td *ngIf="isAdmin">
+                                            <button class="icon-product-cat" style="background-color: #00254e"
+                                                (click)="editPharmacyStore(pharmacystore)" mat-mini-fab
+                                                [disabled]="pharmacystore.isexpired">
                                                 <i class="material-icons" style="color: whitesmoke"
                                                     matTooltip="Edit Product">edit</i></button>
                                         </td>

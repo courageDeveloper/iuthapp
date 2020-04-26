@@ -273,7 +273,7 @@ export class ViewEvacuatedComponent implements OnInit {
         evacuates = evacuates.filter(data => data.branch == staff.branch);
 
         evacuates.map(evacuate => {
-          evacuate['timestamp'] = new Date(evacuate.date).toLocaleString("en-US", { timeZone: "GMT" });
+          evacuate['timestamp'] = new Date(evacuate.date);
           evacuate['timestamp'] = new Date(evacuate['timestamp']).setSeconds(0);
           evacuate['timestamp'] = evacuate['timestamp'] + 3600000;
           /*  evacuate['timestamp'] = new Date(evacuate['timestamp']).setMinutes(0);
@@ -290,7 +290,7 @@ export class ViewEvacuatedComponent implements OnInit {
           this.paginatedEvacuates = paginatedata;
 
           this.paginatedEvacuates.map(paginatedLoan => {
-            paginatedLoan['timestamp'] = new Date(paginatedLoan.date).toLocaleString("en-US", { timeZone: "GMT" });
+            paginatedLoan['timestamp'] = new Date(paginatedLoan.date);
             paginatedLoan['timestamp'] = new Date(paginatedLoan['timestamp']).setSeconds(0);
             paginatedLoan['timestamp'] = paginatedLoan['timestamp'] + 3600000;
             /*  loan['timestamp'] = new Date(loan['timestamp']).setMinutes(0);

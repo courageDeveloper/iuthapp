@@ -6,7 +6,7 @@
 import { Injectable } from '@angular/core';
 declare var require: any;
 import PouchDB from 'pouchdb';
-PouchDB.plugin(require('pouchdb-find').default);
+PouchDB.plugin(require('pouchdb-find'));
 PouchDB.plugin(require('relational-pouch'));
 PouchDB.plugin(require('pouchdb-upsert'));
 require('pouchdb-all-dbs')(PouchDB);
@@ -48,7 +48,7 @@ export class PouchService {
     remote: any;
     finishSync: any;
     paginationId = null;
-    limitRange: number = 31;
+    limitRange: number = 21;
 
     /**
     * Constructor
@@ -62,18 +62,22 @@ export class PouchService {
     */
 
     initDB() {
-        this.db = new PouchDB('iuth', { adapter: 'websql' });
+        //
+        this.db = new PouchDB('iuth', {revs_limit: 1, auto_compaction: true});
         this.db.setSchema(Schema);
 
         this.enableSyncing();
-        //this.checkRemoteSync();
+        this.checkRemoteSync();
 
+        this.db.info().then(function (info) {
+                        console.log(info);
+                })
 
         this.db.createIndex({
             index: {
                 fields: ['data.branch','data.store', 'data.sourcedepartment', 'data.department', 'data.departmentname',
                  'data.isoncredit', 'data.isowing', 'data.iscomplete', 'data.isnoticed', 'data.isquantitynoticed', 'data.year',
-                'data.notification', 'data.expensetype', 'data.isexpired', 'data.patientid', 'data.vendorid']
+                'data.notification', 'data.expensetype', 'data.isexpired', 'data.patientid', 'data.vendorid', 'data.totalsubitem', 'data.productname']
             }
         });
     }
@@ -81,14 +85,15 @@ export class PouchService {
     enableSyncing() {
         let options = {
             Auth: {
-                username: 'iuth',
+               username: 'iuth',
                 password: 'iuth'
             },
             live: true,
             retry: true,
-            continuous: true
+            batch_size: 10
         };
 
+        /* this.remote = 'http://127.0.0.1:5984/iuth'; */
         this.remote = 'http://169.254.232.218:5984/iuth';
 
         this.db.sync(this.remote, options).on('change', function (change) {
@@ -186,12 +191,12 @@ export class PouchService {
      } */
 
       /* Faster choice than using the query method; */
-    paginateByBranchRemoveItem(type?, id?, year?, expired?) {
+    paginateByBranchRemoveItem(type?, id?, year?, expired?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': {$eq: year}, 'data.totalsubitem': {$ne: productquantity}, 'data.isexpired': {$eq: expired}, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(res => {
@@ -207,12 +212,12 @@ export class PouchService {
         });
     }
 
-    paginateByCentralStoreRemoveItem(type?, id?) {
+    paginateByCentralStoreRemoveItem(type?, id?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, 'data.totalsubitem': {$ne: productquantity}, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(res => {
@@ -228,12 +233,12 @@ export class PouchService {
         });
     }
 
-     paginateByStoreRemoveItem(type?, id?, store?, isnoticed?, isquantitynoticed?) {
+     paginateByStoreRemoveItem(type?, id?, store?, isnoticed?, isquantitynoticed?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.isnoticed': {$eq: isnoticed},  'data.isquantitynoticed': {$eq: isquantitynoticed}, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.totalsubitem': {$ne: productquantity}, 'data.isnoticed': {$eq: isnoticed},  'data.isquantitynoticed': {$eq: isquantitynoticed}, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(res => {
@@ -291,12 +296,12 @@ export class PouchService {
         });
     }
 
-    paginateByDepartmentRemoveItem(type?, id?, department?, isnoticed?, isquantitynoticed?, year?, expired?) {
+    paginateByDepartmentRemoveItem(type?, id?, department?, isnoticed?, isquantitynoticed?, year?, expired?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': {$eq: isnoticed},  'data.isquantitynoticed': {$eq: isquantitynoticed}, 'data.totalsubitem': {$ne: productquantity}, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $eq: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(res => {
@@ -356,15 +361,16 @@ export class PouchService {
 
 
     /* Faster choice than using the query method; */
-    paginateByBranch2(type?, id?, year?, expired?) {
+    paginateByBranch2(type?, id?, year?, expired?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': {$eq: year}, 'data.totalsubitem': {$ne: productquantity}, 'data.isexpired': {$eq: expired}, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(res => {
+                console.log(res);
                 return this.db.rel.parseRelDocs(type, res.docs).then(result => {
 
                     let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
@@ -401,12 +407,12 @@ export class PouchService {
 
 
      /* Faster choice than using the query method; */
-     paginateByCentralStore(type?, id?) {
+     paginateByCentralStore(type?, id?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, 'data.totalsubitem': {$ne: productquantity}, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(res => {
@@ -422,12 +428,12 @@ export class PouchService {
     }
 
      /* Faster choice than using the query method; */
-     paginateByStore(type?, id?, store?, isnoticed?, isquantitynoticed?) {
+     paginateByStore(type?, id?, store?, isnoticed?, isquantitynoticed?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store },  'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.totalsubitem': {$ne: productquantity}, 'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(res => {
@@ -488,12 +494,35 @@ export class PouchService {
     }
 
     /* Faster choice than using the query method; */
-      paginateByDepartment2(type?, id?, department?, isnoticed?, isquantitynoticed?, year?, expired?) {          
+      paginateByDepartment2(type?, id?, department?, isnoticed?, isquantitynoticed?, year?, expired?, productquantity?) {          
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, 'data.totalsubitem': {$ne: productquantity}, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(res => {
+                return this.db.rel.parseRelDocs(type, res.docs).then(result => {
+
+                    let paginatedtypes = result[`${type}s`] ? result[`${type}s`] : [];
+                    
+                    return paginatedtypes;
+                }).catch((err: any) => {
+                    console.log(err);
+                });
+            })
+        });
+    }
+
+    //Paginate by inputstring
+    paginateByInputString(type?, id?, department?, isnoticed?, isquantitynoticed?, year?, expired?, productquantity?, inputstring?) {          
+        var localStorageItem;
+        console.log(inputstring);
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(staff => {
+            return this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, 'data.totalsubitem': {$ne: productquantity}, 'data.productname': {$lte: inputstring}, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(res => {
@@ -555,12 +584,12 @@ export class PouchService {
 
 
     /* Faster choice than using the query method; */
-    paginateByBranchPrev2(type?, id?, year?, expired?) {
+    paginateByBranchPrev2(type?, id?, year?, expired?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': {$eq: year}, 'data.totalsubitem': {$ne: productquantity}, 'data.isexpired': {$eq: expired}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'asc' }]
             }).then(res => {
@@ -577,12 +606,12 @@ export class PouchService {
     }
 
      /* Faster choice than using the query method; */
-     paginateByCentralStorePrev(type?, id?) {
+     paginateByCentralStorePrev(type?, id?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, 'data.totalsubitem': {$ne: productquantity}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'asc' }]
             }).then(res => {
@@ -599,12 +628,12 @@ export class PouchService {
     }
 
       /* Faster choice than using the query method; */
-     paginateByStorePrev(type?, id?, store?, isnoticed?, isquantitynoticed?) {
+     paginateByStorePrev(type?, id?, store?, isnoticed?, isquantitynoticed?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store },  'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.totalsubitem': {$ne: productquantity},  'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'asc' }]
             }).then(res => {
@@ -667,12 +696,12 @@ export class PouchService {
 
 
        /* Faster choice than using the query method; */
-       paginateByDepartmentPrev2(type?, id?, department?, isnoticed?, isquantitynoticed?, year?, expired?) {
+       paginateByDepartmentPrev2(type?, id?, department?, isnoticed?, isquantitynoticed?, year?, expired?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, 'data.totalsubitem': {$ne: productquantity},  'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'asc' }]
             }).then(res => {
@@ -734,12 +763,12 @@ export class PouchService {
 
 
     /* Go to begin of page; */
-    paginateByBranchStart(type?, id?, year?, expired?) {
+    paginateByBranchStart(type?, id?, year?, expired?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.year': {$eq: year}, 'data.totalsubitem': {$ne: productquantity}, 'data.isexpired': {$eq: expired}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(res => {
@@ -756,12 +785,12 @@ export class PouchService {
     }
 
      /* Go to begin of page; */
-     paginateByCentralStoreStart(type?, id?) {
+     paginateByCentralStoreStart(type?, id?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: 'Central Store' }, 'data.totalsubitem': {$ne: productquantity}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(res => {
@@ -778,12 +807,12 @@ export class PouchService {
     }
 
      /* Go to begin of page; */
-     paginateByStoreStart(type?, id?, store?, isnoticed?, isquantitynoticed?) {
+     paginateByStoreStart(type?, id?, store?, isnoticed?, isquantitynoticed?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store },  'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.store': { $eq: store }, 'data.totalsubitem': {$ne: productquantity},  'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(res => {
@@ -844,12 +873,12 @@ export class PouchService {
     }
 
      /* Go to begin of page; */
-     paginateByDepartmentStart(type?, id?, department?, isnoticed?, isquantitynoticed?, year?, expired?) {
+     paginateByDepartmentStart(type?, id?, department?, isnoticed?, isquantitynoticed?, year?, expired?, productquantity?) {
         var localStorageItem;
         localStorageItem = JSON.parse(localStorage.getItem('user'));
         return this.getStaff(localStorageItem).then(staff => {
             return this.db.find({
-                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department },'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department },'data.isnoticed': {$eq: isnoticed}, 'data.isquantitynoticed': {$eq: isquantitynoticed}, 'data.totalsubitem': {$ne: productquantity}, 'data.year': {$eq: year}, 'data.isexpired': {$eq: expired}, _id: { $gte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(res => {

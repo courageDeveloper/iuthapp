@@ -56,7 +56,7 @@ export class AddGrossProfitComponent implements OnInit {
         closingstock: 0,
         isopeningstock: false,
         isclosingstock: false,
-        date: new Date().toString(),
+        date: new Date(),
         salespermonth: 0,
         month: '',
         year: '',

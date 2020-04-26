@@ -334,7 +334,7 @@ export class DepartmentLiabilityComponent implements OnInit {
         borrows = borrows.filter(data => data.isoncredit == true || data.isowing == true);
 
         borrows.map(borrow => {
-          borrow['timestamp'] = new Date(borrow.date).toLocaleString("en-US", { timeZone: "GMT" });
+          borrow['timestamp'] = new Date(borrow.date);
           borrow['timestamp'] = new Date(borrow['timestamp']).setSeconds(0);
           /* borrow['timestamp'] = new Date(borrow['timestamp']).setMinutes(0);
           borrow['timestamp'] = new Date(borrow['timestamp']).setHours(0); */
@@ -349,7 +349,7 @@ export class DepartmentLiabilityComponent implements OnInit {
           this.paginatedBorrows = paginatedata;
 
           this.paginatedBorrows.map(paginatedBorrow => {
-            paginatedBorrow['timestamp'] = new Date(paginatedBorrow.date).toLocaleString("en-US", { timeZone: "GMT" });
+            paginatedBorrow['timestamp'] = new Date(paginatedBorrow.date);
             paginatedBorrow['timestamp'] = new Date(paginatedBorrow['timestamp']).setSeconds(0);
             /*  expense['timestamp'] = new Date(expense['timestamp']).setMinutes(0);
              expense['timestamp'] = new Date(expense['timestamp']).setHours(0); */

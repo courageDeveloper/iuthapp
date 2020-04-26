@@ -22,7 +22,7 @@ export class AddRadiologyCounterProductComponent implements OnInit {
   costPrice = 0;
   subItem = 0;
   localStorageItem: any;
-
+  isAdmin = false
 
   counterProductForm = new FormGroup({
     id: new FormControl(),
@@ -96,6 +96,7 @@ export class AddRadiologyCounterProductComponent implements OnInit {
       data.counterproduct.expirydate = new Date(data.counterproduct.expirydate);
       this.counterProduct = data.counterproduct;
     }
+    this.checkDepartment()
   }
 
   ngOnInit() {
@@ -133,6 +134,14 @@ export class AddRadiologyCounterProductComponent implements OnInit {
     });
     this.counterProductForm.controls['productname'].disable();
     this.counterProductForm.controls['suppliedunit'].disable();
+    var localStorageItem = JSON.parse(localStorage.getItem('user'))
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      console.log(staff.department)
+      if (staff.department == 'Admin') {
+        this.isAdmin = true;
+        this.counterProductForm.controls['suppliedunit'].enable()
+      }
+    })
     this.counterProductForm.controls['datesupplied'].disable();
     this.counterProductForm.controls['expirydate'].disable();
     this.counterProductForm.controls['costprice'].disable();
@@ -167,6 +176,15 @@ export class AddRadiologyCounterProductComponent implements OnInit {
         this.sendNotification(this.counterProduct.branch);
       });
     });
+  }
+
+  checkDepartment() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'))
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      if (staff.department == 'Admin') {
+        this.isAdmin = true
+      }
+    })
   }
 
   sendNotification(branch) {

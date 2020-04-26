@@ -93,7 +93,7 @@ export class EditVendorComponent implements OnInit {
     this.errorMessage = "";
     this.pouchService.getVendors().then(data => {
       data.forEach(item => {
-        if (this.vendor.email == item.email && item.email != this.currentUseremail) {
+        if (this.vendor.email == item.email && item.email != this.currentUseremail && this.vendor.email != "") {
           this.errorMessage = "This email already exists";
           this.disabled = true;
         }

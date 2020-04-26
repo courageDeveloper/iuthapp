@@ -98,15 +98,20 @@
                                             [disabled]="centralstorebc.isoncredit || centralstorebc.iscompletepayment || centralstorebc.isowing || !isUserPermitted || !isSupervisor"><i
                                                 class="material-icons" style="color: whitesmoke"
                                                 matTooltip="Delete Product">delete</i></button>
-                                        <button class="icon-product-cat" style="background-color: #00254e"
+                                        <button *ngIf="!isAdmin" class="icon-product-cat" style="background-color: #00254e"
                                             (click)="editCentralStoreBc(centralstorebc)" mat-mini-fab
                                             [disabled]="centralstorebc.isexpired || centralstorebc.isoncredit || centralstorebc.iscompletepayment || centralstorebc.isowing || !isUserPermitted || !isSupervisor">
                                             <i class="material-icons" style="color: whitesmoke"
                                                 matTooltip="Edit Product">edit</i></button>
+                                        <button *ngIf="isAdmin" class="icon-product-cat" style="background-color: #00254e"
+                                            (click)="editCentralStoreBc(centralstorebc)" mat-mini-fab
+                                            [disabled]="centralstorebc.isexpired">
+                                            <i class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Edit Product">edit</i></button>
                                         <button class="icon-product-cat" style="background-color: green"
                                             (click)="dispatchItem(centralstorebc)" mat-mini-fab
-                                            [disabled]="centralstorebc.isexpired || !isUserPermitted || !centralstorebc.isoncredit && !centralstorebc.iscompletepayment && !centralstorebc.isowing"> <i
-                                                class="material-icons" style="color: whitesmoke"
+                                            [disabled]="centralstorebc.isexpired || !isUserPermitted || !centralstorebc.isoncredit && !centralstorebc.iscompletepayment && !centralstorebc.isowing">
+                                            <i class="material-icons" style="color: whitesmoke"
                                                 matTooltip="Dispatch Item">local_shipping</i></button>
                                         <button class="icon-product-cat btn btn-info"
                                             (click)="refundCentralStoreBc(centralstorebc)" mat-mini-fab
@@ -231,8 +236,8 @@
                                         <td>
                                             <button class="icon-product-cat" style="background-color: green"
                                                 (click)="dispatchItem(centralstorebc)" mat-mini-fab
-                                                [disabled]="centralstorebc.isexpired || !isUserPermitted || !centralstorebc.isoncredit && !centralstorebc.iscompletepayment && !centralstorebc.isowing"> <i
-                                                    class="material-icons" style="color: whitesmoke"
+                                                [disabled]="centralstorebc.isexpired || !isUserPermitted || !centralstorebc.isoncredit && !centralstorebc.iscompletepayment && !centralstorebc.isowing">
+                                                <i class="material-icons" style="color: whitesmoke"
                                                     matTooltip="Dispatch Item">local_shipping</i></button>
                                         </td>
                                         <td>

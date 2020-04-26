@@ -258,7 +258,7 @@ export class ViewSalesComponent implements OnInit {
         this.sales = data.filter(data => data.branch == staff.branch);
         this.sales = this.sales.filter(data => data.iscomplete == true);
         this.sales = this.sales.filter(data => data.isoncredit == false);
-        
+        console.log(this.sales);
         this.pouchService.paginationId = this.sales[0].id; //Reverse of what is meant to be;
 
         this.pouchService.paginateBySale('sale', this.pouchService.paginationId, undefined, false, undefined, true).then(paginatedata => {
@@ -940,7 +940,7 @@ export class ViewSalesComponent implements OnInit {
         sales = sales.filter(data => data.isoncredit == false);
 
         sales.map(sale => {
-          sale['timestamp'] = new Date(sale.date).toLocaleString("en-US", { timeZone: "GMT" });
+          sale['timestamp'] = new Date(sale.date);
           sale['timestamp'] = new Date(sale['timestamp']).setSeconds(0);
           /* sale['timestamp'] = new Date(sale['timestamp']).setMinutes(0);
           sale['timestamp'] = new Date(sale['timestamp']).setHours(0); */
@@ -956,7 +956,7 @@ export class ViewSalesComponent implements OnInit {
           this.paginatedSales = paginatedata;
 
           this.paginatedSales.map(paginatedSale => {
-            paginatedSale['timestamp'] = new Date(paginatedSale.date).toLocaleString("en-US", { timeZone: "GMT" });
+            paginatedSale['timestamp'] = new Date(paginatedSale.date);
             paginatedSale['timestamp'] = new Date(paginatedSale['timestamp']).setSeconds(0);
             /*  loan['timestamp'] = new Date(loan['timestamp']).setMinutes(0);
              loan['timestamp'] = new Date(loan['timestamp']).setHours(0); */

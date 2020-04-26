@@ -80,7 +80,7 @@ export class MakepaymentFormPharmacyStoreComponent implements OnInit {
         staffname: '',
         staffposition: '',
         departmentloaning: '',
-        dateofloan: new Date(),
+        dateofloan: new Date().toString(),
         expensename: '',
         amount: 0,
         isoncredit: false,

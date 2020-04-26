@@ -23571,7 +23571,7 @@ window.process.nextTick = setTimeout;
 
 /***/ }),
 
-/***/ 1:
+/***/ 3:
 /*!**************************************************************************************************************************************************************************************************************************!*\
   !*** multi ./node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/es5-polyfills.js ./node_modules/@angular-devkit/build-angular/src/angular-cli-files/models/es5-jit-polyfills.js ./src/polyfills.ts ***!
   \**************************************************************************************************************************************************************************************************************************/
@@ -23585,5 +23585,5 @@ module.exports = __webpack_require__(/*! C:\Users\IRORO\Desktop\angularprojects\
 
 /***/ })
 
-},[[1,"runtime"]]]);
+},[[3,"runtime"]]]);
 //# sourceMappingURL=polyfills-es5.js.map

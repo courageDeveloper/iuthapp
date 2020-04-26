@@ -149,7 +149,7 @@
                                                         list-formatter="productname" placeholder="Search for Product"
                                                         [(ngModel)]='counterproducts.productname' [max-num-list]="10"
                                                         (valueChanged)="selectProduct($event)"
-                                                        placeholder="Product Name" type="text" />
+                                                        placeholder="Product Name" type="text" (keyup)="getInputChar($event)"/>
                                                 </div>
                                             </div>
                                         </div>

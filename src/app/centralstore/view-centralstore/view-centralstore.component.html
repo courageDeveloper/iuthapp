@@ -98,15 +98,20 @@
                                             [disabled]="centralstore.isoncredit || centralstore.iscompletepayment || centralstore.isowing || !isUserPermitted || !isSupervisor"><i
                                                 class="material-icons" style="color: whitesmoke"
                                                 matTooltip="Delete Product">delete</i></button>
-                                        <button class="icon-product-cat" style="background-color: #00254e"
+                                        <button *ngIf="!isAdmin" class="icon-product-cat" style="background-color: #00254e"
                                             (click)="editCentralStore(centralstore)" mat-mini-fab
                                             [disabled]="centralstore.isexpired || centralstore.isoncredit || centralstore.iscompletepayment || centralstore.isowing || !isUserPermitted || !isSupervisor">
                                             <i class="material-icons" style="color: whitesmoke"
                                                 matTooltip="Edit Product">edit</i></button>
+                                        <button *ngIf="isAdmin" class="icon-product-cat" style="background-color: #00254e"
+                                            (click)="editCentralStore(centralstore)" mat-mini-fab
+                                            [disabled]="centralstore.isexpired">
+                                            <i class="material-icons" style="color: whitesmoke"
+                                                matTooltip="Edit Product">edit</i></button>
                                         <button class="icon-product-cat" style="background-color: green"
                                             (click)="dispatchItem(centralstore)" mat-mini-fab
-                                            [disabled]="centralstore.isexpired || !isUserPermitted || !centralstore.isoncredit && !centralstore.iscompletepayment && !centralstore.isowing"> <i
-                                                class="material-icons" style="color: whitesmoke"
+                                            [disabled]="centralstore.isexpired || !isUserPermitted || !centralstore.isoncredit && !centralstore.iscompletepayment && !centralstore.isowing">
+                                            <i class="material-icons" style="color: whitesmoke"
                                                 matTooltip="Dispatch Item">local_shipping</i></button>
                                         <button class="icon-product-cat btn btn-info"
                                             (click)="refundCentralStore(centralstore)" mat-mini-fab
@@ -150,8 +155,7 @@
                             [disabled]="!isNextActive"> Load More.... <i class="material-icons" style='color: white;'
                                 matTooltip="Go to Next">keyboard_arrow_right</i></button>
                     </div>
-                    <button mat-fab class='btn btn-success' (click)="goToStart()"
-                        [disabled]="!isPreviousActive">
+                    <button mat-fab class='btn btn-success' (click)="goToStart()" [disabled]="!isPreviousActive">
                         <i class="material-icons" style='color: white;'
                             matTooltip="Go to Start">keyboard_arrow_up</i></button>
                 </cdk-virtual-scroll-viewport>
@@ -230,8 +234,8 @@
                                         <td>
                                             <button class="icon-product-cat" style="background-color: green"
                                                 (click)="dispatchItem(centralstore)" mat-mini-fab
-                                                [disabled]="centralstore.isexpired || !isUserPermitted || !centralstore.isoncredit && !centralstore.iscompletepayment && !centralstore.isowing"> <i
-                                                    class="material-icons" style="color: whitesmoke"
+                                                [disabled]="centralstore.isexpired || !isUserPermitted || !centralstore.isoncredit && !centralstore.iscompletepayment && !centralstore.isowing">
+                                                <i class="material-icons" style="color: whitesmoke"
                                                     matTooltip="Dispatch Item">local_shipping</i></button>
                                         </td>
                                         <td>

@@ -53,10 +53,13 @@ export class ViewCentralStoreComponent implements OnInit {
   paginatedCentralStores;
   isPreviousActive = false;
   isNextActive = false;
+  isAdmin = false
 
   constructor(private dialog: MatDialog, private data: DataService, private router: Router, public pouchService: PouchService, public _DomSanitizer: DomSanitizer, public toastr: ToastrService) { }
 
   ngOnInit() {
+    this.checkDepartment();
+
     this.pouchService.userPermission().then(result => {
       if (result.department == 'Central Store') {
         this.isUserPermitted = true;
@@ -74,19 +77,26 @@ export class ViewCentralStoreComponent implements OnInit {
     this.checkRoles();
   }
 
-
+checkDepartment() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'))
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      if (staff.department == 'Admin') {
+        this.isAdmin = true
+      }
+    })
+  }
 
   reloadCentralStores() {
     var localStorageItem = JSON.parse(localStorage.getItem('user'));
     this.pouchService.getStaff(localStorageItem).then(staff => {
       this.pouchService.getProducts().then(items => {
-        items = items.filter(data => data.branch == 'IUTH(Okada)' && data.store == "Central Store");
+        items = items.filter(data => data.branch == 'IUTH(Okada)' && data.store == "Central Store" && data.totalsubitem > 0);
         this.centralstores = items;
         this.itemSize = this.centralstores.length;
 
         this.pouchService.paginationId = this.centralstores[0].id; //Reverse of what is meant to be;
 
-        this.pouchService.paginateByCentralStoreRemoveItem('product', this.pouchService.paginationId).then(paginatedata => {
+        this.pouchService.paginateByCentralStoreRemoveItem('product', this.pouchService.paginationId, 0).then(paginatedata => {
           this.paginatedCentralStores = paginatedata;
 
           this.isNextActive = true;
@@ -98,13 +108,13 @@ export class ViewCentralStoreComponent implements OnInit {
 
   loadCentralStores() {
     this.pouchService.getProducts().then(items => {
-      items = items.filter(data => data.branch == 'IUTH(Okada)' && data.store == "Central Store");
+      items = items.filter(data => data.branch == 'IUTH(Okada)' && data.store == "Central Store" && data.totalsubitem > 0);
       this.centralstores = items;
       this.itemSize = this.centralstores.length;
 
       this.pouchService.paginationId = this.centralstores[0].id; //Reverse of what is meant to be;
 
-      this.pouchService.paginateByCentralStore('product', this.pouchService.paginationId).then(paginatedata => {
+      this.pouchService.paginateByCentralStore('product', this.pouchService.paginationId, 0).then(paginatedata => {
         this.paginatedCentralStores = paginatedata;
 
         $(document).ready(function () {
@@ -122,7 +132,7 @@ export class ViewCentralStoreComponent implements OnInit {
   next() {
     this.pouchService.paginationId = this.paginatedCentralStores[this.paginatedCentralStores.length - 1].id;  //Reverse of what is meant to be;
 
-    this.pouchService.paginateByCentralStore('product', this.pouchService.paginationId).then(paginatedata => {
+    this.pouchService.paginateByCentralStore('product', this.pouchService.paginationId, 0).then(paginatedata => {
       this.paginatedCentralStores = paginatedata;
 
       this.isPreviousActive = true;
@@ -132,7 +142,7 @@ export class ViewCentralStoreComponent implements OnInit {
   previous() {
     this.pouchService.paginationId = this.paginatedCentralStores[this.paginatedCentralStores.length - 1].id;  //Reverse of what is meant to be;
 
-    this.pouchService.paginateByCentralStorePrev('product', this.pouchService.paginationId).then(paginatedata => {
+    this.pouchService.paginateByCentralStorePrev('product', this.pouchService.paginationId, 0).then(paginatedata => {
       this.paginatedCentralStores = paginatedata;
 
       if (this.paginatedCentralStores.length < this.pouchService.limitRange) {
@@ -146,7 +156,7 @@ export class ViewCentralStoreComponent implements OnInit {
 
     this.pouchService.paginationId = this.paginatedCentralStores[this.paginatedCentralStores.length - 1].id;  //Reverse of what is meant to be;
 
-    this.pouchService.paginateByCentralStoreStart('product', this.pouchService.paginationId).then(paginatedata => {
+    this.pouchService.paginateByCentralStoreStart('product', this.pouchService.paginationId, 0).then(paginatedata => {
       this.paginatedCentralStores = paginatedata;
 
     });

@@ -1,28 +1,28 @@
-import { Component, OnInit, Inject } from '@angular/core';
-import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog';
-import * as _ from 'lodash'; // to help loop over files more succinctly
-import { FormGroup, FormControl, FormBuilder, Validators } from '@angular/forms';
-import { PouchService } from '../../../providers/pouch-service';
-import { CounterProducts } from '../../../model/counterproduct';
-import { DomSanitizer } from '@angular/platform-browser';
-import { ToastrService } from 'ngx-toastr';
-import { Router } from '@angular/router';
+import { Component, OnInit, Inject } from '@angular/core'
+import { MAT_DIALOG_DATA, MatDialogRef } from '@angular/material/dialog'
+import * as _ from 'lodash' // to help loop over files more succinctly
+import { FormGroup, FormControl, FormBuilder, Validators } from '@angular/forms'
+import { PouchService } from '../../../providers/pouch-service'
+import { CounterProducts } from '../../../model/counterproduct'
+import { DomSanitizer } from '@angular/platform-browser'
+import { ToastrService } from 'ngx-toastr'
+import { Router } from '@angular/router'
 
 @Component({
   selector: 'app-add-gopd-pharmacy-counterproduct',
   templateUrl: './add-gopd-pharmacy-counterproduct.component.html',
-  styleUrls: ['./add-gopd-pharmacy-counterproduct.component.css']
+  styleUrls: ['./add-gopd-pharmacy-counterproduct.component.css'],
 })
 export class AddGopdPharmacyCounterProductComponent implements OnInit {
-  title;
-  public counterProduct: CounterProducts;
-  counterProducts = [];
-  files: FileList;
-  isEditTotalItem = false;
-  costPrice = 0;
-  subItem = 0;
-  localStorageItem: any;
-
+  title
+  public counterProduct: CounterProducts
+  counterProducts = []
+  files: FileList
+  isEditTotalItem = false
+  costPrice = 0
+  subItem = 0
+  localStorageItem: any
+  isAdmin = false
 
   counterProductForm = new FormGroup({
     id: new FormControl(),
@@ -52,15 +52,22 @@ export class AddGopdPharmacyCounterProductComponent implements OnInit {
     refund: new FormControl(),
     isnoticed: new FormControl(),
     isquantitynoticed: new FormControl(),
-    sales: new FormControl()
-  });
+    sales: new FormControl(),
+  })
 
-  constructor(private router: Router, public dialogRef: MatDialogRef<AddGopdPharmacyCounterProductComponent>, @Inject(MAT_DIALOG_DATA) public data: any, public toastr: ToastrService, public _DomSanitizer: DomSanitizer, public pouchService: PouchService, private formBuilder: FormBuilder) {
-
+  constructor(
+    private router: Router,
+    public dialogRef: MatDialogRef<AddGopdPharmacyCounterProductComponent>,
+    @Inject(MAT_DIALOG_DATA) public data: any,
+    public toastr: ToastrService,
+    public _DomSanitizer: DomSanitizer,
+    public pouchService: PouchService,
+    private formBuilder: FormBuilder,
+  ) {
     if (this.data.action == 'add') {
-      this.title = 'Add';
+      this.title = 'Add'
       this.counterProduct = {
-        id: Math.round((new Date()).getTime()).toString(),
+        id: Math.round(new Date().getTime()).toString(),
         rev: '',
         productname: '',
         productimage: '',
@@ -87,19 +94,21 @@ export class AddGopdPharmacyCounterProductComponent implements OnInit {
         refund: false,
         isnoticed: false,
         isquantitynoticed: false,
-        sales: []
+        sales: [],
       }
+    } else {
+      this.title = 'Edit'
+      data.counterproduct.datesupplied = new Date(
+        data.counterproduct.datesupplied,
+      )
+      data.counterproduct.expirydate = new Date(data.counterproduct.expirydate)
+      this.counterProduct = data.counterproduct
     }
-    else {
-      this.title = 'Edit';
-      data.counterproduct.datesupplied = new Date(data.counterproduct.datesupplied);
-      data.counterproduct.expirydate = new Date(data.counterproduct.expirydate);
-      this.counterProduct = data.counterproduct;
-    }
+    this.checkDepartment()
   }
 
   ngOnInit() {
-    this.localStorageItem = JSON.parse(localStorage.getItem('user'));
+    this.localStorageItem = JSON.parse(localStorage.getItem('user'))
 
     this.counterProductForm = this.formBuilder.group({
       id: [this.counterProduct.id],
@@ -129,49 +138,70 @@ export class AddGopdPharmacyCounterProductComponent implements OnInit {
       refund: [this.counterProduct.refund],
       isnoticed: [this.counterProduct.isnoticed],
       isquantitynoticed: [this.counterProduct.isquantitynoticed],
-      sales: [this.counterProduct.sales]
-    });
-    this.counterProductForm.controls['productname'].disable();
-    this.counterProductForm.controls['suppliedunit'].disable();
-    this.counterProductForm.controls['datesupplied'].disable();
-    this.counterProductForm.controls['expirydate'].disable();
-    this.counterProductForm.controls['costprice'].disable();
+      sales: [this.counterProduct.sales],
+    })
+    this.counterProductForm.controls['productname'].disable()
+    this.counterProductForm.controls['suppliedunit'].disable()
+    var localStorageItem = JSON.parse(localStorage.getItem('user'))
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      console.log(staff.department)
+      if (staff.department == 'Admin') {
+        this.isAdmin = true
+        this.counterProductForm.controls['suppliedunit'].enable()
+      }
+    })
+    this.counterProductForm.controls['datesupplied'].disable()
+    this.counterProductForm.controls['expirydate'].disable()
+    this.counterProductForm.controls['costprice'].disable()
   }
 
   onNoClick(): void {
-    this.dialogRef.close();
+    this.dialogRef.close()
   }
 
   handleFiles(event) {
-    var myThis = this;
-    this.files = event.target.files;
-    var reader = new FileReader();
-    reader.readAsDataURL(this.files[0]);
-    reader.onloadend = function () {
-      myThis.counterProduct.productimage = reader.result;
+    var myThis = this
+    this.files = event.target.files
+    var reader = new FileReader()
+    reader.readAsDataURL(this.files[0])
+    reader.onloadend = function() {
+      myThis.counterProduct.productimage = reader.result
     }
-    reader.onerror = function (error) {
-      console.log("Error: ", error);
+    reader.onerror = function(error) {
+      console.log('Error: ', error)
     }
   }
 
   edit() {
-    var localStorageItem = JSON.parse(localStorage.getItem('user'));
+    var localStorageItem = JSON.parse(localStorage.getItem('user'))
     this.pouchService.getStaff(localStorageItem).then(item => {
-      this.counterProduct.branch = item.branch;
-      this.counterProduct.datesupplied = new Date(this.counterProduct.datesupplied).toString();
-      this.counterProduct.expirydate = new Date(this.counterProduct.expirydate).toString();
+      this.counterProduct.branch = item.branch
+      this.counterProduct.datesupplied = new Date(
+        this.counterProduct.datesupplied,
+      ).toString()
+      this.counterProduct.expirydate = new Date(
+        this.counterProduct.expirydate,
+      ).toString()
       this.pouchService.updateCounterProduct(this.counterProduct).then(res => {
-        this.toastr.success('Product has been updated');
-        this.dialogRef.close(true);
-        this.sendNotification(this.counterProduct.branch);
-      });
-    });
+        this.toastr.success('Product has been updated')
+        this.dialogRef.close(true)
+        this.sendNotification(this.counterProduct.branch)
+      })
+    })
+  }
+
+  checkDepartment() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'))
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      if (staff.department == 'Admin') {
+        this.isAdmin = true
+      }
+    })
   }
 
   sendNotification(branch) {
     var notification = {
-      id: Math.round((new Date()).getTime()).toString(),
+      id: Math.round(new Date().getTime()).toString(),
       rev: '',
       name: `${this.counterProduct.productname} Supply Notification`,
       department: 'GOPD Pharmacy',
@@ -180,20 +210,22 @@ export class AddGopdPharmacyCounterProductComponent implements OnInit {
       url: this.router.url,
       viewed: false,
       message: `${this.counterProduct.productname} selling price has been added at GOPD Pharmacy`,
-      sourceid: this.counterProduct.id
+      sourceid: this.counterProduct.id,
     }
 
     this.pouchService.getStaffs().then(staffs => {
-      staffs = staffs.filter(data => data.branch == notification.branch);
-      staffs = staffs.filter(data => data.department == 'GOPD Pharmacy' || data.department == this.counterProduct.sourcedepartment || data.department == 'Account' || data.department == 'Audit');
+      staffs = staffs.filter(data => data.branch == notification.branch)
+      staffs = staffs.filter(
+        data =>
+          data.department == 'GOPD Pharmacy' ||
+          data.department == this.counterProduct.sourcedepartment ||
+          data.department == 'Account' ||
+          data.department == 'Audit',
+      )
       staffs.forEach(staff => {
-        staff.notification.push(notification);
-        this.pouchService.updateStaff(staff).then(result => {
-
-        })
+        staff.notification.push(notification)
+        this.pouchService.updateStaff(staff).then(result => {})
       })
-    });
-
+    })
   }
-
 }

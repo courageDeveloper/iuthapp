@@ -384,7 +384,7 @@ export class ViewIndividualsalesComponent implements OnInit {
         individualsales = individualsales.filter(data => data.branch == staff.branch);
 
         individualsales.map(individualsale => {
-          individualsale['timestamp'] = new Date(individualsale.checkindate).toLocaleString("en-US", { timeZone: "GMT" });
+          individualsale['timestamp'] = new Date(individualsale.checkindate);
           individualsale['timestamp'] = new Date(individualsale['timestamp']).setSeconds(0);
         });
         individualsales = individualsales.filter(data => newDateFrom <= data['timestamp']);
@@ -397,7 +397,7 @@ export class ViewIndividualsalesComponent implements OnInit {
           this.paginatedIndividualSales = paginatedata;
 
           this.paginatedIndividualSales.map(paginatedSale => {
-            paginatedSale['timestamp'] = new Date(paginatedSale.date).toLocaleString("en-US", { timeZone: "GMT" });
+            paginatedSale['timestamp'] = new Date(paginatedSale.date);
             paginatedSale['timestamp'] = new Date(paginatedSale['timestamp']).setSeconds(0);
             //paginatedSale['timestamp'] = paginatedSale['timestamp'] + 3600000;
             /*  loan['timestamp'] = new Date(loan['timestamp']).setMinutes(0);

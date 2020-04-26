@@ -54,11 +54,15 @@ export class ViewPharmacyStoreComponent implements OnInit {
   paginatedPharmacyStores;
   isPreviousActive = false;
   isNextActive = false;
+  isAdmin = false
 
   constructor(private dialog: MatDialog, private data: DataService, private router: Router, public pouchService: PouchService, public _DomSanitizer: DomSanitizer, public toastr: ToastrService) { }
 
   ngOnInit() {
+    this.checkDepartment();
+
     this.pouchService.userPermission().then(result => {
+      console.log(result);
       if (result.department == 'Pharmacy Store') {
         this.isUserPermitted = true;
       }
@@ -77,15 +81,24 @@ export class ViewPharmacyStoreComponent implements OnInit {
     }, 300000);
   }
 
+  checkDepartment() {
+    var localStorageItem = JSON.parse(localStorage.getItem('user'))
+    this.pouchService.getStaff(localStorageItem).then(staff => {
+      if (staff.department == 'Admin') {
+        this.isAdmin = true
+      }
+    })
+  }
+
   reloadPharmacyStores() {
     this.pouchService.getProducts().then(items => {
-      items = items.filter(data => data.branch == 'IUTH(Okada)' && data.store == "Pharmacy Store");
+      items = items.filter(data => data.branch == 'IUTH(Okada)' && data.store == "Pharmacy Store" && data.totalsubitem > 0);
       this.pharmacystores = items;
       this.itemSize = this.pharmacystores.length;
 
       this.pouchService.paginationId = this.pharmacystores[0].id; //Reverse of what is meant to be;
 
-      this.pouchService.paginateByStoreRemoveItem('product', this.pouchService.paginationId, 'Pharmacy Store').then(paginatedata => {
+      this.pouchService.paginateByStoreRemoveItem('product', this.pouchService.paginationId, 'Pharmacy Store', undefined, undefined, 0).then(paginatedata => {
         this.paginatedPharmacyStores = paginatedata;
 
       });
@@ -94,14 +107,14 @@ export class ViewPharmacyStoreComponent implements OnInit {
 
   loadPharmacyStores() {
     this.pouchService.getProducts().then(items => {
-      items = items.filter(data => data.branch == 'IUTH(Okada)' && data.store == "Pharmacy Store");
+      items = items.filter(data => data.branch == 'IUTH(Okada)' && data.store == "Pharmacy Store" && data.totalsubitem > 0);
       this.pharmacystores = items;
       
       this.itemSize = this.pharmacystores.length;
 
       this.pouchService.paginationId = this.pharmacystores[0].id; //Reverse of what is meant to be;
 
-      this.pouchService.paginateByStore('product', this.pouchService.paginationId, 'Pharmacy Store').then(paginatedata => {
+      this.pouchService.paginateByStore('product', this.pouchService.paginationId, 'Pharmacy Store', undefined, undefined, 0).then(paginatedata => {
         this.paginatedPharmacyStores = paginatedata;
 
         $(document).ready(function () {
@@ -119,7 +132,7 @@ export class ViewPharmacyStoreComponent implements OnInit {
   next() {
     this.pouchService.paginationId = this.paginatedPharmacyStores[this.paginatedPharmacyStores.length - 1].id;  //Reverse of what is meant to be;
 
-    this.pouchService.paginateByStore('product', this.pouchService.paginationId, 'Pharmacy Store').then(paginatedata => {
+    this.pouchService.paginateByStore('product', this.pouchService.paginationId, 'Pharmacy Store', undefined, undefined, 0).then(paginatedata => {
       this.paginatedPharmacyStores = paginatedata;
 
       this.isPreviousActive = true;
@@ -129,7 +142,7 @@ export class ViewPharmacyStoreComponent implements OnInit {
   previous() {
     this.pouchService.paginationId = this.paginatedPharmacyStores[this.paginatedPharmacyStores.length - 1].id;  //Reverse of what is meant to be;
 
-    this.pouchService.paginateByStorePrev('product', this.pouchService.paginationId, 'Pharmacy Store').then(paginatedata => {
+    this.pouchService.paginateByStorePrev('product', this.pouchService.paginationId, 'Pharmacy Store', undefined, undefined, 0).then(paginatedata => {
       this.paginatedPharmacyStores = paginatedata;
 
       if (this.paginatedPharmacyStores.length < this.pouchService.limitRange) {
@@ -143,7 +156,7 @@ export class ViewPharmacyStoreComponent implements OnInit {
 
     this.pouchService.paginationId = this.paginatedPharmacyStores[this.paginatedPharmacyStores.length - 1].id;  //Reverse of what is meant to be;
 
-    this.pouchService.paginateByStoreStart('product', this.pouchService.paginationId, 'Pharmacy Store').then(paginatedata => {
+    this.pouchService.paginateByStoreStart('product', this.pouchService.paginationId, 'Pharmacy Store', undefined, undefined, 0).then(paginatedata => {
       this.paginatedPharmacyStores = paginatedata;
 
     });
