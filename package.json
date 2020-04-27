@@ -14,7 +14,7 @@
     "dist": "build",
     "e2e": "ng e2e",
     "install:clean": "rm -rf node_modules/ && rm -rf package-lock.json && npm install && ng serve -o",
-    "postinstall": "ng build --aot -prod"
+    "heroku-postbuild": "ng build --prod"
   },
   "main": "electron/electron.js",
   "build": {
