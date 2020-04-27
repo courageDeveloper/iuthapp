@@ -6,7 +6,7 @@
 import { Injectable } from '@angular/core';
 declare var require: any;
 import PouchDB from 'pouchdb';
-PouchDB.plugin(require('pouchdb-find'));
+PouchDB.plugin(require('pouchdb-find').default);
 PouchDB.plugin(require('relational-pouch'));
 PouchDB.plugin(require('pouchdb-upsert'));
 require('pouchdb-all-dbs')(PouchDB);
