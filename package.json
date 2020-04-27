@@ -95,6 +95,7 @@
     "path": "^0.12.7",
     "perfect-scrollbar": "^1.1.0",
     "popper.js": "1.15.0",
+    "pouchdb": "^6.4.3",
     "pouchdb-adapter-websql": "^7.0.0",
     "pouchdb-all-dbs": "^1.0.2",
     "pouchdb-find": "^6.4.3",
