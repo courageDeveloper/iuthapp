@@ -2008,7 +2008,7 @@ var PouchService = /** @class */ (function () {
             index: {
                 fields: ['data.branch', 'data.store', 'data.sourcedepartment', 'data.department', 'data.departmentname',
                     'data.isoncredit', 'data.isowing', 'data.iscomplete', 'data.isnoticed', 'data.isquantitynoticed', 'data.year',
-                    'data.notification', 'data.expensetype', 'data.isexpired', 'data.patientid', 'data.vendorid', 'data.totalsubitem']
+                    'data.notification', 'data.expensetype', 'data.isexpired', 'data.patientid', 'data.vendorid', 'data.totalsubitem', 'data.productname']
             }
         });
     };
@@ -2391,6 +2391,27 @@ var PouchService = /** @class */ (function () {
         return this.getStaff(localStorageItem).then(function (staff) {
             return _this.db.find({
                 selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, 'data.totalsubitem': { $ne: productquantity }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
+                limit: _this.limitRange,
+                sort: [{ _id: 'desc' }]
+            }).then(function (res) {
+                return _this.db.rel.parseRelDocs(type, res.docs).then(function (result) {
+                    var paginatedtypes = result[type + "s"] ? result[type + "s"] : [];
+                    return paginatedtypes;
+                }).catch(function (err) {
+                    console.log(err);
+                });
+            });
+        });
+    };
+    //Paginate by inputstring
+    PouchService.prototype.paginateByInputString = function (type, id, department, isnoticed, isquantitynoticed, year, expired, productquantity, inputstring) {
+        var _this = this;
+        var localStorageItem;
+        console.log(inputstring);
+        localStorageItem = JSON.parse(localStorage.getItem('user'));
+        return this.getStaff(localStorageItem).then(function (staff) {
+            return _this.db.find({
+                selector: { 'data.branch': { $eq: staff.branch }, 'data.department': { $eq: department }, 'data.isnoticed': { $eq: isnoticed }, 'data.isquantitynoticed': { $eq: isquantitynoticed }, 'data.year': { $eq: year }, 'data.isexpired': { $eq: expired }, 'data.totalsubitem': { $ne: productquantity }, 'data.productname': { $lte: inputstring }, _id: { $lte: type + '_2_' + id, $regex: new RegExp(type) } },
                 limit: _this.limitRange,
                 sort: [{ _id: 'desc' }]
             }).then(function (res) {

@@ -38,8 +38,8 @@
     }
   },
   "engines": {
-    "node": "6.11.1",
-    "npm": "3.10.9"
+    "node": "10.16.3",
+    "npm": "6.7.0"
   },
   "private": true,
   "dependencies": {
@@ -56,6 +56,8 @@
     "@angular/platform-browser-dynamic": "8.0.0",
     "@angular/platform-server": "8.0.0",
     "@angular/router": "8.0.0",
+    "@angular/cli": "8.0.0",
+    "@angular/compiler-cli": "8.0.0",
     "@types/datatables.net": "^1.10.17",
     "@types/file-saver": "^2.0.1",
     "@types/pouchdb": "^6.3.0",
@@ -104,8 +106,6 @@
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^0.803.23",
-    "@angular/cli": "8.0.0",
-    "@angular/compiler-cli": "8.0.0",
     "@angular/language-service": "8.0.0",
     "@types/bootstrap": "4.3.0",
     "@types/chartist": "0.9.46",
@@ -117,6 +117,7 @@
     "electron": "^2.0.18",
     "electron-builder": "^21.2.0",
     "electron-packager": "^14.0.6",
+    "enhanced-resolve": "^3.3.0",
     "jasmine-core": "3.4.0",
     "jasmine-spec-reporter": "4.2.1",
     "karma": "4.1.0",
