@@ -4,7 +4,7 @@
   "license": "MIT",
   "scripts": {
     "ng": "ng",
-    "start": "ng serve",
+    "start": "node server.js",
     "build": "ng build",
     "test": "ng test",
     "electron dist": "electron .",
@@ -47,8 +47,10 @@
     "@agm/core": "1.0.0-beta.6",
     "@angular/animations": "8.0.0",
     "@angular/cdk": "^8.0.0",
+    "@angular/cli": "8.0.0",
     "@angular/common": "8.0.0",
     "@angular/compiler": "8.0.0",
+    "@angular/compiler-cli": "8.0.0",
     "@angular/core": "8.0.0",
     "@angular/forms": "8.0.0",
     "@angular/http": "7.2.15",
@@ -57,8 +59,6 @@
     "@angular/platform-browser-dynamic": "8.0.0",
     "@angular/platform-server": "8.0.0",
     "@angular/router": "8.0.0",
-    "@angular/cli": "8.0.0",
-    "@angular/compiler-cli": "8.0.0",
     "@types/datatables.net": "^1.10.17",
     "@types/file-saver": "^2.0.1",
     "@types/pouchdb": "^6.3.0",
@@ -79,7 +79,7 @@
     "datatables.net-dt": "^1.10.19",
     "datatables.net-select": "^1.3.0",
     "datatables.net-select-bs": "^1.3.0",
-    "express": "4.17.1",
+    "express": "^4.17.1",
     "file-saver": "^2.0.2",
     "googleapis": "40.0.0",
     "hammerjs": "2.0.8",
@@ -92,6 +92,7 @@
     "ngx-toastr": "^10.0.4",
     "node-sass": "^4.13.1",
     "number-to-words": "^1.2.4",
+    "path": "^0.12.7",
     "perfect-scrollbar": "^1.1.0",
     "popper.js": "1.15.0",
     "pouchdb-adapter-websql": "^7.0.0",
@@ -101,14 +102,16 @@
     "relational-pouch": "^1.4.5",
     "rxjs": "6.5.2",
     "rxjs-compat": "6.5.2",
+    "typescript": "3.4.5",
     "web-animations-js": "2.3.1",
     "xlsx": "^0.14.4",
-    "zone.js": "0.9.1",
-    "typescript": "3.4.5"
+    "zone.js": "0.9.1"
   },
   "devDependencies": {
     "@angular-devkit/build-angular": "^0.803.23",
     "@angular/language-service": "8.0.0",
+    "@angular/cli": "8.0.0",
+    "@angular/compiler-cli": "8.0.0",
     "@types/bootstrap": "4.3.0",
     "@types/chartist": "0.9.46",
     "@types/googlemaps": "3.36.4",
@@ -130,6 +133,7 @@
     "pouchdb": "^6.4.3",
     "protractor": "5.4.2",
     "ts-node": "8.2.0",
-    "tslint": "5.17.0"
+    "tslint": "5.17.0",
+    "typescript": "3.4.5"
   }
 }
